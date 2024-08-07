@@ -1,5 +1,3 @@
-import torch 
-from torch import nn
 
 import pandas as pd
 
@@ -9,6 +7,8 @@ from pathlib import Path
 
 from MEGSignal import MEGSignal
 from MyModel import MyModel
+from NNModelRunner import NNModelRunner
+from LDAModel import MyLDA
 
 # def accuracy_fn(y_true, y_pred):
 #     correct = torch.eq(y_true, y_pred).sum().item() # torch.eq() calculates where two tensors are equal
@@ -16,7 +16,9 @@ from MyModel import MyModel
 #     return acc
 
 if __name__ == "__main__":
-    # Load the JSON configuration file
+
+    # ---   config load in --- #
+
     config_path = Path('train_config.json')
     try:
         with config_path.open('r') as file:
@@ -49,42 +51,35 @@ if __name__ == "__main__":
         root = raw_data_path
     )
 
-    if(training_flow == "nn"):
-    
-        meg_signal = MEGSignal(bids_path, low_pass = low_pass_filter, high_pass = high_pass_filter)
-        meg_signal.load_meta(meta_data_src = ph_info)
-        meg_signal.load_epochs()
-        
-        phonemes = meg_signal.epochs["not is_word"]
-        X = phonemes.get_data()
-        y = phonemes.metadata["voiced"].values
-        
-        
-        X = torch.tensor(X)
-        y = torch.tensor(y)
-        print(type(X), type(y))
-        
-        # print(len(X), len(y))
-        # print(len(X[0]), len(X[1]))
-        # print(len(X[0][0]), len(X[1][0]))
-        # print(X[0][0])
-        # print(X, y)
-        
-        train_split = int(0.8 * len(X))
-        X_train, y_train = X[:train_split], y[:train_split]
-        X_test,  y_test  = X[train_split:], y[train_split:]
 
+
+    # --- signal processing --- #
+    
+    meg_signal = MEGSignal(bids_path, low_pass = low_pass_filter, high_pass = high_pass_filter)
+    meg_signal.load_meta(meta_data_src = ph_info)
+    meg_signal.load_epochs()
+    
+    phonemes = meg_signal.epochs["not is_word"]
+    X = phonemes.get_data()
+    y = phonemes.metadata["voiced"].values
+
+
+    # ---- train model ---- #
+
+    if(training_flow == "nn"):
+        nnRunner = NNModelRunner(X, y)
         
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-        model_0 = MyModel(num_classes = 2).to(device)
         
-        loss_function = torch.nn.BCELoss
-        optimizer = torch.optim.SGD(params = model_0.parameters(), lr = 0.1)
         
-        # for epoch in range(100):
+       
     elif(training_flow == "lda"):
         # example code for running differnt training flow
         # to be implemented
-        pass
+        metadata = meg_signal.get_metadata()
+        lda_model = MyLDA()
+        predictions = lda_model.decode_binary(X, y, metadata)
+        print(type(predictions))
+        print(predictions)
+
         
         

@@ -145,6 +145,16 @@ class MEGSignal():
         # logger.debug(meta.wordfreq)
         if(to_save_csv):
             self.meta.to_csv(util.get_unique_file_name(file_name="test_wfreq.csv", dir="./"))
+    
+    def get_metadata(self)->pd.DataFrame:
+        """
+        getter of self.meta (metadata)
+        """
+        if self.meta is not None:
+            return self.meta
+        else:
+            logger.warning("metadata is not set, cannot get metadata.")
+            return None
 
     
     
