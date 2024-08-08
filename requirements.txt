@@ -9,3 +9,4 @@ seaborn
 matplotlib
 tqdm
 tabulate
+# torch

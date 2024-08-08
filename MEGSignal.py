@@ -40,8 +40,7 @@ class MEGSignal():
        self.load_raw(bids_path, low_pass, high_pass, n_jobs)
        
     
-    def load_raw(self, bids_path: mne_bids.BIDSPath, low_pass:float = 30.0, high_pass:float = 0.5, n_jobs:int = 1,
-                 to_save_csv:bool = False):
+    def load_raw(self, bids_path: mne_bids.BIDSPath, low_pass:float = 30.0, high_pass:float = 0.5, n_jobs:int = 1):
         """
         Load Raw MEG signal
         remark: 

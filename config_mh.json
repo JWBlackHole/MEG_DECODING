@@ -1,0 +1,15 @@
+{
+    "training": {
+        "flow": "lda",
+        "until_subject": "01",
+        "until_session": "1",
+        "until_task": "1",
+        "raw_data_path": "D://NTHU//meta-brainmagick2//brainmagick//data//gwilliams2022//download",
+        "preprocess_low_pass": 30,
+        "preprocess_high_pass": 0.5
+    },
+    "house_keeping": {
+        "log_level": "INFO",
+        "result_metrics_save_path": "./results"
+    }
+}
