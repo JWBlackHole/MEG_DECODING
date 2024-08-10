@@ -74,7 +74,7 @@ if __name__ == "__main__":
     # --- signal processing --- #
     
     meg_signal = MEGSignal(bids_path, low_pass = low_pass_filter, high_pass = high_pass_filter)
-    meg_signal.load_meta(meta_data_src = ph_info, to_save_csv=True)
+    meg_signal.load_meta(meta_data_src = ph_info, to_save_csv=False)
     meg_signal.load_epochs()
     
     phonemes = meg_signal.epochs["not is_word"]
@@ -98,6 +98,8 @@ if __name__ == "__main__":
         result_df , scores = lda_model.decode_binary(X, y, phonemes.metadata)
         logger.debug(f"type of predictions (returned from model): {type(result_df)}")
         result_df.to_csv(util.get_unique_file_name("voiced_prediction_t=1.csv", "./result"))
+        logger.debug(f"type of scores  (returned from model): {type(scores)}")
+        print(scores)
 
         
         
