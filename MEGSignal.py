@@ -15,15 +15,12 @@ from sklearn.preprocessing import StandardScaler, scale
 import sys
 from loguru import logger
 
-logger.remove(0)
-logger.add(sys.stderr, level="DEBUG")
-
 
 # import torch
 # import torch.nn as nn
 # import torch.functional as F
 
-# cutom import
+# custom import
 import my_utils as util
 
 
