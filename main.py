@@ -13,8 +13,8 @@ from loguru import logger
 
 from MEGSignal import MEGSignal
 from MyModel import MyModel
-from NNModelRunner import NNModelRunner
-from LdaModelRunner import LdaModelRunner
+from nnModelRunner import NNModelRunner
+from ldaModelRunner import LdaModelRunner
 import my_utils as util
 from preprocessor import Preprocessor
 

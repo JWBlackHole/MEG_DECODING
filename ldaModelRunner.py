@@ -8,12 +8,12 @@ import sys
 from loguru import logger
 
 
-from LDAModel import MyLDA
+from ldaModel import MyLDA
 import my_utils as util
 
 
 class LdaModelRunner():
-    def __init__(self, X, y, meta, dont_kfold = False) -> None:
+    def __init__(self, X, y, meta, dont_kfold = False, to_save_csv = False) -> None:
         
         logger.info("start to train with model: LDA")
 

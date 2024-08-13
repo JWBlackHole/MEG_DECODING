@@ -63,9 +63,9 @@ class MyLDA():
 
         # call function for LDA according to prediction_mode
         if (prediction_mode == "collapse"):
-            pred_df, scores = self.predict_each_window(X, y, meta)
+            pred_df, scores = self.predict_each_window(X, y, meta, dont_kfold)
         elif (prediction_mode == "each_timepoint"):
-            self.predict_each_timepoint(X, y, meta)
+            self.predict_each_timepoint(X, y, meta, dont_kfold)
         else:
             logger.error("undefined prediction_mode!")
             return pred_df, scores
@@ -139,6 +139,8 @@ class MyLDA():
         # evaluate by k fold
 
         ret_socres = None
+        if dont_kfold:
+            return pred_df, ret_socres
 
         try:
             for t in range(2):
