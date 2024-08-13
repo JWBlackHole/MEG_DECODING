@@ -46,7 +46,26 @@ if __name__ == "__main__":
     
     # print(X, y)
     
-    X = torch.tensor(X).to(torch.float32).reshape(-1, 208*81)
+    X = torch.tensor(X).to(torch.float32).reshape(-1, 208*81)   # reshape(-1, 208*81) collapse 208chans * 81 time points to 
+    
+    '''
+    e.g. original:
+    [
+        [ [chan0t0, chan0t1, ..., chan0t80],
+        [chan1t0, chan1t1, ..., chan1t80],
+        ...
+        [chan207t0, chan207t1, ..., chan207t80] ],
+        
+        [...], ...
+    ]
+    now:
+    [   [chan0t0, chan0t1, ..., chan0t80, chan1t0, chan1t1, ,..., chan1t80, ...],
+        [...], ...
+    ]
+    this means collapse channels and timepoints in 1 window into 1D and treat them all as a feature,
+    and predcit one probability for each window
+
+    '''
     y = torch.tensor(y.astype(bool)).to(torch.float32)
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, 
