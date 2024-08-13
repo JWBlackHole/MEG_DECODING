@@ -4,6 +4,8 @@ from mne    import Epochs
 from mne.io import Raw
 import pandas as pd
 import numpy as np
+from typing import Tuple
+import json
 import os
 import sys
 from loguru import logger
@@ -13,7 +15,7 @@ from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.model_selection import train_test_split, RepeatedStratifiedKFold, cross_val_score
 
 
-# cutom import
+# custom import
 import my_utils as util
 
 class MyLDA():
@@ -22,7 +24,8 @@ class MyLDA():
 
     def decode_binary(self, X: np.ndarray, y: np.ndarray, meta: pd.DataFrame, times= None, 
                       to_print_csv = False,
-                      prediction_mode = "collapse"):
+                      prediction_mode = "collapse", 
+                      dont_kfold = False)-> Tuple[pd.DataFrame, pd.DataFrame]:
         """
         y is expected to be binary with value True or False
 
@@ -40,7 +43,7 @@ class MyLDA():
             - "each_timepoint": Predict a probability for each time point in each window
 
         """
-        logger.info("decod_binary is running")
+        logger.info(f"decod_binary is running with prediction_mode: {prediction_mode}")
         try:
             assert len(X) == len(y) == len(meta)
         except AssertionError:
@@ -59,17 +62,20 @@ class MyLDA():
         pred_df = scores = None
 
         # call function for LDA according to prediction_mode
-        if (prediction_mode == "each_timepoint"):
-            pred_df, scores = self.predict_each_timepoint(X, y, meta)
+        if (prediction_mode == "collapse"):
+            pred_df, scores = self.predict_each_window(X, y, meta)
         elif (prediction_mode == "each_timepoint"):
-            self.predict_each_window(X, y, meta)
+            self.predict_each_timepoint(X, y, meta)
+        else:
+            logger.error("undefined prediction_mode!")
+            return pred_df, scores
         
         if to_print_csv:
             pass # TBC
 
         return pred_df, scores
 
-    def predict_each_timepoint(self, X: np.ndarray, y: np.ndarray, meta: pd.DataFrame):
+    def predict_each_timepoint(self, X: np.ndarray, y: np.ndarray, meta: pd.DataFrame, dont_kfold=False):
         """
         predict a probability for each time point in each window
         Parameters
@@ -87,7 +93,7 @@ class MyLDA():
         pred_df = None
         ret_scores = None
 
-        if len(X.shape) != 3    # assert X is 3D array
+        if len(X.shape) != 3:    # assert X is 3D array
             logger.error(f"X is not 3D array, X.shape={X.shape}, non 3D X is not suported yet")
             return pred_df, ret_scores
         if not (y.dtype == bool or np.issubdtype(y.dtype, np.number)):
@@ -152,7 +158,7 @@ class MyLDA():
             return pred_df, None
         return pred_df, ret_socres
     
-    def predict_each_window(X, y, meta):
+    def predict_each_window(self, X: np.ndarray, y: np.ndarray, meta: pd.DataFrame, dont_kfold = False):
         """
         predict a probability for each window (collapse all timepoints in each window)
 
@@ -196,16 +202,19 @@ class MyLDA():
         lda.fit(X_train, y_train)
 
         logger.debug(f"shape of X_test: {X_test.shape}")
-        lda.predict(X_test)
+        preds = lda.predict(X_test)
 
         # construct df from prediction result
         pred_df = pd.DataFrame(preds, columns=["prediction"])
         pred_df["ground_truth"] = y_test.tolist()
 
-
+        if dont_kfold:
+            return pred_df, ret_socres
+        
+        logger.debug("start to run kfold")
         try:
 
-            cv = RepeatedStratifiedKFold(n_splits=5, n_repeats = 3, random_state=1)
+            cv = RepeatedStratifiedKFold(n_splits=5, n_repeats = 3, random_state=1) # remark: 5 split * 3 repeats = 15 Folds
             # n_split = no. of folds
             score = cross_val_score(lda, X, y, scoring="accuracy", cv=cv, n_jobs=-1)
             scores.append(score)
@@ -213,12 +222,15 @@ class MyLDA():
             try:
                 scores_df = pd.DataFrame(scores, columns=[f"fold_{i}" for i in range(len(scores[0]))])
                 ret_socres = scores_df
-            except Exception:
-                logger.error("error occur in converting scores to df")
+            except Exception as err:
+                logger.error(err)
+                logger.error("error occur in converting scores to df, returning raw scores")
                 return pred_df, ret_socres
                 
-        except Exception:
+        except Exception as err:
+            logger.error(err)
             logger.error("error occur in get kfold score, returning None for scores")
             return pred_df, None
         
         return pred_df, ret_socres
+    
