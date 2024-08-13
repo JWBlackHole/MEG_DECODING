@@ -1,6 +1,6 @@
 {
     "training": {
-        "flow": "lda",
+        "flow": "nn",
         "until_subject": "01",
         "until_session": "1",
         "until_task": "1",
