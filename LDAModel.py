@@ -54,7 +54,7 @@ class MyLDA():
         df = None # tmp df for one time point
 
         # predict by my self
-        for t in range(1):
+        for t in range(2):
             # Scale the data
             # X_train_scaled = scaler.fit_transform(X_train[:, :, t])
             # X_test_scaled = scaler.transform(X_test[:, :, t])
