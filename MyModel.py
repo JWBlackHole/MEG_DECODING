@@ -13,7 +13,7 @@ class MyModel(nn.Module):
         ) for i in range(1)])
         
         self.output = nn.Sequential(
-            nn.Linear(in_features = 10, out_features = num_classes)
+            nn.Linear(in_features = 10, out_features = 1)
         )
 
     def forward(self, x):

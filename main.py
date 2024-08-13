@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import mne_bids
 import torch 
-from torch import nn
+from sklearn.model_selection import train_test_split
 
 import json
 from pathlib import Path
@@ -49,6 +49,7 @@ class Preprocessor:
     
     def get_phonemes(self):
         return self.phonemes
+
 
 
 
@@ -113,5 +114,3 @@ if __name__ == "__main__":
         logger.debug(f"type of scores  (returned from model): {type(scores)}")
         print(scores)
 
-        
-        
