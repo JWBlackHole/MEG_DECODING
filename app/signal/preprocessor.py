@@ -6,7 +6,7 @@ import mne_bids
 from loguru import logger
 
 # custom import
-from app.my_signal.megSignal import MEGSignal
+from app.signal.megSignal import MEGSignal
 
 
 
