@@ -36,6 +36,7 @@ if __name__ == "__main__":
         low_pass_filter = training_config.get('preprocess_low_pass', None)
         high_pass_filter = training_config.get('preprocess_high_pass', None)
         training_flow = training_config.get('flow', None)
+        dont_kfold_in_lda = training_config.get('dont_kfold_in_lda', None)
 
         house_keeping_config = config.get('house_keeping', {})
         raw_data_path = house_keeping_config.get('raw_data_path', "DEBUG")
@@ -49,7 +50,7 @@ if __name__ == "__main__":
         session = '0'
         task = '0'
         raw_data_path = './data'
-        low_pass_filter = high_pass_filter = training_flow = log_level = result_metrics_save_path = None
+        low_pass_filter = high_pass_filter = training_flow = log_level = result_metrics_save_path = dont_kfold_in_lda = None
     
     # ----- Set logger ----- #
     util.MyLogger(logger, log_level=log_level, output="console")   # logger comes from loguru logger
@@ -76,10 +77,8 @@ if __name__ == "__main__":
         
        
     elif(training_flow == "lda"):
-        # example code for running differnt training flow
-        # to be implemented
         logger.info("start to train with model: LDA")
-        ldaRunner = LdaModelRunner(X, y, phonemes.metadata, dont_kfold=True)
+        ldaRunner = LdaModelRunner(X, y, phonemes.metadata, dont_kfold=dont_kfold_in_lda)
 
     else:
         logger.error("undefined training_flow!")

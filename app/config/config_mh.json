@@ -5,7 +5,8 @@
         "until_session": "1",
         "until_task": "1",
         "preprocess_low_pass": 30,
-        "preprocess_high_pass": 0.5
+        "preprocess_high_pass": 0.5,
+        "dont_kfold_in_lda": true
     },
     "house_keeping": {
         "raw_data_path": "D://NTHU//meta-brainmagick2//brainmagick//data//gwilliams2022//download",

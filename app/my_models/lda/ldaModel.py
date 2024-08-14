@@ -47,6 +47,10 @@ class MyLDA():
         logger.debug(f"X.shape: {X.shape}")
         logger.debug(f"y.shape: {y.shape}")
         logger.debug(f"meta.shape: {meta.shape}")
+
+        if dont_kfold is None:
+            dont_kfold = False
+            
         meta = meta.reset_index()
 
         # convert y to correct dtype before LDA

@@ -22,6 +22,7 @@ def get_unique_file_name(file_name: str, dir: str = "./", verbose: bool = True):
                 logger.info(f"Saving file to {file_path}...")
             return file_path
         i += 1
+
 def add_comparison_column(pred_df: pd.DataFrame)->pd.DataFrame:
         """
         add column "TP/FP/TN/FN" from column "prediction" and "ground_truth"
@@ -67,9 +68,9 @@ def get_eval_metrics(pred_df: pd.DataFrame, file_name: str="metrics", save_path:
     tn = len(pred_df[pred_df['TP/FP/TN/FN'] == 'TN'])
     fn = len(pred_df[pred_df['TP/FP/TN/FN'] == 'FN'])
 
-    recall = tp / (tp + fn) if (tp + fn) > 0 else 0
-    precision = tp / (tp + fp) if (tp + fp) > 0 else 0
-    accuracy = (tp + tn) / (tp + tn + fp + fn) if (tp + tn + fp + fn) > 0 else 0
+    recall = tp / (tp + fn) if (tp + fn) > 0 else 0       # 實際為True 的之中有多少被predcit出來
+    precision = tp / (tp + fp) if (tp + fp) > 0 else 0      # predcit 成True 的之中有多少確實是True
+    accuracy = (tp + tn) / (tp + tn + fp + fn) if (tp + tn + fp + fn) > 0 else 0    # 猜中的比例
     f1_score = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
 
     metrics = {
@@ -99,7 +100,7 @@ def get_eval_metrics(pred_df: pd.DataFrame, file_name: str="metrics", save_path:
 
 class MyLogger:
     """
-    redirect package message form stdout to loguru logger (for prettier logging)
+    set up for loguru logger (for prettier logging)
     """
     def __init__(self, logger, log_level, output = "console"):
         """
