@@ -47,7 +47,7 @@ if __name__ == "__main__":
         subject = '01'
         session = '0'
         task = '0'
-        raw_data_path = '../data'
+        raw_data_path = './data'
         low_pass_filter = high_pass_filter = training_flow = log_level = result_metrics_save_path = None
     
     # ----- Set logger ----- #

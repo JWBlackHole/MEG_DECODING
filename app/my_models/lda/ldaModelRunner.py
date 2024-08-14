@@ -30,5 +30,5 @@ class LdaModelRunner():
         # calculate metrics
         prediction_df = util.add_comparison_column(prediction_df)
         util.get_eval_metrics(prediction_df, 
-                              file_name="metrics_LDA", save_path="../results", 
+                              file_name="metrics_LDA", save_path="./results", 
                               description_str="LDA sub 1 task 1 ses 1")

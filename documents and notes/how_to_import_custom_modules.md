@@ -41,7 +41,8 @@ from app.my_models.hi import Hi
 
 **how to run hi2.py**
 ```
-cd ../../  # 出返root
+# 假設現在在hi2.py位處的資料夾
+cd ../../  # cd 至root
 python -m app.folder.hi2
 ```
 - `-m` flag means run as a module
