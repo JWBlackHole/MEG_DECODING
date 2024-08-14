@@ -2,8 +2,8 @@ import torch
 from torch import nn
 from sklearn.model_selection import train_test_split
 
-
-from MyModel import MyModel
+# cutom import
+from app.my_models.nn.nnModel import MyNNModel
 
 def accuracy_fn(y_true, y_pred):
     correct = torch.eq(y_true, y_pred).sum().item() # torch.eq() calculates where two tensors are equal
@@ -54,7 +54,7 @@ class NNModelRunner():
         X_test, y_test   = X_test.to(self.device),  y_test.to(self.device)
         
         # Our "model", "loss function" and "optimizer"
-        model_0 = MyModel(2).to(self.device)
+        model_0 = MyNNModel(2).to(self.device)
         # loss_fn = torch.nn.BCELoss()
         loss_fn = torch.nn.BCEWithLogitsLoss()
         optimizer     = torch.optim.SGD(params = model_0.parameters(), lr = 0.1)

@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.functional as F
 
-class MyModel(nn.Module):
+class MyNNModel(nn.Module):
     def __init__(self, num_classes = 2):
         super().__init__()
         self.input = nn.Sequential(

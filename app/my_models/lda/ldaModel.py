@@ -1,22 +1,16 @@
-import mne
-import mne_bids
-from mne    import Epochs
-from mne.io import Raw
+
 import pandas as pd
 import numpy as np
 from typing import Tuple
-import json
-import os
-import sys
 from loguru import logger
 
-from sklearn.preprocessing import StandardScaler
+
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.model_selection import train_test_split, RepeatedStratifiedKFold, cross_val_score
 
 
 # custom import
-import my_utils as util
+import app.utils.my_utils as util
 
 class MyLDA():
     def __init__(self):

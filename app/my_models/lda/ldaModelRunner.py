@@ -1,15 +1,11 @@
 
 import pandas as pd
 import numpy as np
-
-import json
-from pathlib import Path
-import sys
 from loguru import logger
 
-
-from ldaModel import MyLDA
-import my_utils as util
+# cutom import
+from app.my_models.lda.ldaModel import MyLDA
+import app.utils.my_utils as util
 
 
 class LdaModelRunner():
@@ -24,7 +20,7 @@ class LdaModelRunner():
         logger.debug(f"type of predictions (returned from model): {type(prediction_df)}")
         logger.debug(f"type of scores  (returned from model): {type(scores)}")
         try:
-            prediction_df.to_csv(util.get_unique_file_name("voiced_prediction_t=1.csv", "./result"))
+            prediction_df.to_csv(util.get_unique_file_name("voiced_prediction_t=1.csv", "./results"))
         except Exception as err:
             logger.error(err)
             logger.error("fail to output csv, skipping output csv")
@@ -34,5 +30,5 @@ class LdaModelRunner():
         # calculate metrics
         prediction_df = util.add_comparison_column(prediction_df)
         util.get_eval_metrics(prediction_df, 
-                              file_name="metrics_LDA", save_path="./result", 
+                              file_name="metrics_LDA", save_path="../results", 
                               description_str="LDA sub 1 task 1 ses 1")

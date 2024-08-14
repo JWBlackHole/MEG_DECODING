@@ -3,13 +3,10 @@ import pandas as pd
 import numpy as np
 import mne_bids
 
-
-from pathlib import Path
-import sys
 from loguru import logger
 
-
-from MEGSignal import MEGSignal
+# custom import
+from app.my_signal.megSignal import MEGSignal
 
 
 
@@ -20,7 +17,7 @@ class Preprocessor:
                 low_pass_filter, high_pass_filter):
         
         logger.debug(f"raw data path: {raw_data_path}")
-        ph_info:pd.DataFrame = pd.read_csv("./phoneme_info.csv")
+        ph_info:pd.DataFrame = pd.read_csv("./phoneme_data/phoneme_info.csv")   # file path is relative to root dir
 
         # Specify a path to a epoch
         bids_path = mne_bids.BIDSPath(

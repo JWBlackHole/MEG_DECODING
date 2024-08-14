@@ -1,33 +1,29 @@
 
 import pandas as pd
 import numpy as np
-import mne_bids
-import torch 
-from sklearn.model_selection import train_test_split
-
 import json
+import os
 from pathlib import Path
-import sys
 from loguru import logger
 
 
-from MEGSignal import MEGSignal
-from MyModel import MyModel
-from nnModelRunner import NNModelRunner
-from ldaModelRunner import LdaModelRunner
-import my_utils as util
-from preprocessor import Preprocessor
+# custom import
+from app.my_signal.preprocessor import Preprocessor
+from app.my_models.nn.nnModelRunner import NNModelRunner
+from app.my_models.lda.ldaModelRunner import LdaModelRunner
+import app.utils.my_utils as util
+
 
 
 
 if __name__ == "__main__":
 
    
-    # ---   load config --- #
+    # ---  load config --- #
 
 
-    config_path = Path('config_mh.json')
-    # config_path = Path('my_own_config.json')      # put your own config file here cuz dir for data of everyone may be different
+    config_path = Path('./app/config/config_mh.json')
+    # config_path = Path('./config/my_own_config.json')      # put your own config file here cuz setting of everyone may be different
     
     try:
         with config_path.open('r') as file:
@@ -44,12 +40,14 @@ if __name__ == "__main__":
         raw_data_path = house_keeping_config.get('raw_data_path', "DEBUG")
         log_level = house_keeping_config.get('log_level', None)
         result_metrics_save_path = house_keeping_config.get('result_metrics_save_path', None)
+        logger.info(f"Execution start according to config: {config_path}")
     except (FileNotFoundError, json.JSONDecodeError, KeyError):
+        logger.error(f"config file: {os.path.abspath(config_path)} not exist, use fall back values")
         # Use hardcoded values if the config file is not found or is invalid
         subject = '01'
         session = '0'
         task = '0'
-        raw_data_path = './data'
+        raw_data_path = '../data'
         low_pass_filter = high_pass_filter = training_flow = log_level = result_metrics_save_path = None
     
     # ----- Set logger ----- #

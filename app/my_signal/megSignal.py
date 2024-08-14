@@ -5,14 +5,11 @@ import mne
 import mne_bids
 from mne    import Epochs
 from mne.io import Raw
-
 from wordfreq import zipf_frequency
+from sklearn.preprocessing import StandardScaler, scale
 
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import StandardScaler, scale
-
-import sys
 from loguru import logger
 
 
@@ -21,7 +18,7 @@ from loguru import logger
 # import torch.functional as F
 
 # custom import
-import my_utils as util
+import app.utils.my_utils as util
 
 
 wk_dir = Path(os.getcwd())

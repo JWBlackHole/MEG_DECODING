@@ -8,7 +8,7 @@ import json
 
 def get_unique_file_name(file_name: str, dir: str = "./", verbose: bool = True):
     """Get a unique file name in a directory for saving file to avoid overwriting.
-    example dir: "./result" (no need ending slash)
+    example dir: "./results" (no need ending slash)
     
     """
     if not os.path.exists(dir):
@@ -103,10 +103,14 @@ class MyLogger:
     """
     def __init__(self, logger, log_level, output = "console"):
         """
+        Parameters
+        ---------
+        logger:
+            expects loguru logger
         output: where to log, 
-        "both" - both in console and log in file, 
-        "file" - only log in file, "console" - only log in console,
-        "no" - don't use logger for package messages
+            "both" - both in console and log in file, 
+            "file" - only log in file, "console" - only log in console,
+            "no" - don't use logger for package messages
         """
         self.output = output
         self.log_level = log_level
@@ -133,8 +137,14 @@ class MyLogger:
 
 
     def writePackageMsg(self, message):
+        """
+        (for redirect package msg to loguru logger, but not in used)
+        """
         if message.strip():
             logger.log(self.log_level, message.strip())
 
     def flush(self):
+        """
+        (for redirect package msg to loguru logger, but not in used)
+        """
         pass
