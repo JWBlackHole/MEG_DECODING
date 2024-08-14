@@ -23,7 +23,8 @@ if __name__ == "__main__":
 
 
     config_path = Path('./app/config/config_mh.json')
-    # config_path = Path('./config/my_own_config.json')      # put your own config file here cuz setting of everyone may be different
+    # config_path = Path("./app/config/train_config.json")
+    # config_path = Path('./app/config/my_own_config.json')      # put your own config file here cuz setting of everyone may be different
     
     try:
         with config_path.open('r') as file:
