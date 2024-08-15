@@ -12,6 +12,7 @@ from app.signal.preprocessor import Preprocessor
 from app.my_models.nn.nnModelRunner import NNModelRunner
 from app.my_models.lda.ldaModelRunner import LdaModelRunner
 import app.utils.my_utils as util
+from app.common.commonSetting import TargetLabel
 
 
 
@@ -30,12 +31,13 @@ if __name__ == "__main__":
         with config_path.open('r') as file:
             config = json.load(file)
         training_config = config.get('training', {})
-        subject = str(training_config.get('until_subject', "01"))
-        session = str(training_config.get('until_session', "0"))
-        task = str(training_config.get('until_task', "0"))
+        subject = training_config.get('until_subject', 1)
+        session = training_config.get('until_session',1)
+        task = training_config.get('until_task', 1)
         low_pass_filter = training_config.get('preprocess_low_pass', None)
         high_pass_filter = training_config.get('preprocess_high_pass', None)
         training_flow = training_config.get('flow', None)
+        target_label = training_config.get('target_label', None)
         dont_kfold_in_lda = training_config.get('dont_kfold_in_lda', None)
 
         house_keeping_config = config.get('house_keeping', {})
@@ -46,11 +48,12 @@ if __name__ == "__main__":
     except (FileNotFoundError, json.JSONDecodeError, KeyError):
         logger.error(f"config file: {os.path.abspath(config_path)} not exist, use fall back values")
         # Use hardcoded values if the config file is not found or is invalid
-        subject = '01'
-        session = '0'
-        task = '0'
+        subject = 1
+        session = 1
+        task = 1
         raw_data_path = './data'
         low_pass_filter = high_pass_filter = training_flow = log_level = result_metrics_save_path = dont_kfold_in_lda = None
+        target_label = None
     
     # ----- Set logger ----- #
     util.MyLogger(logger, log_level=log_level, output="console")   # logger comes from loguru logger
@@ -59,26 +62,65 @@ if __name__ == "__main__":
     #sys.stdout = util.StreamToLogger(log_level="INFO", output="console")
     #sys.stderr = util.StreamToLogger(log_level="ERROR", output="console")
 
+
+    # ------  target label checking  ----  #
+
+    # target label is the label to predict in the training
+    # this should affect the preprocessing and the training and predcition process
+
+
+    if type(target_label) is not str:
+        logger.error("target_label is not valid, program exit.")
+        exit(0)
+
+    if target_label  == "voiced":
+        target_label = TargetLabel.VOICED
+        logger.info("target label to predicted got: \"voiced\"")
+    elif target_label  == "is_word":
+        target_label = TargetLabel.IS_WORD
+    elif target_label == "is_sound":
+        target_label = TargetLabel.IS_SOUND
+
+    elif target_label in ["is voiced", "is_voiced", "phoneme", "phonemes", "voice", "is voice", "is_voice"]:
+        logger.error(f"target_label \"{target_label}\" is not supported, do you mean \"voiced\"?")
+        logger.warning("assume default flow")
+        target_label = TargetLabel.DEFAULT
+    elif target_label in ["is word", "word"]:
+        logger.error(f"target_label \"{target_label}\" is not supported, do you mean \"is_word\"?")
+        logger.warning("assume default flow")
+        target_label = TargetLabel.DEFAULT
+    elif target_label in ["is sound", "sound", "have sound", "have_sound"]:
+        logger.error(f"target_label \"{target_label}\" is not supported, do you mean \"is_sound\"?")
+        logger.warning("assume default flow")
+        target_label = TargetLabel.DEFAULT
+    else:
+        logger.error(f"target_label \"{target_label}\" not recognised, assume default flow")
+        logger.warning("assume default flow")
+        target_label = TargetLabel.DEFAULT
     
-    
+
+
     # ------ Data Getting and Preprocessing ------ #
+    
     logger.info("start to preprocess data....")
     preprocessor = Preprocessor()
-    X, y = preprocessor.get_data(subject, session, task, raw_data_path, low_pass_filter, high_pass_filter)
-    phonemes = preprocessor.get_phonemes()
+    X, y = preprocessor.get_data(subject, session, task, raw_data_path, target_label, low_pass_filter, high_pass_filter)
+    phonemes = preprocessor.get_metadata("phonemes")
+
+
 
     # ---- train model ---- #
     logger.info("start to train...")
 
     if(training_flow == "nn"):
         logger.info("start to train with model: NN")
-        nnRunner = NNModelRunner(X, y)
+        nnRunner = NNModelRunner(X, y, target_label)
         nnRunner.train()
         
        
     elif(training_flow == "lda"):
         logger.info("start to train with model: LDA")
-        ldaRunner = LdaModelRunner(X, y, phonemes.metadata, dont_kfold=dont_kfold_in_lda)
+        ldaRunner = LdaModelRunner(X, y, phonemes.metadata, target_label, dont_kfold=dont_kfold_in_lda)
 
     else:
         logger.error("undefined training_flow!")

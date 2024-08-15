@@ -19,21 +19,28 @@ from loguru import logger
 
 # custom import
 import app.utils.my_utils as util
+from app.common.commonSetting import TargetLabel
 
 
 wk_dir = Path(os.getcwd())
 
 class MEGSignal():
-    def __init__(self, bids_path, low_pass:float = 30.0, high_pass:float = 0.5, n_jobs:int = 1):
+    """
+    expected flow to prepare MEG signal with metadata:
+        init -> load_raw -> load-meta -> load_epochs
+    
+    """
+    def __init__(self, bids_path, setting: TargetLabel, low_pass:float = 30.0, high_pass:float = 0.5, n_jobs:int = 1):
        self.raw:  Raw|None          = None
        self.meta: pd.DataFrame|None = None
        
        # Epoches
        self.epochs: Epochs|None     = None      #mne.Epochs object
+       self.setting: TargetLabel | None = setting
        
        self.load_raw(bids_path, low_pass, high_pass, n_jobs)
        
-    
+
     def load_raw(self, bids_path: mne_bids.BIDSPath, low_pass:float = 30.0, high_pass:float = 0.5, n_jobs:int = 1):
         """
         Load Raw MEG signal
@@ -41,7 +48,7 @@ class MEGSignal():
         - low_pass: frequency above this value will be filtered out
         - high_pass: frequency below this value will be filtered out
         
-        """
+        """ 
         # Reading associated event.tsv and channels.tsv
         self.raw = mne_bids.read_raw_bids(bids_path)
         # Specify the type of recording we want
@@ -51,7 +58,7 @@ class MEGSignal():
         # Load raw data and filter by low and high pass
         self.raw.load_data().filter(high_pass, low_pass, n_jobs=n_jobs)
         
-    def load_meta(self, meta_data_src: pd.DataFrame, to_save_csv:bool = False):
+    def load_meta(self, supplementary_meta: pd.DataFrame, to_save_csv:bool = False):
         """Load meta data
         set slef.meta fom information in meta_data_src
         meta_data_src: source of meta data
@@ -59,61 +66,68 @@ class MEGSignal():
         # Read the annotations, in this experiment are phonemes or sound, like "eh_I", "r_I", "t_B"
         # And append items to it.
         # count = 0 # debug
-        meta_list = list()
-        for annot in self.raw.annotations:
-            d = eval(annot.pop("description"))
-            # print(annot)
-            for k, v in annot.items():
-                assert k not in d.keys()
-                d[k] = v
-            # print(d.keys())
-            meta_list.append(d)
 
-            # # Debug
-            # count = count + 1
-            # if(count >= 10):
-            #     break
-        
-        # --- Convert meatdata to form of DataFrame --- #
-        self.meta = pd.DataFrame(meta_list)
-        self.meta["intercept"] = 1.0
-        
-        # Computing if voicing
-        # Replace voiced to True or False
-        phonemes = self.meta.query('kind=="phoneme"')
-        for ph, d in phonemes.groupby("phoneme"):
-            # print(ph, ":\n", d)
-            ph = ph.split("_")[0]
-            match = meta_data_src.query(f"phoneme==\"{ph}\"")
-            # print(match)
-            assert len(match) == 1
-            self.meta.loc[d.index, "voiced"] = (match.iloc[0].phonation == "v") # True or False
-            
-            
-        # Compute word frequency
-        self.meta["is_word"] = False
-        words = self.meta.query('kind=="word"').copy()
-        self.meta.loc[words.index + 1, "is_word"] = True
-        
-        # Merge "word frequency" with "phoneme"
-        # apply a funcion to calculate the word frequency
-        wfreq = lambda x: zipf_frequency(x, "en")  # noqa
-        self.meta.loc[words.index + 1, "wordfreq"] = words.word.apply(wfreq).values
-        
+        if self.setting == TargetLabel.VOICED:
 
-        self.meta = self.meta.query('kind=="phoneme"')
-        if(to_save_csv):
-            self.meta.to_csv(util.get_unique_file_name(file_name="test_wfreq.csv", dir="./test"))
+            meta_list = list()
+            for annot in self.raw.annotations:
+                d = eval(annot.pop("description"))
+                # print(annot)
+                for k, v in annot.items():
+                    assert k not in d.keys()
+                    d[k] = v
+                # print(d.keys())
+                meta_list.append(d)
+
+                # # Debug
+                # count = count + 1
+                # if(count >= 10):
+                #     break
+            
+            # --- Convert meatdata to form of DataFrame --- #
+            self.meta = pd.DataFrame(meta_list)
+            self.meta["intercept"] = 1.0
+            
+            # Computing if voicing
+            # Replace voiced to True or False
+            phonemes = self.meta.query('kind=="phoneme"')
+            for ph, d in phonemes.groupby("phoneme"):
+                # print(ph, ":\n", d)
+                ph = ph.split("_")[0]
+                match = supplementary_meta.query(f"phoneme==\"{ph}\"")
+                # print(match)
+                assert len(match) == 1
+                self.meta.loc[d.index, "voiced"] = (match.iloc[0].phonation == "v") # True or False
+                
+                
+            # Compute word frequency
+            self.meta["is_word"] = False
+            words = self.meta.query('kind=="word"').copy()
+            self.meta.loc[words.index + 1, "is_word"] = True
+            
+            # Merge "word frequency" with "phoneme"
+            # apply a funcion to calculate the word frequency
+            wfreq = lambda x: zipf_frequency(x, "en")  # noqa
+            self.meta.loc[words.index + 1, "wordfreq"] = words.word.apply(wfreq).values
+            
+
+            self.meta = self.meta.query('kind=="phoneme"')
+            if(to_save_csv):
+                self.meta.to_csv(util.get_unique_file_name(file_name="test_wfreq.csv", dir="./test"))
+
+        else:
+            logger.error("preprocessing for setting other than \"voiced\" is not implemented. program exit")
+            exit(0)
 
        
-    def load_epochs(self, to_save_csv: bool = False):
+    def load_epochs(self, to_save_csv: bool = False, tmin: float = None, tmax: float = None):
         """Get epochs by assemble "meatadata" and "raw". """
         # Create event that mne need
         # including time info
         events = np.c_[
             self.meta.onset * self.raw.info["sfreq"], np.ones((len(self.meta), 2))
         ].astype(int)
-        logger.debug("SFREQ", self.raw.info["sfreq"])
+        logger.debug(f"SFREQ: {self.raw.info["sfreq"]}")
 
         self.epochs = mne.Epochs(
             self.raw,
