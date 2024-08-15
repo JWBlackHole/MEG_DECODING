@@ -36,6 +36,7 @@ if __name__ == "__main__":
         low_pass_filter = training_config.get('preprocess_low_pass', None)
         high_pass_filter = training_config.get('preprocess_high_pass', None)
         training_flow = training_config.get('flow', None)
+        target_label = training_config.get('target_label', None)
         dont_kfold_in_lda = training_config.get('dont_kfold_in_lda', None)
 
         house_keeping_config = config.get('house_keeping', {})
@@ -51,6 +52,7 @@ if __name__ == "__main__":
         task = '0'
         raw_data_path = './data'
         low_pass_filter = high_pass_filter = training_flow = log_level = result_metrics_save_path = dont_kfold_in_lda = None
+        target_label = None
     
     # ----- Set logger ----- #
     util.MyLogger(logger, log_level=log_level, output="console")   # logger comes from loguru logger
@@ -62,10 +64,13 @@ if __name__ == "__main__":
     
     
     # ------ Data Getting and Preprocessing ------ #
+    if type(target_label) is not str:
+        logger.error("target_label is not valid, program exit.")
+        exit(0)
     logger.info("start to preprocess data....")
     preprocessor = Preprocessor()
-    X, y = preprocessor.get_data(subject, session, task, raw_data_path, low_pass_filter, high_pass_filter)
-    phonemes = preprocessor.get_phonemes()
+    X, y = preprocessor.get_data(subject, session, task, raw_data_path, target_label, low_pass_filter, high_pass_filter)
+    phonemes = preprocessor.get_metadata("phonemes")
 
     # ---- train model ---- #
     logger.info("start to train...")
