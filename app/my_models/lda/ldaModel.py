@@ -11,13 +11,14 @@ from sklearn.model_selection import train_test_split, RepeatedStratifiedKFold, c
 
 # custom import
 import app.utils.my_utils as util
+from app.common.commonSetting import TargetLabel
 
 class MyLDA():
     def __init__(self):
         pass
 
-    def decode_binary(self, X: np.ndarray, y: np.ndarray, meta: pd.DataFrame, times= None, 
-                      to_print_csv = False,
+    def decode_binary(self, X: np.ndarray, y: np.ndarray, meta: pd.DataFrame, target_label: TargetLabel,
+                      times= None, to_print_csv = False,
                       prediction_mode = "collapse", 
                       dont_kfold = False)-> Tuple[pd.DataFrame, pd.DataFrame]:
         """

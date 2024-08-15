@@ -25,6 +25,11 @@ from app.common.commonSetting import TargetLabel
 wk_dir = Path(os.getcwd())
 
 class MEGSignal():
+    """
+    expected flow to prepare MEG signal with metadata:
+        init -> load_raw -> load-meta -> load_epochs
+    
+    """
     def __init__(self, bids_path, setting: TargetLabel, low_pass:float = 30.0, high_pass:float = 0.5, n_jobs:int = 1):
        self.raw:  Raw|None          = None
        self.meta: pd.DataFrame|None = None
@@ -35,7 +40,7 @@ class MEGSignal():
        
        self.load_raw(bids_path, low_pass, high_pass, n_jobs)
        
-    
+
     def load_raw(self, bids_path: mne_bids.BIDSPath, low_pass:float = 30.0, high_pass:float = 0.5, n_jobs:int = 1):
         """
         Load Raw MEG signal
@@ -43,7 +48,7 @@ class MEGSignal():
         - low_pass: frequency above this value will be filtered out
         - high_pass: frequency below this value will be filtered out
         
-        """
+        """ 
         # Reading associated event.tsv and channels.tsv
         self.raw = mne_bids.read_raw_bids(bids_path)
         # Specify the type of recording we want
@@ -53,7 +58,7 @@ class MEGSignal():
         # Load raw data and filter by low and high pass
         self.raw.load_data().filter(high_pass, low_pass, n_jobs=n_jobs)
         
-    def load_meta(self, meta_data_src: pd.DataFrame, to_save_csv:bool = False):
+    def load_meta(self, supplementary_meta: pd.DataFrame, to_save_csv:bool = False):
         """Load meta data
         set slef.meta fom information in meta_data_src
         meta_data_src: source of meta data
@@ -89,7 +94,7 @@ class MEGSignal():
             for ph, d in phonemes.groupby("phoneme"):
                 # print(ph, ":\n", d)
                 ph = ph.split("_")[0]
-                match = meta_data_src.query(f"phoneme==\"{ph}\"")
+                match = supplementary_meta.query(f"phoneme==\"{ph}\"")
                 # print(match)
                 assert len(match) == 1
                 self.meta.loc[d.index, "voiced"] = (match.iloc[0].phonation == "v") # True or False
@@ -115,14 +120,14 @@ class MEGSignal():
             exit(0)
 
        
-    def load_epochs(self, to_save_csv: bool = False):
+    def load_epochs(self, to_save_csv: bool = False, tmin: float = None, tmax: float = None):
         """Get epochs by assemble "meatadata" and "raw". """
         # Create event that mne need
         # including time info
         events = np.c_[
             self.meta.onset * self.raw.info["sfreq"], np.ones((len(self.meta), 2))
         ].astype(int)
-        logger.debug("SFREQ", self.raw.info["sfreq"])
+        logger.debug(f"SFREQ: {self.raw.info["sfreq"]}")
 
         self.epochs = mne.Epochs(
             self.raw,
