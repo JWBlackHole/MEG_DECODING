@@ -47,7 +47,7 @@ class NNModelRunner():
     
     def train(self):
 
-        if self.target_label == TargetLabel.VOICED:
+        if self.target_label == TargetLabel.VOICED_PHONEME:
         
             X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, 
                                                                 test_size=0.2,   # 20% test, 80% train
