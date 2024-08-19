@@ -1,9 +1,9 @@
 {
     "training": {
-        "flow": "lda",
+        "flow": "nn",
         "target_label": "voiced",
         "until_subject": 1,
-        "until_session": 1,
+        "until_session": 0,
         "until_task": 1,
         "preprocess_low_pass": 30,
         "preprocess_high_pass": 0.5,
@@ -11,7 +11,8 @@
     },
     "house_keeping": {
         "raw_data_path": "D://NTHU//meta-brainmagick2//brainmagick//data//gwilliams2022//download",
-        "log_level": "INFO",
-        "result_metrics_save_path": "./results"
+        "log_level": "DEBUG",
+        "result_metrics_save_path": "./results",
+        "to_print_interim_csv": true
     }
 }

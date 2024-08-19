@@ -200,9 +200,12 @@ class MyLDA():
         logger.debug(f"shape of X_train: {X_train.shape}")
         logger.debug(f"shape of y_train: {y_train.shape}")
 
+        logger.info("start to fit LDA...")
         lda.fit(X_train, y_train)
 
         logger.debug(f"shape of X_test: {X_test.shape}")
+        logger.info(f"prediction is expected to have {X_test.shape[0]} rows")
+        logger.info("start to predict...")
         preds = lda.predict(X_test)
 
         # construct df from prediction result
@@ -212,7 +215,7 @@ class MyLDA():
         if dont_kfold:
             return pred_df, ret_socres
         
-        logger.debug("start to run kfold")
+        logger.info("start to run kfold")
         try:
 
             cv = RepeatedStratifiedKFold(n_splits=5, n_repeats = 3, random_state=1) # remark: 5 split * 3 repeats = 15 Folds
