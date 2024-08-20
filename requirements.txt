@@ -1,0 +1,12 @@
+loguru
+pandas
+mne_bids
+openpyxl
+nibabel
+wordfreq
+scikit-learn
+seaborn
+matplotlib
+tqdm
+tabulate
+# torch
