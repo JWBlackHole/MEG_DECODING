@@ -45,7 +45,17 @@ class NNModelRunner():
         self.y = y
         self.target_label =  target_label
     
-    def train(self):
+    def train(self, total_epoch: int, log_interval: int|None = None):
+        """
+        total_epoch
+            - how many epochs to train in total
+        log_interval
+            - how often to print log message
+
+        """
+
+        if log_interval is None:
+            log_interval = total_epoch / 10
 
         if self.target_label == TargetLabel.VOICED_PHONEME:
         
@@ -60,12 +70,13 @@ class NNModelRunner():
             X_test, y_test   = X_test.to(self.device),  y_test.to(self.device)
             
             # Our "model", "loss function" and "optimizer"
-            model_0 = MyNNModel(2).to(self.device)
+            model_0 = MyNNModel(num_classes=2).to(self.device)
             # loss_fn = torch.nn.BCELoss()
             loss_fn = torch.nn.BCEWithLogitsLoss()
             optimizer     = torch.optim.SGD(params = model_0.parameters(), lr = 0.1)
             
-            n_epochs = 100
+            n_epochs = total_epoch
+
             for epoch in range(n_epochs + 1):
                 # set to training mode
                 model_0.train()
@@ -100,7 +111,9 @@ class NNModelRunner():
                     test_acc = accuracy_fn(y_true=y_test,
                                         y_pred=test_pred)
 
-                if epoch % 10 == 0:
+                
+
+                if epoch % log_interval == 0:
                     print(f"Epoch: {epoch} | Loss: {loss:.5f}, Accuracy: {acc:.2f}% | Test loss: {test_loss:.5f}, Test acc: {test_acc:.2f}%")
         else:
             logger.error("preprocessing for setting other than \"voiced\" is not implemented. program exit")

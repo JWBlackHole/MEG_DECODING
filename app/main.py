@@ -126,7 +126,7 @@ if __name__ == "__main__":
     if(training_flow == "nn"):
         logger.info("start to train with model: NN")
         nnRunner = NNModelRunner(X, y, target_label)
-        nnRunner.train()
+        nnRunner.train(100)
         
        
     elif(training_flow == "lda"):
