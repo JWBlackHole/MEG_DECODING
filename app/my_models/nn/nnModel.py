@@ -6,14 +6,14 @@ class MyNNModel(nn.Module):
     def __init__(self, num_classes = 2):
         super().__init__()
         self.input = nn.Sequential(
-            nn.Linear(in_features = 208*81, out_features = 10)
+            nn.Linear(in_features = 208*81, out_features = 1000)
         )
         self.hidden = nn.ModuleList([nn.Sequential(
-            nn.Linear(in_features = 10, out_features = 10)
+            nn.Linear(in_features = 1000, out_features = 1000)
         ) for i in range(1)])
         
         self.output = nn.Sequential(
-            nn.Linear(in_features = 10, out_features = 1)
+            nn.Linear(in_features = 1000, out_features = 1)
         )
 
     def forward(self, x):
