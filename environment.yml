@@ -40,15 +40,33 @@ dependencies:
   - xz=5.4.6=h998d150_1
   - zlib=1.2.13=h998d150_1
   - pip:
+      - certifi==2024.7.4
+      - charset-normalizer==3.3.2
+      - contourpy==1.2.1
+      - cycler==0.12.1
+      - decorator==5.1.1
+      - fonttools==4.53.1
+      - idna==3.7
       - joblib==1.4.2
+      - kiwisolver==1.4.5
+      - lazy-loader==0.4
       - loguru==0.7.2
+      - matplotlib==3.9.2
       - numpy==2.1.0
+      - packaging==24.1
       - pandas==2.2.2
+      - pillow==10.4.0
+      - platformdirs==4.2.2
+      - pooch==1.8.2
+      - pyparsing==3.1.2
       - python-dateutil==2.9.0.post0
       - pytz==2024.1
+      - requests==2.32.3
       - scikit-learn==1.5.1
       - scipy==1.14.1
       - six==1.16.0
       - threadpoolctl==3.5.0
+      - tqdm==4.66.5
       - tzdata==2024.1
+      - urllib3==2.2.2
 prefix: /home/william/miniconda3/envs/dataset

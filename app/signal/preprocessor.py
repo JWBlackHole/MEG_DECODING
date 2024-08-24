@@ -1,6 +1,7 @@
 
 import pandas as pd
 import numpy as np
+
 import mne_bids
 from mne import Epochs, concatenate_epochs
  
@@ -9,8 +10,6 @@ from loguru import logger
 # custom import
 from app.signal.megSignal import MEGSignal
 from app.common.commonSetting import TargetLabel
-
-
 
 class Preprocessor:
     def __init__(self):

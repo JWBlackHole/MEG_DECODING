@@ -6,7 +6,6 @@ import os
 from pathlib import Path
 from loguru import logger
 
-
 # custom import
 from app.signal.preprocessor import Preprocessor
 from app.my_models.nn.nnModelRunner import NNModelRunner
@@ -18,7 +17,7 @@ from app.common.commonSetting import TargetLabel
 if __name__ == "__main__":
 
     # ---  load config --- #
-
+    # exit()
 
     config_path = Path('./app/config/config_jw.json')
     # config_path = Path('./app/config/config_mh.json')
