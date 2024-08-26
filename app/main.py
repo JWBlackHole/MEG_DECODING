@@ -11,6 +11,7 @@ from loguru import logger
 from app.signal.preprocessor import Preprocessor
 from app.my_models.nn.nnModelRunner import NNModelRunner
 from app.my_models.lda.ldaModelRunner import LdaModelRunner
+from app.my_models.svm.svmModel import svmModel # new added
 import app.utils.my_utils as util
 from app.common.commonSetting import TargetLabel
 
@@ -132,6 +133,31 @@ if __name__ == "__main__":
     elif(training_flow == "lda"):
         logger.info("start to train with model: LDA")
         ldaRunner = LdaModelRunner(X, y, phonemes_epochs.metadata, target_label, dont_kfold=dont_kfold_in_lda, to_save_csv=True)
+
+    elif(training_flow == "svm"):
+        logger.info("start to train with model: SVM")
+        svmRunner = svmModel(X, y, target_label)
+        
+        import cProfile
+        import pstats
+
+        profiler = cProfile.Profile()
+        profiler.enable()
+
+        try:
+            # 將結果保存到檔案
+            cProfile.run('svmRunner.train()', 'profile_results.prof')
+            
+            # 讀取分析結果
+            p = pstats.Stats('profile_results.prof')
+
+            # 排序和查看結果
+            p.sort_stats('cumulative').print_stats(10)  # 顯示前10個最耗時的函數
+        finally:
+            profiler.disable()
+            profiler.print_stats(sort='cumulative')
+
+        # svmRunner.train()
 
     else:
         logger.error("undefined training_flow!")

@@ -63,9 +63,10 @@ class NNModelRunner():
             model_0 = MyNNModel(2).to(self.device)
             # loss_fn = torch.nn.BCELoss()
             loss_fn = torch.nn.BCEWithLogitsLoss()
-            optimizer     = torch.optim.SGD(params = model_0.parameters(), lr = 0.1)
-            
-            n_epochs = 100
+            #optimizer = torch.optim.SGD(params = model_0.parameters(), lr = 0.1)
+            optimizer = torch.optim.Adam(params = model_0.parameters(), lr = 0.001)
+
+            n_epochs = 100 #100
             for epoch in range(n_epochs + 1):
                 # set to training mode
                 model_0.train()
@@ -76,7 +77,7 @@ class NNModelRunner():
                 y_pred = torch.round(torch.sigmoid(y_logits))
                 
                 # Calculate loss and accuracy
-                loss = loss_fn(y_logits, y_train) 
+                loss = loss_fn(y_logits, y_train) #y_batch
                 acc = accuracy_fn(y_true = y_train, y_pred = y_pred) 
                 
                 # 3. Reset Optimizer zero grad
@@ -102,6 +103,9 @@ class NNModelRunner():
 
                 if epoch % 10 == 0:
                     print(f"Epoch: {epoch} | Loss: {loss:.5f}, Accuracy: {acc:.2f}% | Test loss: {test_loss:.5f}, Test acc: {test_acc:.2f}%")
+                
+                if epoch == 10:
+                    print(y_pred)
         else:
             logger.error("preprocessing for setting other than \"voiced\" is not implemented. program exit")
             exit(0)
