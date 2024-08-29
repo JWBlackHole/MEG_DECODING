@@ -1,4 +1,5 @@
-import torch 
+import torch
+from torch import Tensor
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 
@@ -14,6 +15,31 @@ def accuracy_fn(y_true, y_pred):
     acc = (correct / len(y_pred)) * 100 
     return acc
 
+def balance_label(X: Tensor, y: Tensor):
+    X_true,  y_true  = Tensor(), Tensor()
+    X_false, y_false = Tensor(), Tensor()
+    
+    # print(X, y)
+        
+    len_train_data = len(X)
+    for i in range(len_train_data):
+        if(y[i] == True):
+            X_true = torch.cat((X_true, torch.unsqueeze(X[i], 0)), 0) if len(X_true) else torch.unsqueeze(X[i], 0)
+            y_true = torch.cat((y_true, torch.unsqueeze(y[i], 0)), 0) if len(y_true) else torch.unsqueeze(y[i], 0)
+        else:
+            X_false = torch.cat((X_false, torch.unsqueeze(X[i], 0)), 0) if len(X_false) else torch.unsqueeze(X[i], 0)
+            y_false = torch.cat((y_false, torch.unsqueeze(y[i], 0)), 0) if len(y_false) else torch.unsqueeze(y[i], 0)
+    
+    min_len = min(len(X_true), len(X_false))
+    X_true,  y_true  = X_true[:min_len],  y_true[:min_len]
+    X_false, y_false = X_false[:min_len], y_false[:min_len]
+    
+    print("X length", len(X_true), len(X_false))
+    print("Y length", len(y_true), len(y_false))
+    
+    return torch.cat((X_true, X_false), 0), torch.cat((y_true, y_false), 0)
+    
+
 class NNModelRunner():
     BATCH_SIZE = 64
     
@@ -21,9 +47,11 @@ class NNModelRunner():
 
         
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        # print(X)
+        # print(y)
         
-        X = torch.tensor(X).to(torch.float32).reshape(-1, 208*81)   # reshape(-1, 208*81) collapse 208chans * 81 time points to 
-    
+        X = torch.tensor(X).to(torch.float32).reshape(-1, 208*81)   # reshape(-1, 208*81) collapse 208chans * 81 time points to
+        y = torch.tensor(y.astype(bool)).to(torch.float32)
         '''
         e.g. original:
         [
@@ -42,7 +70,6 @@ class NNModelRunner():
         and predcit one probability for each window
 
         '''
-        y = torch.tensor(y.astype(bool)).to(torch.float32)
 
         self.X = X
         self.y = y
@@ -60,6 +87,11 @@ class NNModelRunner():
         X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, 
                                                             test_size=0.2,   # 20% test, 80% train
                                                             random_state=25) # shffuling, making the random split reproducible
+        
+        X_train, y_train = balance_label(X_train, y_train)
+        # print(X_train)
+        # print(y_train)
+        
         dataset    = TensorDataset(X_train, y_train)
         dataloader = DataLoader(dataset = dataset, batch_size = NNModelRunner.BATCH_SIZE)
         batch_number = len(dataloader)
@@ -67,15 +99,20 @@ class NNModelRunner():
 
         
         # Our "model", "loss function" and "optimizer"
-        model_0 = MyNNModel(2).to(self.device)
-        # loss_fn = torch.nn.BCELoss()
-        loss_fn = torch.nn.BCEWithLogitsLoss()
-        optimizer     = torch.optim.SGD(params = model_0.parameters(), lr = 0.1)
+        model_0   = MyNNModel(2).to(self.device)
+        loss_fn   = torch.nn.BCEWithLogitsLoss()
+        # loss_fn   = torch.nn.CrossEntropyLoss()
+        optimizer = torch.optim.SGD(params = model_0.parameters(), lr = 0.01, momentum=0.9)
             
+
         n_epochs = total_epoch
         train_loss = 0
         train_acc  = 0
+
+
         for epoch in range(n_epochs + 1):
+            train_loss = 0
+            train_acc  = 0
             for id_batch, (X_batch, y_batch) in enumerate(dataloader):
                 # set to training mode
                 model_0.train()
@@ -83,22 +120,22 @@ class NNModelRunner():
                 # Binary classification, just using sigmoid to predict output
                 # Round: <0.5 class 1, >0.5 class2
                 y_logits = model_0(X_batch).squeeze()
-                y_pred = torch.round(torch.sigmoid(y_logits))
+                y_pred = torch.round(y_logits)
                     
                 # Calculate loss and accuracy
-                loss = loss_fn(y_logits, y_train) 
+                loss = loss_fn(y_logits, y_batch) 
                 
                 train_loss += loss
                 train_acc  += accuracy_fn(y_true = y_batch, y_pred = y_pred) 
-                    
-                # Reset Optimizer zero grad
-                optimizer.zero_grad()
 
                 # Loss backwards
                 loss.backward()
 
                 # Optimizer step
                 optimizer.step()
+                
+                # Reset Optimizer zero grad
+                optimizer.zero_grad()
                 
             # ------ Testing ------ #
             train_acc  /= batch_number

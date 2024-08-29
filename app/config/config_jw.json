@@ -10,7 +10,7 @@
         "dont_kfold_in_lda": true
     },
     "house_keeping": {
-        "raw_data_path": "D://NTHU//meta-brainmagick2//brainmagick//data//gwilliams2022//download",
+        "raw_data_path": "/mnt/ntfs/data",
         "log_level": "DEBUG",
         "result_metrics_save_path": "./results",
         "to_print_interim_csv": true
