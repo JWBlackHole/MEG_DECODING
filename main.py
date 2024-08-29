@@ -6,42 +6,46 @@ import os
 from pathlib import Path
 from loguru import logger
 
+
 # custom import
 from app.signal.preprocessor import Preprocessor
 from app.my_models.nn.nnModelRunner import NNModelRunner
 from app.my_models.lda.ldaModelRunner import LdaModelRunner
+from app.my_models.svm.svmModel import svmModel # new added
 import app.utils.my_utils as util
 from app.common.commonSetting import TargetLabel
 
 
+
+
 if __name__ == "__main__":
 
+   
     # ---  load config --- #
-    # exit()
 
-    config_path = Path('./app/config/config_jw.json')
-    # config_path = Path('./app/config/config_mh.json')
+
+    config_path = Path('./app/config/config_mh.json')
     # config_path = Path("./app/config/train_config.json")
     # config_path = Path('./app/config/my_own_config.json')      # put your own config file here cuz setting of everyone may be different
     
     try:
         with config_path.open('r') as file:
             config = json.load(file)
-        training_config   = config.get('training', {})
-        subject           = training_config.get('until_subject', 1)       # subject start from 1
-        until_session     = training_config.get('until_session',0)  # session start from 0
-        until_task        = training_config.get('until_task', 0)       # task start from 0
-        low_pass_filter   = training_config.get('preprocess_low_pass', None)
-        high_pass_filter  = training_config.get('preprocess_high_pass', None)
-        training_flow     = training_config.get('flow', None)
-        target_label      = training_config.get('target_label', None)
+        training_config = config.get('training', {})
+        subject = training_config.get('until_subject', 1)       # subject start from 1
+        until_session = training_config.get('until_session',0)  # session start from 0
+        until_task = training_config.get('until_task', 0)       # task start from 0
+        low_pass_filter = training_config.get('preprocess_low_pass', None)
+        high_pass_filter = training_config.get('preprocess_high_pass', None)
+        training_flow = training_config.get('flow', None)
+        target_label = training_config.get('target_label', None)
         dont_kfold_in_lda = training_config.get('dont_kfold_in_lda', None)
 
-        house_keeping_config     = config.get('house_keeping', {})
-        raw_data_path            = house_keeping_config.get('raw_data_path', "DEBUG")
-        log_level                = house_keeping_config.get('log_level', None)
+        house_keeping_config = config.get('house_keeping', {})
+        raw_data_path = house_keeping_config.get('raw_data_path', "DEBUG")
+        log_level = house_keeping_config.get('log_level', None)
         result_metrics_save_path = house_keeping_config.get('result_metrics_save_path', None)
-        to_print_interim_csv     = house_keeping_config.get('to_print_interim_csv', False)
+        to_print_interim_csv = house_keeping_config.get('to_print_interim_csv', False)
         logger.info(f"Execution start according to config: {config_path}")
     except (FileNotFoundError, json.JSONDecodeError, KeyError):
         logger.error(f"config file: {os.path.abspath(config_path)} not exist, use fall back values")
@@ -130,8 +134,32 @@ if __name__ == "__main__":
         logger.info("start to train with model: LDA")
         ldaRunner = LdaModelRunner(X, y, phonemes_epochs.metadata, target_label, dont_kfold=dont_kfold_in_lda, to_save_csv=True)
 
+    elif(training_flow == "svm"):
+        logger.info("start to train with model: SVM")
+        svmRunner = svmModel(X, y, target_label)
+        
+        import cProfile
+        import pstats
+
+        profiler = cProfile.Profile()
+        profiler.enable()
+
+        try:
+            # 將結果保存到檔案
+            cProfile.run('svmRunner.train()', 'profile_results.prof')
+            
+            # 讀取分析結果
+            p = pstats.Stats('profile_results.prof')
+
+            # 排序和查看結果
+            p.sort_stats('cumulative').print_stats(10)  # 顯示前10個最耗時的函數
+        finally:
+            profiler.disable()
+            profiler.print_stats(sort='cumulative')
+
+        # svmRunner.train()
+
     else:
         logger.error("undefined training_flow!")
 
     logger.info("training finished.")
-
