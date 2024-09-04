@@ -142,8 +142,6 @@ class Preprocessor:
         self.concated_epochs = concatenate_epochs(epochs_list)
         return self.concated_epochs
 
-        
-        
 
     def load_epochs_one_task(self, subject, session, task, raw_data_path, setting: TargetLabel,
                 low_pass_filter, high_pass_filter) -> None:

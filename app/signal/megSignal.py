@@ -5,6 +5,7 @@ import mne
 import mne_bids
 from mne    import Epochs
 from mne.io import Raw
+
 from wordfreq import zipf_frequency
 from sklearn.preprocessing import StandardScaler, scale
 
@@ -31,16 +32,19 @@ class MEGSignal():
     
     """
     def __init__(self, setting: TargetLabel, low_pass:float = 30.0, high_pass:float = 0.5, n_jobs:int = 1):
-       self.raw:  Raw|None          = None
-       self.meta: pd.DataFrame|None = None
-       
-       # Epoches
-       self.epochs: Epochs|None     = None      #mne.Epochs object
-       # self.all_epochs: list = []               # list of mne.Epochs??
-       self.setting: TargetLabel | None = setting
-       self.low_pass: float = low_pass
-       self.high_pass: float = high_pass
-       self.n_jobs: int = n_jobs
+        self.raw:  Raw|None          = None
+        self.meta: pd.DataFrame|None = None
+        
+        # Epoches
+        self.epochs: Epochs|None     = None      #mne.Epochs object
+        # self.all_epochs: list = []               # list of mne.Epochs??
+        self.setting: TargetLabel | None = setting
+        self.low_pass: float = low_pass
+        self.high_pass: float = high_pass
+        # print("Low Pass",  self.low_pass)
+        # print("High Pass", self.high_pass)
+        # exit()
+        self.n_jobs: int = n_jobs
        
        
        
@@ -54,7 +58,7 @@ class MEGSignal():
         return epochs
 
 
-    def load_raw(self, bids_path)->mne.io.Raw:
+    def load_raw(self, bids_path) -> Raw:
         """
         Load Raw MEG signal
         Return
@@ -66,13 +70,14 @@ class MEGSignal():
         
         """ 
         # Reading associated event.tsv and channels.tsv
-        raw = mne_bids.read_raw_bids(bids_path)
+        raw: Raw = mne_bids.read_raw_bids(bids_path)
         # Specify the type of recording we want
         raw = raw.pick_types(
             meg=True, misc=False, eeg=False, eog=False, ecg=False
         )
         # Load raw data and filter by low and high pass
-        raw.load_data().filter(self.high_pass, self.low_pass, n_jobs=self.n_jobs)
+        # print(self.low_pass, self.high_pass)
+        raw.load_data().filter(l_freq = self.low_pass, h_freq = self.high_pass, n_jobs=self.n_jobs)
         return raw
         
     def _load_meta(self, raw: mne.io.Raw, supplementary_meta: pd.DataFrame, to_save_csv:bool = False)->pd.DataFrame:
@@ -144,7 +149,7 @@ class MEGSignal():
         return meta
 
        
-    def load_epochs(self, raw: mne.io.Raw, meta: pd.DataFrame, to_save_csv: bool = False, tmin: float = None, tmax: float = None)->mne.Epochs:
+    def load_epochs(self, raw: Raw, meta: pd.DataFrame, to_save_csv: bool = False, tmin: float = None, tmax: float = None)->mne.Epochs:
         """Get epochs by assemble "meatadata" and "raw". 
         will load epochs of the given raw and meta 
         meta and raw should correspond to the same subject same session same task
@@ -161,15 +166,26 @@ class MEGSignal():
         ].astype(int)
         logger.debug(f"SFREQ: {raw.info["sfreq"]}")
 
+        # epochs = mne.Epochs(
+        #     raw,
+        #     events,
+        #     tmin=-0.200,
+        #     tmax=0.6,
+        #     decim=10,
+        #     baseline=(-0.2, 0.0),
+        #     metadata=meta,
+        #     preload=True,
+        #     event_repeated="drop",
+        # )
         epochs = mne.Epochs(
             raw,
             events,
-            tmin=-0.200,
-            tmax=0.6,
-            decim=10,
-            baseline=(-0.2, 0.0),
+            tmin    = -0.1,
+            tmax    = 0.3,
+            decim   = 10,
+            baseline=(-0.1, 0.0),
             metadata=meta,
-            preload=True,
+            preload =True,
             event_repeated="drop",
         )
 
