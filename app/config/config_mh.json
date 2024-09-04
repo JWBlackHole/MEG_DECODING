@@ -4,7 +4,7 @@
         "target_label": "voiced",
         "until_subject": 1,
         "until_session": 0,
-        "until_task": 1,
+        "until_task": 0,
         "preprocess_low_pass": 30,
         "preprocess_high_pass": 0.5,
         "dont_kfold_in_lda": true

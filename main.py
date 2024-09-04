@@ -86,6 +86,10 @@ if __name__ == "__main__":
         target_label = TargetLabel.WORD_FREQ
     elif target_label == "is_sound":
         target_label = TargetLabel.IS_SOUND
+    elif target_label == "plot_word":
+        target_label  = TargetLabel.PLOT_WORD_ONSET
+    elif target_label == "word_onset":
+        target_label = TargetLabel.WORD_ONSET
 
     elif target_label in ["is voiced", "is_voiced", "phoneme", "phonemes", "voice", "is voice", "is_voice"]:
         logger.error(f"target_label is not supported, do you mean \"voiced\"?")

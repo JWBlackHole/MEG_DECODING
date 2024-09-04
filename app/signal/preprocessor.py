@@ -10,6 +10,7 @@ from loguru import logger
 # custom import
 from app.signal.megSignal import MEGSignal
 from app.common.commonSetting import TargetLabel
+import app.utils.my_utils as util
 
 class Preprocessor:
     def __init__(self):
@@ -26,27 +27,16 @@ class Preprocessor:
             if target_label  == "voiced":
                 preprocess_setting = TargetLabel.VOICED_PHONEME
                 logger.info("target label to predicted got: \"voiced\"")
-            elif target_label  == "is_word":
-                preprocess_setting = TargetLabel.WORD_FREQ
+            elif target_label  == "word_onset":
+                preprocess_setting = TargetLabel.WORD_ONSET
             elif target_label == "is_sound":
                 preprocess_setting = TargetLabel.IS_SOUND
+            elif target_label == "plot_word":
+                preprocess_setting = TargetLabel.PLOT_WORD_ONSET
 
-            # elif target_label in ["is voiced", "is_voiced", "phoneme", "phonemes", "voice", "is voice", "is_voice"]:
-            #     logger.error(f"target_label \"{target_label}\" is not supported, do you mean \"voiced\"?")
-            #     logger.warning("assume default flow")
-            #     preprocess_setting = TargetLabel.DEFAULT
-            # elif target_label in ["is word", "word"]:
-            #     logger.error(f"target_label \"{target_label}\" is not supported, do you mean \"is_word\"?")
-            #     logger.warning("assume default flow")
-            #     preprocess_setting = TargetLabel.DEFAULT
-            # elif target_label in ["is sound", "sound", "have sound", "have_sound"]:
-            #     logger.error(f"target_label \"{target_label}\" is not supported, do you mean \"is_sound\"?")
-            #     logger.warning("assume default flow")
             #     preprocess_setting = TargetLabel.DEFAULT
             else:
-                logger.error(f"target_label \"{target_label}\" not recognised, assume default flow")
-                logger.warning("assume default flow")
-                preprocess_setting = TargetLabel.DEFAULT
+                raise NotImplementedError
                 
         elif type(target_label) is TargetLabel:
             preprocess_setting = target_label
@@ -62,16 +52,9 @@ class Preprocessor:
         # in the future, may use preprocess_setting to control the preprocess of MEG signal
         # set self.concated_epochs
 
-        if preprocess_setting == TargetLabel.VOICED_PHONEME:
-            self.load_all_epochs(subject, until_session, until_task, raw_data_path, preprocess_setting, low_pass_filter, high_pass_filter)
+        concated_epoch = self.load_all_epochs(subject, until_session, until_task, raw_data_path, preprocess_setting, low_pass_filter, high_pass_filter)
         
 
-        elif preprocess_setting == TargetLabel.WORD_FREQ:
-            self.load_all_epochs(subject, until_session, until_task, raw_data_path, preprocess_setting, low_pass_filter, high_pass_filter)
-        
-        else:
-            logger.error(f"for now only \"voiced\" is supported. program exit.")
-            exit(0)
         
         # after self.concated_epochs setted in self.load_all_epochs, it is ready to use
 
@@ -82,20 +65,29 @@ class Preprocessor:
         # example of extracting relevant epochs
         # example_epoch = self.concated_epochs["exampl_col_name"]
 
-        # if preprocess_setting == TargetLabel.WORD_FREQ:
-            # to be tested
-            # words = self.concated_epochs["is_word"]
-            # self.X = words.get_data(copy=True)
-            # self.y = words.metadata["wordfreq"].values
+
         
         if preprocess_setting == TargetLabel.VOICED_PHONEME:
             phonemes = self.concated_epochs["not is_word"]      # for now not is_word means phoneme, in the future may change to more intuitive way
             self.X = phonemes.get_data(copy=True)   # use copy=True to avoid changing the original data
             self.y = phonemes.metadata["voiced"].values
+        
+        elif preprocess_setting in [TargetLabel.WORD_ONSET, TargetLabel.WORD_FREQ, TargetLabel.PLOT_WORD_ONSET] :
+            ep = self.concated_epochs
+            meta = ep.metadata
+            meta.to_csv(util.get_unique_file_name("wholemeta_from_preprocessor.csv", "./results"))
+            logger.info("plot is word is doing")
+            words = self.concated_epochs["is_word"]
+            self.X = words.get_data(copy=True)
+            meta = words.metadata
+            meta.to_csv(util.get_unique_file_name("words_from_preprocessor.csv", "./results"))
+            self.y = None # not important for now
+
+
+            exit(0)
 
         else:
-            logger.error(f"for now only \"voiced\" is supported. program exit.")
-            exit(0)
+            raise NotImplementedError
 
 
         return self.X, self.y
@@ -105,13 +97,7 @@ class Preprocessor:
         """
         load epochs of all sessions, all tasks for one subject to self.concated_epochs
         """
-        if setting == TargetLabel.WORD_FREQ:
-            logger.error("target label \"is_word\" is not supported yet. program exit.")
-            exit(0)
-
-        if setting == TargetLabel.IS_SOUND:
-            logger.error("target label \"is_sound\" is not supported yet. program exit.")
-            exit(0)
+     
 
         epochs_list = []    # list for save epochs of all sesions, all tasks
 
@@ -120,9 +106,6 @@ class Preprocessor:
         if setting == TargetLabel.VOICED_PHONEME:
             ph_info:pd.DataFrame = pd.read_csv("./phoneme_data/phoneme_info.csv")   # file path is relative to root dir
 
-        else:
-            logger.error(f"target label \"{setting}\" is not supported yet. program exit.")
-            exit(0)
 
         
         # load epochs for each session each task
@@ -137,7 +120,7 @@ class Preprocessor:
         
         if not len(epochs_list):
             logger.error("error in loading all epochs, program exit.")
-            exit(0)
+            raise ValueError
 
         self.concated_epochs = concatenate_epochs(epochs_list)
         return self.concated_epochs
@@ -151,23 +134,9 @@ class Preprocessor:
         prepare mne epoch of one task of one session one subject
         """
 
-        
-        if setting == TargetLabel.WORD_FREQ:
-            logger.error("target label \"is_word\" is not supported yet. program exit.")
-            exit(0)
 
-        if setting == TargetLabel.IS_SOUND:
-            logger.error("target label \"is_sound\" is not supported yet. program exit.")
-            exit(0)
 
         logger.debug(f"raw data path: {raw_data_path}")
-
-        if setting == TargetLabel.VOICED_PHONEME:
-            ph_info:pd.DataFrame = pd.read_csv("./phoneme_data/phoneme_info.csv")   # file path is relative to root dir
-
-        else:
-            logger.error(f"target label \"{setting}\" is not supported yet. program exit.")
-            exit(0)
 
         
 
@@ -189,9 +158,11 @@ class Preprocessor:
             ph_info:pd.DataFrame = pd.read_csv("./phoneme_data/phoneme_info.csv")   # file path is relative to root dir
             return signal_handler.prepare_one_epochs(bids_path, supplementary_meta = ph_info)
 
-        else:
-            logger.error(f"target label \"{setting}\" is not supported yet. program exit.")
-            exit(0)
+        elif setting == TargetLabel.PLOT_WORD_ONSET:
+            return signal_handler.prepare_one_epochs(bids_path, None)
+        
+        return
+
 
 
 

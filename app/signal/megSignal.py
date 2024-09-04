@@ -49,7 +49,7 @@ class MEGSignal():
         bids_path is path to one task of one sesion of one subject
         """
         raw = self.load_raw(bids_path)
-        meta = self._load_meta(raw, supplementary_meta, False)
+        meta = self._load_meta(raw, supplementary_meta, True)
         epochs = self.load_epochs(raw, meta, False)
         return epochs
 
@@ -89,29 +89,29 @@ class MEGSignal():
         # And append items to it.
         # count = 0 # debug
 
+        meta_list = list()
+        for annot in raw.annotations:
+            d = eval(annot.pop("description"))
+            # print(annot)
+            for k, v in annot.items():
+                assert k not in d.keys()
+                d[k] = v
+            # print(d.keys())
+            meta_list.append(d)
+
+            # # Debug
+            # count = count + 1
+            # if(count >= 10):
+            #     break
+        
+        # --- Convert meatdata to form of DataFrame --- #
+        meta = pd.DataFrame(meta_list)
+        #meta["intercept"] = 1.0
+        
+        # Computing if voicing
+        # Replace voiced to True or False
+
         if self.setting == TargetLabel.VOICED_PHONEME:
-
-            meta_list = list()
-            for annot in raw.annotations:
-                d = eval(annot.pop("description"))
-                # print(annot)
-                for k, v in annot.items():
-                    assert k not in d.keys()
-                    d[k] = v
-                # print(d.keys())
-                meta_list.append(d)
-
-                # # Debug
-                # count = count + 1
-                # if(count >= 10):
-                #     break
-            
-            # --- Convert meatdata to form of DataFrame --- #
-            meta = pd.DataFrame(meta_list)
-            meta["intercept"] = 1.0
-            
-            # Computing if voicing
-            # Replace voiced to True or False
             phonemes = meta.query('kind=="phoneme"')
             for ph, d in phonemes.groupby("phoneme"):
                 # print(ph, ":\n", d)
@@ -135,11 +135,25 @@ class MEGSignal():
 
             meta = meta.query('kind=="phoneme"')
             if(to_save_csv):
-                meta.to_csv(util.get_unique_file_name(file_name="test_wfreq.csv", dir="./test"))
+                meta.to_csv(util.get_unique_file_name(file_name="meta.csv", dir="./test"))
+        elif self.setting in [TargetLabel.WORD_FREQ, TargetLabel.PLOT_WORD_ONSET, TargetLabel.PLOT_WORD_ONSET]:
+            # create colmn is_word in meta
+            # if column "kind"=="word", is_word
+            # else false
+            # meta["word_onset"] = False
+            # for index, row in meta.iterrows():
+            #     if row['kind'] == 'word':
+            #         meta.loc[index, "word_onset"] = True
+            # # add
 
-        else:
-            logger.error("preprocessing for setting other than \"voiced\" is not implemented. program exit")
-            exit(0)
+            meta = meta[meta['kind'] == 'word']
+            meta["is_word"] = True
+            
+
+
+            if(to_save_csv):
+                meta.to_csv(util.get_unique_file_name(file_name="meta_from_megsignal.csv", dir="./results"))
+
 
         return meta
 
@@ -156,6 +170,7 @@ class MEGSignal():
         """
         # Create event that mne need
         # including time info
+        logger.debug(f"in meg signal handler, self.setting: {self.setting}")
         events = np.c_[
             meta.onset * raw.info["sfreq"], np.ones((len(meta), 2))
         ].astype(int)
@@ -172,6 +187,8 @@ class MEGSignal():
             preload=True,
             event_repeated="drop",
         )
+        #events
+        # 1st col: onset time
 
         # threshold
         th = np.percentile(np.abs(epochs._data), 95)
@@ -183,7 +200,7 @@ class MEGSignal():
         
         # logger.debug(meta.wordfreq)
         if(to_save_csv):
-            meta.to_csv(util.get_unique_file_name(file_name="test_wfreq.csv", dir="./"))
+            meta.to_csv(util.get_unique_file_name(file_name="epochs.csv", dir="./"))
 
         return epochs
     
