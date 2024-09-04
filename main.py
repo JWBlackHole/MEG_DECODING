@@ -162,8 +162,10 @@ if __name__ == "__main__":
             profiler.print_stats(sort='cumulative')
 
         # svmRunner.train()
-
+    elif (training_flow == "plot_word_evo"):
+        preprocessor.plot_evoked_response("is_word")
     else:
-        logger.error("undefined training_flow!")
+        raise NotImplementedError
+    
 
     logger.info("training finished.")
