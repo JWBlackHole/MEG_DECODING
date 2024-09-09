@@ -136,7 +136,7 @@ class MEGSignal():
             meta = meta.query('kind=="phoneme"')
             if(to_save_csv):
                 meta.to_csv(util.get_unique_file_name(file_name="meta.csv", dir="./test"))
-        elif self.setting in [TargetLabel.WORD_FREQ, TargetLabel.PLOT_WORD_ONSET, TargetLabel.PLOT_WORD_ONSET]:
+        elif self.setting in [TargetLabel.WORD_FREQ, TargetLabel.PLOT_WORD_ONSET, TargetLabel.WORD_ONSET]:
             # create colmn is_word in meta
             # if column "kind"=="word", is_word
             # else false

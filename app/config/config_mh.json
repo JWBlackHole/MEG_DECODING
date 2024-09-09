@@ -1,12 +1,12 @@
 {
     "training": {
-        "flow": "nn",
-        "target_label": "voiced",
+        "flow": "plot_word_evo",
+        "target_label": "word_onset",
         "until_subject": 1,
         "until_session": 0,
         "until_task": 0,
-        "preprocess_low_pass": 30,
-        "preprocess_high_pass": 0.5,
+        "preprocess_low_pass": 0.5,
+        "preprocess_high_pass": 30,
         "dont_kfold_in_lda": true
     },
     "house_keeping": {

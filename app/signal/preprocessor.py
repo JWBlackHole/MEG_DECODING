@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 
 import mne_bids
-from mne import Epochs, concatenate_epochs
+from mne import Epochs, concatenate_epochs, EpochsArray
  
 from loguru import logger
 
@@ -83,8 +83,8 @@ class Preprocessor:
             meta.to_csv(util.get_unique_file_name("words_from_preprocessor.csv", "./results"))
             self.y = None # not important for now
 
-
-            exit(0)
+            self.is_word = words
+            return None, None
 
         else:
             raise NotImplementedError
@@ -158,7 +158,7 @@ class Preprocessor:
             ph_info:pd.DataFrame = pd.read_csv("./phoneme_data/phoneme_info.csv")   # file path is relative to root dir
             return signal_handler.prepare_one_epochs(bids_path, supplementary_meta = ph_info)
 
-        elif setting == TargetLabel.PLOT_WORD_ONSET:
+        elif setting in [TargetLabel.PLOT_WORD_ONSET, TargetLabel.WORD_ONSET, TargetLabel.WORD_FREQ] :
             return signal_handler.prepare_one_epochs(bids_path, None)
         
         return
@@ -194,3 +194,72 @@ class Preprocessor:
         else:
             logger.error(f"cannot access self.concated_epochs.metadata or it is of wrong type, type of self.concated_epochs.metadata: \
                          {type(self.concated_epochs.metadata)}, returning None")
+            
+    def plot_evoked_response(self, target: str):
+        """
+        notes
+
+        'MEG 001'  is channel
+
+        
+        target: "is_word"
+        """
+        if(target == "is_word"):
+            if self.is_word and (isinstance(self.is_word, Epochs) or isinstance(self.is_word, EpochsArray)):
+                print(type(self.is_word))
+                for evo in self.is_word.iter_evoked():
+                    print(f"iter evoked of self.is_word: {type(evo)}")
+                    has = hasattr(evo, 'plot')
+                    print("evo has attr plot:", has)
+                #fig1 = self.is_word.plot()
+                #evo = self.is_word.average()    # mne.evoked.EvokedArray of 668 events
+
+                #fig_evo = evo.plot(spatial_colors=True, show=False) # type: matplotlib.figure.Figure
+                #print(type(fig_evo))
+
+                #fig_evo.savefig(util.get_unique_file_name("evoked_response.png", "./results"))
+                epoch = self.is_word[0]     # mne.epochs.EpochsArray of 1 event
+                print(f"epoch: {type(epoch)}")
+                for evo in epoch.iter_evoked():
+                    print(f"iter evoked of self.is_word: {type(evo)}")
+                    has = hasattr(evo, 'plot')
+                    print("evo has attr plot:", has)
+
+                event = epoch[0]    # mne.epochs.EpochsArray (event is same as epoch)
+                print(f"event: {type(event)}")
+                for evo in event.iter_evoked():
+                    print(f"iter evoked of event: {type(evo)}")
+                    has = hasattr(evo, 'plot')
+                    print("evo has attr plot:", has)
+                    if(has):
+                        evo.plot(spatial_colors = True, show = True)
+
+            else:
+                raise ValueError("self.is_word is not prepared or of wrong type")
+        return
+            
+    def plot_n_events_evo(self, target, n: int):
+        """
+        target: "is_word"
+        n: how many rows to plot
+        """
+        i=1
+        if(target == "is_word"):
+            if self.is_word and  isinstance(self.is_word, EpochsArray):
+                print(type(self.is_word))
+                for evo in self.is_word.iter_evoked():
+                    if(i>n):
+                        break
+                    if(i!=n):
+                        fig_evo = evo.plot(spatial_colors = True, show = False)
+                    else:
+                        fig_evo = evo.plot(spatial_colors = True, show = True)
+
+                    fig_evo.set_size_inches(12,8)
+                    fig_evo.savefig(util.get_unique_file_name(f"evoked_event{i}.png", "./graphs"),
+                                    dpi=300)
+
+                    i=i+1
+            else:
+                raise ValueError("self.is_word is not type mne.EpochsArray")
+        return

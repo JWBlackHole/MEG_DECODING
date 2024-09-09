@@ -42,8 +42,8 @@ if __name__ == "__main__":
         dont_kfold_in_lda = training_config.get('dont_kfold_in_lda', None)
 
         house_keeping_config = config.get('house_keeping', {})
-        raw_data_path = house_keeping_config.get('raw_data_path', "DEBUG")
-        log_level = house_keeping_config.get('log_level', None)
+        raw_data_path = house_keeping_config.get('raw_data_path', None)
+        log_level = house_keeping_config.get('log_level', "DEBUG")
         result_metrics_save_path = house_keeping_config.get('result_metrics_save_path', None)
         to_print_interim_csv = house_keeping_config.get('to_print_interim_csv', False)
         logger.info(f"Execution start according to config: {config_path}")
@@ -57,7 +57,7 @@ if __name__ == "__main__":
         low_pass_filter = high_pass_filter = training_flow = log_level = result_metrics_save_path = dont_kfold_in_lda = None
         target_label = None
         to_print_interim_csv = None
-    
+
     # ----- Set logger ----- #
     util.MyLogger(logger, log_level=log_level, output="console")   # logger comes from loguru logger
     
@@ -71,6 +71,7 @@ if __name__ == "__main__":
     # target label is the label to predict in the training
     # this should affect the preprocessing and the training and predcition process
 
+    
 
     if type(target_label) is not str:
         logger.error("target_label is not valid, program exit.")
@@ -119,7 +120,11 @@ if __name__ == "__main__":
     # X, y is for the subject for all sessions to `until_session` and all tasks to `until_task`
     # X is the "features" 
     # y is the label 
-    phonemes_epochs = preprocessor.get_metadata("phonemes")     # get the epochs only considering is phoneme voiced / not voiced
+    if(target_label == TargetLabel.VOICED_PHONEME):
+        phonemes_epochs = preprocessor.get_metadata("phonemes")     # get the epochs only considering is phoneme voiced / not voiced
+        phoneme_meta = phonemes_epochs.metadata
+    else:
+        phoneme_meta = None
 
     if to_print_interim_csv:
         whole_meta_table = preprocessor.get_concated_metadata() # get the df of metadata of all sessions, all tasks
@@ -136,7 +141,8 @@ if __name__ == "__main__":
        
     elif(training_flow == "lda"):
         logger.info("start to train with model: LDA")
-        ldaRunner = LdaModelRunner(X, y, phonemes_epochs.metadata, target_label, dont_kfold=dont_kfold_in_lda, to_save_csv=True)
+
+        ldaRunner = LdaModelRunner(X, y, phoneme_meta, target_label, dont_kfold=dont_kfold_in_lda, to_save_csv=True)
 
     elif(training_flow == "svm"):
         logger.info("start to train with model: SVM")
@@ -163,7 +169,7 @@ if __name__ == "__main__":
 
         # svmRunner.train()
     elif (training_flow == "plot_word_evo"):
-        preprocessor.plot_evoked_response("is_word")
+        preprocessor.plot_n_events_evo("is_word", 1)
     else:
         raise NotImplementedError
     
