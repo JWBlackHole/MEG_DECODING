@@ -115,23 +115,22 @@ class MyLogger:
         """
         self.output = output
         self.log_level = log_level
-        self.logger = logger
         
         if self.output == "no":
-            self.logger.remove()
+            logger.remove()
             return
         if not (self.output in ["both", "file", "console"]):
             output = "console"
 
         
-        self.logger.remove()
+        logger.remove()
         if (self.output in ["both", "file"]):
-            self.logger.add(
+            logger.add(
                 f"./log/{date.today()}_log.log",
                 level = self.log_level
             )
         if output == "console":
-            self.logger.add(
+            logger.add(
                 sys.stderr,
                 level=self.log_level
             )
