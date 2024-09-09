@@ -4,6 +4,7 @@ import numpy as np
 
 import mne_bids
 from mne import Epochs, concatenate_epochs, EpochsArray
+import matplotlib.pyplot as plt
  
 from loguru import logger
 
@@ -238,28 +239,34 @@ class Preprocessor:
                 raise ValueError("self.is_word is not prepared or of wrong type")
         return
             
-    def plot_n_events_evo(self, target, n: int):
+    def plot_n_events_evo(self, target, n: int,  show_last_fig = False, plot_only_one = False):
         """
         target: "is_word"
         n: how many rows to plot
         """
-        i=1
+        if plot_only_one:
+            i = n
+        else:
+            i=1
         if(target == "is_word"):
             if self.is_word and  isinstance(self.is_word, EpochsArray):
-                print(type(self.is_word))
+                logger.debug(f"type of self.is_word: {type(self.is_word)}")
                 for evo in self.is_word.iter_evoked():
                     if(i>n):
                         break
-                    if(i!=n):
-                        fig_evo = evo.plot(spatial_colors = True, show = False)
-                    else:
-                        fig_evo = evo.plot(spatial_colors = True, show = True)
+                    
+                    fig_evo = evo.plot(spatial_colors = True, show = False)
 
-                    fig_evo.set_size_inches(12,8)
+                    fig_evo.set_size_inches(36,24)
                     fig_evo.savefig(util.get_unique_file_name(f"evoked_event{i}.png", "./graphs"),
-                                    dpi=300)
+                                    dpi=200)
+                    plt.close(fig_evo)  # for closing the file before writing next graph
 
+                    if show_last_fig and i == n:
+                        evo.plot(spatial_colors=True, show=True)
+                    
                     i=i+1
+
             else:
                 raise ValueError("self.is_word is not type mne.EpochsArray")
         return
