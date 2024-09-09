@@ -14,6 +14,7 @@ from app.my_models.lda.ldaModelRunner import LdaModelRunner
 from app.my_models.svm.svmModel import svmModel # new added
 import app.utils.my_utils as util
 from app.common.commonSetting import TargetLabel
+from app.signal.sensorTools import plot_sensor
 
 
 
@@ -72,7 +73,13 @@ if __name__ == "__main__":
     # this should affect the preprocessing and the training and predcition process
 
     
+    if training_flow == "plot_sensor":
+        logger.info("plotting sensor, not proceeding for training...")
+        plot_sensor(raw_data_path)
+        logger.info("finish plotting, program exit")
+        exit(0)
 
+    
     if type(target_label) is not str:
         logger.error("target_label is not valid, program exit.")
         exit(0)

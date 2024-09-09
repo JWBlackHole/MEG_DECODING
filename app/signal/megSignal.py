@@ -49,9 +49,9 @@ class MEGSignal():
         """
         bids_path is path to one task of one sesion of one subject
         """
-        raw = self.load_raw(bids_path)
-        meta = self._load_meta(raw, supplementary_meta, to_save_csv=self.to_print_interim_csv)
-        epochs = self.load_epochs(raw, meta, to_save_csv=self.to_print_interim_csv)
+        self.raw = self.load_raw(bids_path)
+        meta = self._load_meta(self.raw, supplementary_meta, to_save_csv=self.to_print_interim_csv)
+        epochs = self.load_epochs(self.raw, meta, to_save_csv=self.to_print_interim_csv)
         return epochs
 
 
@@ -216,4 +216,13 @@ class MEGSignal():
             return None
 
     
-    
+    def plot_sensor_topology(self):
+        """
+        Plot the sensor topology of the loaded raw MEG data.
+        """
+        if self.raw is None:
+            raise ValueError("Raw data is not loaded. Please load the raw data first.")
+        
+        fig = mne.viz.plot_alignment(self.raw.info, meg=('helmet', 'sensors'), coord_frame='meg')
+        mne.viz.set_3d_title(figure=fig, title="Sensor Topology")
+        mne.viz.show()
