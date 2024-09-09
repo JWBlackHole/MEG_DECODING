@@ -116,7 +116,8 @@ if __name__ == "__main__":
     preprocessor = Preprocessor()
 
 
-    X, y = preprocessor.get_data(subject, until_session, until_task, raw_data_path, target_label, low_pass_filter, high_pass_filter)
+    X, y = preprocessor.get_data(subject, until_session, until_task, raw_data_path, target_label, 
+                                 low_pass_filter, high_pass_filter, to_print_interim_csv)
     # X, y is for the subject for all sessions to `until_session` and all tasks to `until_task`
     # X is the "features" 
     # y is the label 

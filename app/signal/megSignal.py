@@ -30,7 +30,7 @@ class MEGSignal():
         init -> load_raw -> load-meta -> load_epochs
     
     """
-    def __init__(self, setting: TargetLabel, low_pass:float = 30.0, high_pass:float = 0.5, n_jobs:int = 1):
+    def __init__(self, setting: TargetLabel, low_pass:float = 0.5, high_pass:float = 30.0, n_jobs:int = 1, to_print_interim_csv=False):
        self.raw:  Raw|None          = None
        self.meta: pd.DataFrame|None = None
        
@@ -41,6 +41,7 @@ class MEGSignal():
        self.low_pass: float = low_pass
        self.high_pass: float = high_pass
        self.n_jobs: int = n_jobs
+       self.to_print_interim_csv: bool = to_print_interim_csv
        
        
        
@@ -49,8 +50,8 @@ class MEGSignal():
         bids_path is path to one task of one sesion of one subject
         """
         raw = self.load_raw(bids_path)
-        meta = self._load_meta(raw, supplementary_meta, True)
-        epochs = self.load_epochs(raw, meta, False)
+        meta = self._load_meta(raw, supplementary_meta, to_save_csv=self.to_print_interim_csv)
+        epochs = self.load_epochs(raw, meta, to_save_csv=self.to_print_interim_csv)
         return epochs
 
 
