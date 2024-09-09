@@ -169,7 +169,7 @@ if __name__ == "__main__":
 
         # svmRunner.train()
     elif (training_flow == "plot_word_evo"):
-        preprocessor.plot_n_events_evo("is_word", 1)
+        preprocessor.plot_n_events_evo("is_word", 1, True)
     else:
         raise NotImplementedError
     
