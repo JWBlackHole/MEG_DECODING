@@ -17,6 +17,20 @@ class Preprocessor:
     def __init__(self):
         self.concated_epochs: Epochs | None = None  # concatenated Epochs of all sessions all tasks
 
+    def plot_sensor_topo(self, raw_data_path):
+        bids_path = mne_bids.BIDSPath(
+            subject = "01",     # subject need to be 2-digit str (e.g. "01" to align folder name sub-01)  
+            session = "0",
+            task = "0",
+            datatype = "meg",
+            root = raw_data_path
+        )
+        signal_handler = MEGSignal(None, low_pass=None, high_pass=None, to_print_interim_csv=None)
+        signal_handler.load_raw(bids_path)
+        signal_handler.plot_sensor_topology()
+
+        
+
     def get_data(self, subject, until_session, until_task, raw_data_path, target_label, 
                 low_pass_filter, high_pass_filter, to_print_interim_csv):
         
