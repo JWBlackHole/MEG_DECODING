@@ -7,6 +7,7 @@ from mne    import Epochs
 from mne.io import Raw
 from wordfreq import zipf_frequency
 from sklearn.preprocessing import StandardScaler, scale
+import matplotlib.pyplot as plt
 
 import pandas as pd
 import numpy as np
@@ -44,17 +45,19 @@ class MEGSignal():
        self.to_print_interim_csv: bool = to_print_interim_csv
        
        
-       
+
     def prepare_one_epochs(self, bids_path, supplementary_meta: pd.DataFrame = None):
         """
         bids_path is path to one task of one sesion of one subject
         """
-        self.raw = self.load_raw(bids_path)
+        self.load_raw(bids_path)
         meta = self._load_meta(self.raw, supplementary_meta, to_save_csv=self.to_print_interim_csv)
         epochs = self.load_epochs(self.raw, meta, to_save_csv=self.to_print_interim_csv)
         return epochs
 
-
+    """
+    setter of sellf.raw
+    """
     def load_raw(self, bids_path)->mne.io.Raw:
         """
         Load Raw MEG signal
@@ -74,6 +77,7 @@ class MEGSignal():
         )
         # Load raw data and filter by low and high pass
         raw.load_data().filter(self.high_pass, self.low_pass, n_jobs=self.n_jobs)
+        self.raw = raw
         return raw
         
     def _load_meta(self, raw: mne.io.Raw, supplementary_meta: pd.DataFrame, to_save_csv:bool = False)->pd.DataFrame:
@@ -220,9 +224,17 @@ class MEGSignal():
         """
         Plot the sensor topology of the loaded raw MEG data.
         """
+        logger.info("megSignal.plot_sensor_topology is running")
         if self.raw is None:
             raise ValueError("Raw data is not loaded. Please load the raw data first.")
+        logger.debug(f"type of self.raw: {type(self.raw)}")
         
-        fig = mne.viz.plot_alignment(self.raw.info, meg=('helmet', 'sensors'), coord_frame='meg')
-        mne.viz.set_3d_title(figure=fig, title="Sensor Topology")
-        mne.viz.show()
+
+        # plot 3D graph (need install modules)
+        # fig = mne.viz.plot_alignment(self.raw.info, meg=('helmet', 'sensors'), coord_frame='meg')
+        # mne.viz.set_3d_title(figure=fig, title="Sensor Topology")
+
+        # plot 2D graph
+        fig = mne.viz.plot_sensors(self.raw.info, show_names=True)# Plot the 2D sensor positions
+        fig.suptitle("2D Sensor Topology")
+        plt.show(block=True)

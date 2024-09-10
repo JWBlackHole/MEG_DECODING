@@ -73,11 +73,7 @@ if __name__ == "__main__":
     # this should affect the preprocessing and the training and predcition process
 
     
-    if training_flow == "plot_sensor":
-        logger.info("plotting sensor, not proceeding for training...")
-        plot_sensor(raw_data_path)
-        logger.info("finish plotting, program exit")
-        exit(0)
+    
 
     
     if type(target_label) is not str:
@@ -121,6 +117,12 @@ if __name__ == "__main__":
     
     logger.info("start to preprocess data....")
     preprocessor = Preprocessor()
+
+    if training_flow == "plot_sensor":
+        logger.info("plotting sensor, not proceeding for training...")
+        preprocessor.plot_sensor_topo(raw_data_path)
+        logger.info("finish plotting, program exit")
+        exit(0)
 
 
     X, y = preprocessor.get_data(subject, until_session, until_task, raw_data_path, target_label, 
