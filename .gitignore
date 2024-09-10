@@ -1,4 +1,4 @@
 data
-graphs/*
+graphs_ignored/*
 results/mh_dummy/*
 __pycache__
