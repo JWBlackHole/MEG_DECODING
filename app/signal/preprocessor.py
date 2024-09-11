@@ -224,33 +224,15 @@ class Preprocessor:
         """
         if(target == "is_word"):
             if self.is_word and (isinstance(self.is_word, Epochs) or isinstance(self.is_word, EpochsArray)):
-                print(type(self.is_word))
-                for evo in self.is_word.iter_evoked():
-                    print(f"iter evoked of self.is_word: {type(evo)}")
-                    has = hasattr(evo, 'plot')
-                    print("evo has attr plot:", has)
-                #fig1 = self.is_word.plot()
-                #evo = self.is_word.average()    # mne.evoked.EvokedArray of 668 events
 
-                #fig_evo = evo.plot(spatial_colors=True, show=False) # type: matplotlib.figure.Figure
+                fig1 = self.is_word.plot()  # plot each channel
+                evo = self.is_word.average()    # mne.evoked.EvokedArray of 668 events
+
+                fig_evo = evo.plot(spatial_colors=True, show=True) # type: matplotlib.figure.Figure
                 #print(type(fig_evo))
 
-                #fig_evo.savefig(util.get_unique_file_name("evoked_response.png", "./results"))
-                epoch = self.is_word[0]     # mne.epochs.EpochsArray of 1 event
-                print(f"epoch: {type(epoch)}")
-                for evo in epoch.iter_evoked():
-                    print(f"iter evoked of self.is_word: {type(evo)}")
-                    has = hasattr(evo, 'plot')
-                    print("evo has attr plot:", has)
-
-                event = epoch[0]    # mne.epochs.EpochsArray (event is same as epoch)
-                print(f"event: {type(event)}")
-                for evo in event.iter_evoked():
-                    print(f"iter evoked of event: {type(evo)}")
-                    has = hasattr(evo, 'plot')
-                    print("evo has attr plot:", has)
-                    if(has):
-                        evo.plot(spatial_colors = True, show = True)
+                fig_evo.savefig(util.get_unique_file_name("evoked_response.png", "./results"))
+                
 
             else:
                 raise ValueError("self.is_word is not prepared or of wrong type")
