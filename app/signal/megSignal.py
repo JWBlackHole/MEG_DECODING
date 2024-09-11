@@ -179,7 +179,7 @@ class MEGSignal():
         events = np.c_[
             meta.onset * raw.info["sfreq"], np.ones((len(meta), 2))
         ].astype(int)
-        logger.debug(f"SFREQ: {raw.info["sfreq"]}")
+        # logger.debug(f"SFREQ: {raw.info["sfreq"]}")
 
         epochs = mne.Epochs(
             raw,

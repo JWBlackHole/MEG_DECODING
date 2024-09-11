@@ -12,6 +12,7 @@ from app.signal.preprocessor import Preprocessor
 from app.my_models.nn.nnModelRunner import NNModelRunner
 from app.my_models.lda.ldaModelRunner import LdaModelRunner
 from app.my_models.svm.svmModel import svmModel # new added
+from app.my_models.cnn.cnnModel import cnnModel # new added
 import app.utils.my_utils as util
 from app.common.commonSetting import TargetLabel
 from app.signal.sensorTools import plot_sensor
@@ -127,6 +128,9 @@ if __name__ == "__main__":
 
     X, y = preprocessor.get_data(subject, until_session, until_task, raw_data_path, target_label, 
                                  low_pass_filter, high_pass_filter, to_print_interim_csv)
+   
+    # X=X[:100]
+    # y=y[:100]
     # X, y is for the subject for all sessions to `until_session` and all tasks to `until_task`
     # X is the "features" 
     # y is the label 
@@ -158,29 +162,33 @@ if __name__ == "__main__":
         logger.info("start to train with model: SVM")
         svmRunner = svmModel(X, y, target_label)
         
-        import cProfile
-        import pstats
+        # import cProfile
+        # import pstats
 
-        profiler = cProfile.Profile()
-        profiler.enable()
+        # profiler = cProfile.Profile()
+        # profiler.enable()
 
-        try:
-            # 將結果保存到檔案
-            cProfile.run('svmRunner.train()', 'profile_results.prof')
+        # try:
+        #     # 將結果保存到檔案
+        #     cProfile.run('svmRunner.train()', 'profile_results.prof')
             
-            # 讀取分析結果
-            p = pstats.Stats('profile_results.prof')
+        #     # 讀取分析結果
+        #     p = pstats.Stats('profile_results.prof')
 
-            # 排序和查看結果
-            p.sort_stats('cumulative').print_stats(10)  # 顯示前10個最耗時的函數
-        finally:
-            profiler.disable()
-            profiler.print_stats(sort='cumulative')
+        #     # 排序和查看結果
+        #     p.sort_stats('cumulative').print_stats(10)  # 顯示前10個最耗時的函數
+        # finally:
+        #     profiler.disable()
+        #     profiler.print_stats(sort='cumulative')
 
-        # svmRunner.train()
-    elif (training_flow == "plot_word_evo"):
-        preprocessor.plot_n_events_evo("is_word", 1, True)
-        #preprocessor.plot_evoked_response("is_word")
+        svmRunner.train()
+
+    elif(training_flow == "cnn"):
+        logger.info("start to train with model: CNN")
+        cnnRunner = cnnModel(X, y)
+        cnnRunner.train()
+
+
     else:
         raise NotImplementedError
     

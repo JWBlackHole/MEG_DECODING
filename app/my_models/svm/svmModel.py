@@ -35,7 +35,7 @@ class svmModel():
         ## 2. Train SVM model
 
         # 創建SVM分類器，這裡使用線性核函數
-        svm = SVC(kernel='linear', C=0.1)
+        svm = SVC(kernel='linear', C=1, class_weight='balanced')
 
         # 訓練模型
         svm.fit(X_train, y_train)
@@ -45,6 +45,7 @@ class svmModel():
 
         # 預測測試集
         y_pred = svm.predict(X_test)
+        print(y_pred)
 
         # 計算準確率
         accuracy = accuracy_score(y_test, y_pred)
@@ -86,3 +87,39 @@ class svmModel():
         # # 計算準確率
         # accuracy = accuracy_score(y_test, y_pred)
         # print(f'Accuracy with best parameters: {accuracy:.2f}')
+        ## 4. Modify the hyperparameters
+
+        # 定義參數網格  # 'C': [0.1, 1, 10, 100],
+        param_grid = {
+            'C': [0.1, 1, 10, 100],
+            'kernel': ['linear', 'poly', 'rbf', 'sigmoid'],
+            'gamma': ['scale', 'auto'],
+            'class_weight': ['balanced'] 
+        }
+
+        # 創建網格搜索
+        grid_search = GridSearchCV(SVC(), param_grid, cv=5)
+
+        # 執行網格搜索
+        grid_search.fit(X_train, y_train)
+
+        # 找到最佳參數
+        best_params = grid_search.best_params_
+        print(f'Best parameters: {best_params}')
+
+
+        ## 5. Re-train model & Evaluation
+
+        # 使用最佳參數創建SVM分類器
+        svm = SVC(C=best_params['C'], kernel=best_params['kernel'], gamma=best_params['gamma'])
+
+        # 訓練模型
+        svm.fit(X_train, y_train)
+
+        # 預測測試集
+        y_pred = svm.predict(X_test)
+        print(y_pred)
+
+        # 計算準確率
+        accuracy = accuracy_score(y_test, y_pred)
+        print(f'Accuracy with best parameters: {accuracy:.2f}')
