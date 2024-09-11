@@ -27,20 +27,22 @@ if __name__ == "__main__":
 
 
     config_path = Path('./app/config/config_mh.json')
+    # config_path = Path('./app/config/config_jw_theta.json')
+    # config_path = Path('./app/config/config_mh.json')
     # config_path = Path("./app/config/train_config.json")
     # config_path = Path('./app/config/my_own_config.json')      # put your own config file here cuz setting of everyone may be different
     
     try:
         with config_path.open('r') as file:
             config = json.load(file)
-        training_config = config.get('training', {})
-        subject = training_config.get('until_subject', 1)       # subject start from 1
-        until_session = training_config.get('until_session',0)  # session start from 0
-        until_task = training_config.get('until_task', 0)       # task start from 0
-        low_pass_filter = training_config.get('preprocess_low_pass', None)
-        high_pass_filter = training_config.get('preprocess_high_pass', None)
-        training_flow = training_config.get('flow', None)
-        target_label = training_config.get('target_label', None)
+        training_config   = config.get('training', {})
+        subject           = training_config.get('until_subject', 1)    # subject start from 1
+        until_session     = training_config.get('until_session',0)     # session start from 0
+        until_task        = training_config.get('until_task', 0)       # task start from 0
+        low_pass_filter   = training_config.get('preprocess_low_pass', None)
+        high_pass_filter  = training_config.get('preprocess_high_pass', None)
+        training_flow     = training_config.get('flow', None)
+        target_label      = training_config.get('target_label', None)
         dont_kfold_in_lda = training_config.get('dont_kfold_in_lda', None)
 
         house_keeping_config = config.get('house_keeping', {})
