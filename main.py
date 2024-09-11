@@ -44,12 +44,14 @@ if __name__ == "__main__":
         training_flow     = training_config.get('flow', None)
         target_label      = training_config.get('target_label', None)
         dont_kfold_in_lda = training_config.get('dont_kfold_in_lda', None)
+        nn_total_epoch    = training_config.get('nn_total_epoch', None)
 
-        house_keeping_config = config.get('house_keeping', {})
-        raw_data_path = house_keeping_config.get('raw_data_path', None)
-        log_level = house_keeping_config.get('log_level', "DEBUG")
+        house_keeping_config    = config.get('house_keeping', {})
+        raw_data_path           = house_keeping_config.get('raw_data_path', None)
+        log_level               = house_keeping_config.get('log_level', "DEBUG")
         result_metrics_save_path = house_keeping_config.get('result_metrics_save_path', None)
-        to_print_interim_csv = house_keeping_config.get('to_print_interim_csv', False)
+        to_print_interim_csv     = house_keeping_config.get('to_print_interim_csv', False)
+
         logger.info(f"Execution start according to config: {config_path}")
     except (FileNotFoundError, json.JSONDecodeError, KeyError):
         logger.error(f"config file: {os.path.abspath(config_path)} not exist, use fall back values")
@@ -61,6 +63,7 @@ if __name__ == "__main__":
         low_pass_filter = high_pass_filter = training_flow = log_level = result_metrics_save_path = dont_kfold_in_lda = None
         target_label = None
         to_print_interim_csv = None
+        nn_total_epoch = None
 
     # ----- Set logger ----- #
     util.MyLogger(logger, log_level=log_level, output="console")   # logger comes from loguru logger
@@ -152,7 +155,7 @@ if __name__ == "__main__":
     if(training_flow == "nn"):
         logger.info("start to train with model: NN")
         nnRunner = NNModelRunner(X, y, target_label)
-        nnRunner.train(100)
+        nnRunner.train(nn_total_epoch)
         
        
     elif(training_flow == "lda"):
