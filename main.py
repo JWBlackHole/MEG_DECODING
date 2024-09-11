@@ -188,6 +188,14 @@ if __name__ == "__main__":
         cnnRunner = cnnModel(X, y)
         cnnRunner.train()
 
+    elif (training_flow == "plot_word_evo"):
+        
+        # plot each event
+        preprocessor.plot_n_events_evo("is_word", 1, True)
+
+        # plot average of all event
+        #preprocessor.plot_evoked_response("is_word")
+
 
     else:
         raise NotImplementedError
