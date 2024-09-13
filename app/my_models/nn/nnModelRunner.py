@@ -116,7 +116,6 @@ def pca(X: Tensor, y: Tensor):
     
     return torch.from_numpy(X_pca), torch.from_numpy(y)
 
-
 def pca_d(X: Tensor, y: Tensor, dimension: int):
     X, y = X.numpy(), y.numpy()
     
@@ -159,7 +158,7 @@ def balance_label(X: Tensor, y: Tensor):
     
 
 class NNModelRunner():
-    BATCH_SIZE = 512
+    BATCH_SIZE = 2048
     def __init__(self, X, y, target_label) -> None:
         
         self.device = "cuda" if torch.cuda.is_available() else "cpu"

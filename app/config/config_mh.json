@@ -1,16 +1,16 @@
 {
     "training": {
-        "flow": "plot_word_evo",
-        "target_label": "word_onset",
+        "flow": "svm",
+        "target_label": "voiced",
         "until_subject": 1,
         "until_session": 0,
         "until_task": 0,
-        "preprocess_low_pass": 0.5,
-        "preprocess_high_pass": 30,
+        "preprocess_low_pass": 35,
+        "preprocess_high_pass": 180,
         "dont_kfold_in_lda": true
     },
     "house_keeping": {
-        "raw_data_path": "D://NTHU//meta-brainmagick2//brainmagick//data//gwilliams2022//download",
+        "raw_data_path": "/home/dataset/Data/gw_data/download",
         "log_level": "INFO",
         "result_metrics_save_path": "./results",
         "to_print_interim_csv": false
