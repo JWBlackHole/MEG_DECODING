@@ -16,7 +16,7 @@ from app.my_models.svm.svmModel import svmModel # new added
 import app.utils.my_utils as util
 from app.common.commonSetting import TargetLabel
 from app.signal.sensorTools import plot_sensor
-from app.my_models.cnn_torch.torchCnnModel import SimpleTorchCNNModel, SimpleTorchCNNModelRunner
+from app.my_models.cnn_torch.torchCnnModelRunner import SimpleTorchCNNModelRunner
 
 
 if __name__ == "__main__":
@@ -193,7 +193,7 @@ if __name__ == "__main__":
 
     elif (training_flow == "cnn"):
         torch_cnn_model = SimpleTorchCNNModelRunner(X, y)
-        torch_cnn_model.train(epochs=10, batch_size=32, learning_rate=0.001)
+        torch_cnn_model.train(epochs=2, batch_size=32, learning_rate=0.001)
 
     elif (training_flow == "plot_word_evo"):
         
