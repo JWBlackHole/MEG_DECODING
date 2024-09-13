@@ -128,7 +128,7 @@ if __name__ == "__main__":
         exit(0)
 
 
-    X, y = preprocessor.get_data(subject, until_session, until_task, raw_data_path, target_label, 
+    X, y = preprocessor.prepare_X_y(subject, until_session, until_task, raw_data_path, target_label, 
                                  low_pass_filter, high_pass_filter, to_print_interim_csv)
    
     # X=X[:100]

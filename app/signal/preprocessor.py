@@ -5,6 +5,8 @@ import numpy as np
 import mne_bids
 from mne import Epochs, concatenate_epochs, EpochsArray
 import matplotlib.pyplot as plt
+import torch
+from torch.utils.data import Dataset
  
 from loguru import logger
 
@@ -13,10 +15,29 @@ from app.signal.megSignal import MEGSignal
 from app.common.commonSetting import TargetLabel
 import app.utils.my_utils as util
 
-class Preprocessor:
+class Preprocessor(Dataset):
     def __init__(self):
         self.concated_epochs: Epochs | None = None  # concatenated Epochs of all sessions all tasks
 
+    def __len__(self):
+        if isinstance(self.concated_epochs, Epochs):
+            return len(self.concated_epochs)
+        else:
+            raise ValueError("self.concated_epochs is not Epochs!")
+    
+    def __getitem__(self, idx):
+        # Extract the epoch at index `idx`
+        X = self.concated_epochs[idx].get_data()  # Get the data as a 3D array (1, n_channels, n_times)
+        y = self.concated_epochs[idx].events[:, -1]  # Example labels based on event type
+        
+        # Convert to torch tensors
+        n, nchans, ntimes = X.shape
+        logger.info(f"X.shape: {n}, {nchans}, {ntimes}")
+        X_tensor = torch.tensor(X, dtype=torch.float32).reshape(1, nchans, ntimes)  # Shape: (1, n_channels, n_times)
+        y_tensor = torch.tensor(y.astype(int), dtype=torch.long)  # Assuming classification labels are integers
+        
+        return X_tensor, y_tensor
+    
     def plot_sensor_topo(self, raw_data_path):
         bids_path = mne_bids.BIDSPath(
             subject = "01",     # subject need to be 2-digit str (e.g. "01" to align folder name sub-01)  
@@ -31,7 +52,7 @@ class Preprocessor:
 
         
 
-    def get_data(self, subject, until_session, until_task, raw_data_path, target_label, 
+    def prepare_X_y(self, subject, until_session, until_task, raw_data_path, target_label, 
                 low_pass_filter, high_pass_filter, to_print_interim_csv):
         
         self.to_print_interim_csv = to_print_interim_csv
@@ -88,7 +109,7 @@ class Preprocessor:
             self.X = phonemes.get_data(copy=True)   # use copy=True to avoid changing the original data
             self.y = phonemes.metadata["voiced"].values
         
-        elif preprocess_setting in [TargetLabel.WORD_ONSET, TargetLabel.WORD_FREQ, TargetLabel.PLOT_WORD_ONSET] :
+        elif preprocess_setting in [TargetLabel.PLOT_WORD_ONSET, TargetLabel.WORD_FREQ] :
             ep = self.concated_epochs
             meta = ep.metadata
             if self.to_print_interim_csv:
@@ -99,10 +120,9 @@ class Preprocessor:
             meta = words.metadata
             if self.to_print_interim_csv:
                 meta.to_csv(util.get_unique_file_name("words_from_preprocessor.csv", "./results"))
-            self.y = None # not important for now
+            self.y = meta # not important for now
 
             self.is_word = words
-            return None, None
 
         else:
             raise NotImplementedError
@@ -174,7 +194,7 @@ class Preprocessor:
             ph_info:pd.DataFrame = pd.read_csv("./phoneme_data/phoneme_info.csv")   # file path is relative to root dir
             return signal_handler.prepare_one_epochs(bids_path, supplementary_meta = ph_info)
 
-        elif setting in [TargetLabel.PLOT_WORD_ONSET, TargetLabel.WORD_ONSET, TargetLabel.WORD_FREQ] :
+        elif setting in [TargetLabel.PLOT_WORD_ONSET,  TargetLabel.WORD_FREQ] :
             return signal_handler.prepare_one_epochs(bids_path, None)
         
         return
