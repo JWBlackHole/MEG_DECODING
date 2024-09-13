@@ -16,14 +16,15 @@ from app.my_models.svm.svmModel import svmModel # new added
 import app.utils.my_utils as util
 from app.common.commonSetting import TargetLabel
 from app.signal.sensorTools import plot_sensor
+from app.my_models.cnn_torch.torchCnnModel import SimpleTorchCNNModel, SimpleTorchCNNModelRunner
 
 
 if __name__ == "__main__":
 
     # ---  load config --- #
 
-    # config_path = Path('./app/config/config_mh.json')
-    config_path = Path('./app/config/config_jw.json')
+    config_path = Path('./app/config/config_mh.json')
+    # config_path = Path('./app/config/config_jw.json')
     # config_path = Path('./app/config/config_mh.json')
     # config_path = Path("./app/config/train_config.json")
     # config_path = Path('./app/config/my_own_config.json')      # put your own config file here cuz setting of everyone may be different
@@ -189,6 +190,10 @@ if __name__ == "__main__":
     #     logger.info("start to train with model: CNN")
     #     cnnRunner = cnnModel(X, y)
     #     cnnRunner.train()
+
+    elif (training_flow == "cnn"):
+        torch_cnn_model = SimpleTorchCNNModelRunner(X, y)
+        torch_cnn_model.train(epochs=10, batch_size=32, learning_rate=0.001)
 
     elif (training_flow == "plot_word_evo"):
         

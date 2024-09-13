@@ -1,6 +1,6 @@
 {
     "training": {
-        "flow": "svm",
+        "flow": "cnn",
         "target_label": "voiced",
         "until_subject": 1,
         "until_session": 0,
