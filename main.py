@@ -9,6 +9,7 @@ from loguru import logger
 
 # custom import
 from app.signal.preprocessor import Preprocessor
+from app.signal.torchMegLoader import TorchMegLoader
 from app.my_models.nn.nnModelRunner import NNModelRunner
 from app.my_models.lda.ldaModelRunner import LdaModelRunner
 from app.my_models.svm.svmModel import svmModel # new added
@@ -17,6 +18,7 @@ import app.utils.my_utils as util
 from app.common.commonSetting import TargetLabel
 from app.signal.sensorTools import plot_sensor
 from app.my_models.cnn_torch.torchCnnModelRunner import SimpleTorchCNNModelRunner
+
 
 
 if __name__ == "__main__":
@@ -89,7 +91,7 @@ if __name__ == "__main__":
     if target_label  == "voiced":
         target_label = TargetLabel.VOICED_PHONEME
         
-    elif target_label  == "is_word":
+    elif target_label  == "word_freq":
         target_label = TargetLabel.WORD_FREQ
     elif target_label == "is_sound":
         target_label = TargetLabel.IS_SOUND
@@ -100,10 +102,6 @@ if __name__ == "__main__":
 
     elif target_label in ["is voiced", "is_voiced", "phoneme", "phonemes", "voice", "is voice", "is_voice"]:
         logger.error(f"target_label is not supported, do you mean \"voiced\"?")
-        logger.warning("assume default flow")
-        target_label = TargetLabel.DEFAULT
-    elif target_label in ["is word", "word"]:
-        logger.error(f"target_label is not supported, do you mean \"is_word\"?")
         logger.warning("assume default flow")
         target_label = TargetLabel.DEFAULT
     elif target_label in ["is sound", "sound", "have sound", "have_sound"]:
@@ -126,7 +124,12 @@ if __name__ == "__main__":
         preprocessor.plot_sensor_topo(raw_data_path)
         logger.info("finish plotting, program exit")
         exit(0)
-
+    
+    elif (training_flow== "cnn_batch"):
+        megData = TorchMegLoader(subject, until_session, until_task, raw_data_path, target_label, 
+                                 low_pass_filter, high_pass_filter, to_print_interim_csv)
+        
+        torch_cnn_model = SimpleTorchCNNModelRunner(megData)
 
     X, y = preprocessor.prepare_X_y(subject, until_session, until_task, raw_data_path, target_label, 
                                  low_pass_filter, high_pass_filter, to_print_interim_csv)
@@ -136,6 +139,21 @@ if __name__ == "__main__":
     # X, y is for the subject for all sessions to `until_session` and all tasks to `until_task`
     # X is the "features" 
     # y is the label 
+    if(training_flow=="debug"):
+        epochs = preprocessor.get_concated_epochs()
+        logger.info(f"type of get_concated_epochs: {type(epochs)}") # <class 'mne.epochs.EpochsArray'>
+        try:
+            logger.info(f"len of get_concated_epochs: {len(epochs)}")   # len of all events
+            ep = epochs[0]
+            logger.info(f"epochs[0] type: {type(ep)}")      # epochs[0] type: <class 'mne.epochs.EpochsArray'>
+            try:
+                logger.info(f"len of epochs[0]: {len(ep)}") # len of epochs[0]: 1
+            except Exception as err:
+                logger.error(err)
+            exit(0)
+        except Exception as err:
+            logger.error(err)
+            
     if(target_label == TargetLabel.VOICED_PHONEME):
         phonemes_epochs = preprocessor.get_metadata("phonemes")     # get the epochs only considering is phoneme voiced / not voiced
         phoneme_meta = phonemes_epochs.metadata
@@ -202,6 +220,8 @@ if __name__ == "__main__":
 
         # plot average of all event
         #preprocessor.plot_evoked_response("is_word")
+
+
 
 
     else:

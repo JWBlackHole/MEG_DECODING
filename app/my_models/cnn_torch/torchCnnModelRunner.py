@@ -1,8 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader, TensorDataset
-from sklearn.model_selection import train_test_split
+from torch.utils.data import DataLoader, TensorDataset, random_split
 from sklearn.metrics import accuracy_score
 import numpy as np
 from loguru import logger
@@ -10,22 +9,20 @@ from loguru import logger
 from app.my_models.cnn_torch.torchCnnModel import SimpleTorchCNNModel
 
 class SimpleTorchCNNModelRunner:
-    def __init__(self, X, y):
-        n, nchans, ntimes = X.shape
-        logger.info(f"X.shape: {n}, {nchans}, {ntimes}")
-        X = torch.tensor(X).to(torch.float32).reshape(-1, 1, nchans, ntimes)  # Ensure 4D shape
-        y = torch.tensor(y.astype(bool)).to(torch.float32).reshape(-1, 1)
+    def __init__(self, megData):
+        self.megData = megData
 
-        self.X = X
-        self.y = y
 
-    def train(self, epochs=10, batch_size=32, learning_rate=0.001):
+
+    def train(self, epochs=10, batch_size=32, learning_rate=0.001, train_test_ratio=0.8):
         # Split the data into training and testing sets
-        X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, test_size=0.2, random_state=33)
+        train_size = int(train_test_ratio * len(self.megData))
+        test_size = len(self.megData) - train_size
+        rand_generator = torch.Generator().manual_seed(33)      # use for fix random seede
+        train_dataset, test_dataset = random_split(self.megData, 
+                                                    lengths=[train_size, test_size], 
+                                                    generator=rand_generator)
 
-        # Create TensorDatasets
-        train_dataset = TensorDataset(X_train, y_train)
-        test_dataset = TensorDataset(X_test, y_test)
 
         # Create DataLoaders
         train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
@@ -41,6 +38,8 @@ class SimpleTorchCNNModelRunner:
         for epoch in range(epochs):
             running_loss = 0.0
             for inputs, labels in train_loader:
+                inputs = inputs.unsqueeze(1)  # Add the channel dimension [batch_size, 1, nchans, ntimes]
+                # not sure if above is needed
                 optimizer.zero_grad()
                 outputs = model(inputs)
                 loss = criterion(outputs, labels)

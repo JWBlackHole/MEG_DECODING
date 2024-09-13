@@ -32,7 +32,7 @@ class MEGSignal():
         init -> load_raw -> load-meta -> load_epochs
     
     """
-    def __init__(self, setting: TargetLabel, low_pass:float = 0.5, high_pass:float = 30.0, n_jobs:int = 1, to_print_interim_csv=False):
+    def __init__(self, setting: TargetLabel, low_pass:float = 0.5, high_pass:float = 30.0, n_jobs:int = 1, to_print_interim_csv=False, preload=True):
        self.raw:  Raw|None          = None
        self.meta: pd.DataFrame|None = None
        
@@ -44,6 +44,7 @@ class MEGSignal():
        self.high_pass: float = high_pass
        self.n_jobs: int = n_jobs
        self.to_print_interim_csv: bool = to_print_interim_csv
+       self.preload: bool = preload
        
        
 
@@ -165,7 +166,7 @@ class MEGSignal():
         return meta
 
        
-    def load_epochs(self, raw: Raw, meta: pd.DataFrame, to_save_csv: bool = False, tmin: float = None, tmax: float = None)->mne.Epochs:
+    def load_epochs(self, raw: Raw, meta: pd.DataFrame, to_save_csv: bool = False,tmin: float = None, tmax: float = None)->mne.Epochs:
         """Get epochs by assemble "meatadata" and "raw". 
         will load epochs of the given raw and meta 
         meta and raw should correspond to the same subject same session same task
@@ -202,7 +203,7 @@ class MEGSignal():
             decim   = 10,
             baseline=(-0.1, 0.0),
             metadata=meta,
-            preload =True,
+            preload =self.preload,
             event_repeated="drop",
         )
         #events

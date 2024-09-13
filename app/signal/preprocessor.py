@@ -15,9 +15,11 @@ from app.signal.megSignal import MEGSignal
 from app.common.commonSetting import TargetLabel
 import app.utils.my_utils as util
 
-class Preprocessor(Dataset):
+class Preprocessor():
     def __init__(self):
         self.concated_epochs: Epochs | None = None  # concatenated Epochs of all sessions all tasks
+        self.X = None
+        self.y = None
 
     def __len__(self):
         if isinstance(self.concated_epochs, Epochs):
@@ -64,6 +66,8 @@ class Preprocessor(Dataset):
             if target_label  == "voiced":
                 preprocess_setting = TargetLabel.VOICED_PHONEME
                 logger.info("target label to predicted got: \"voiced\"")
+            elif target_label  == "word_freq":
+                preprocess_setting = TargetLabel.WORD_FREQ
             elif target_label  == "word_onset":
                 preprocess_setting = TargetLabel.WORD_ONSET
             elif target_label == "is_sound":
@@ -129,6 +133,10 @@ class Preprocessor(Dataset):
 
 
         return self.X, self.y
+    
+    def get_X_y(self):
+        if (self.X is not None) and (self.y is not None):
+            return self.X, self.y
     
     def load_all_epochs(self, subject, until_session, until_task, raw_data_path, setting,
                          low_pass_filter, high_pass_filter):
@@ -230,6 +238,12 @@ class Preprocessor(Dataset):
         else:
             logger.error(f"cannot access self.concated_epochs.metadata or it is of wrong type, type of self.concated_epochs.metadata: \
                          {type(self.concated_epochs.metadata)}, returning None")
+            
+    def get_concated_epochs(self)-> Epochs:
+        if self.concated_epochs is not None:
+            return self.concated_epochs
+        else:
+            raise ValueError
             
     def plot_evoked_response(self, target: str):
         """
