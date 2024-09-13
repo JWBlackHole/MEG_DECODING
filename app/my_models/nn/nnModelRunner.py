@@ -1,7 +1,7 @@
 import torch
 from torch import Tensor
-from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
+from torch.utils.data.dataloader import default_collate
 
 import numpy as np
 
@@ -78,8 +78,6 @@ def plot(X: Tensor, y: Tensor):
 def pca(X: Tensor, y: Tensor):
     X, y = X.numpy(), y.numpy()
     
-    sc = StandardScaler()
-
     scaler = StandardScaler()
     scaler.fit(X) 
     X_scaled = scaler.transform(X)
@@ -118,6 +116,20 @@ def pca(X: Tensor, y: Tensor):
     
     return torch.from_numpy(X_pca), torch.from_numpy(y)
 
+
+def pca_d(X: Tensor, y: Tensor, dimension: int):
+    X, y = X.numpy(), y.numpy()
+    
+    scaler = StandardScaler()
+    scaler.fit(X) 
+    X_scaled = scaler.transform(X)
+    
+    pca = PCA(n_components = dimension)
+    pca.fit(X_scaled) 
+    X_pca = pca.transform(X_scaled) 
+    
+    return torch.from_numpy(X_pca), torch.from_numpy(y)
+    
 def balance_label(X: Tensor, y: Tensor):
     X_true,  y_true  = Tensor(), Tensor()
     X_false, y_false = Tensor(), Tensor()
@@ -143,15 +155,11 @@ def balance_label(X: Tensor, y: Tensor):
     X, y = torch.cat((X_true, X_false), 0), torch.cat((y_true, y_false), 0)
     # plot(X, X_true, X_false)
     
-    X, y = pca(X, y)
-    
-    # exit()
-    
     return X, y
     
 
 class NNModelRunner():
-    BATCH_SIZE = 128
+    BATCH_SIZE = 512
     def __init__(self, X, y, target_label) -> None:
         
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -180,13 +188,6 @@ class NNModelRunner():
         self.y = y
         self.target_label =  target_label
         
-        # msg = ""
-        # with open("test2.txt", 'w') as fh:
-        #     msg += f"{X}\n"
-        #     msg += f"{y}\n"
-        #     fh.write(msg)
-        
-    
     def train(self):
         print("Start Training")
         if self.target_label != TargetLabel.VOICED_PHONEME:
@@ -194,18 +195,16 @@ class NNModelRunner():
             exit(0)
             
         X, y = balance_label(self.X, self.y)
-        # print(X.shape)
+        X, y = pca_d(X, y, 10)
         
-        # exit()
         X_train, X_test, y_train, y_test = train_test_split(X, y, 
                                                             test_size=0.2,   # 20% test, 80% train
                                                             random_state=25) # shffuling, making the random split reproducible
         
-        # print(X_train)
-        # print(y_train)
         
         dataset    = TensorDataset(X_train, y_train)
-        dataloader = DataLoader(dataset = dataset, batch_size = NNModelRunner.BATCH_SIZE)
+        dataloader = DataLoader(dataset = dataset, batch_size = NNModelRunner.BATCH_SIZE,
+                                collate_fn=lambda x: tuple(x_.to(self.device) for x_ in default_collate(x)))
         dataset_size = len(dataloader.dataset)
         
         # ------ Start Training ------ #
@@ -214,13 +213,11 @@ class NNModelRunner():
         X_test, y_test   = X_test.to(self.device),  y_test.to(self.device)
         
         # Our "model", "loss function" and "optimizer"
-        model_0   = MyNNModel(2).to(self.device)
-        # loss_fn   = torch.nn.BCEWithLogitsLoss()
-        loss_fn   = torch.nn.BCELoss()
-        # loss_fn   = torch.nn.CrossEntropyLoss()
+        model_0   = MyNNModel().to(self.device)
+        loss_fn   = torch.nn.BCELoss().to(self.device)
         optimizer = torch.optim.SGD(params = model_0.parameters(), lr = 0.01, momentum=0.9, weight_decay = 1e-4)
             
-        n_epochs = 100000
+        n_epochs = 10000
         for epoch in range(n_epochs + 1):
             if(epoch % 100 == 0):
                 print(f"Epoch {epoch}")

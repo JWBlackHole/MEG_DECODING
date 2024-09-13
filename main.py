@@ -12,22 +12,18 @@ from app.signal.preprocessor import Preprocessor
 from app.my_models.nn.nnModelRunner import NNModelRunner
 from app.my_models.lda.ldaModelRunner import LdaModelRunner
 from app.my_models.svm.svmModel import svmModel # new added
-from app.my_models.cnn.cnnModel import cnnModel # new added
+# from app.my_models.cnn.cnnModel import cnnModel # new added
 import app.utils.my_utils as util
 from app.common.commonSetting import TargetLabel
 from app.signal.sensorTools import plot_sensor
 
 
-
-
 if __name__ == "__main__":
 
-   
     # ---  load config --- #
 
-
-    config_path = Path('./app/config/config_mh.json')
-    # config_path = Path('./app/config/config_jw_theta.json')
+    # config_path = Path('./app/config/config_mh.json')
+    config_path = Path('./app/config/config_jw.json')
     # config_path = Path('./app/config/config_mh.json')
     # config_path = Path("./app/config/train_config.json")
     # config_path = Path('./app/config/my_own_config.json')      # put your own config file here cuz setting of everyone may be different
@@ -155,7 +151,8 @@ if __name__ == "__main__":
     if(training_flow == "nn"):
         logger.info("start to train with model: NN")
         nnRunner = NNModelRunner(X, y, target_label)
-        nnRunner.train(nn_total_epoch)
+        # nnRunner.train(nn_total_epoch)
+        nnRunner.train()
         
        
     elif(training_flow == "lda"):
@@ -188,10 +185,10 @@ if __name__ == "__main__":
 
         svmRunner.train()
 
-    elif(training_flow == "cnn"):
-        logger.info("start to train with model: CNN")
-        cnnRunner = cnnModel(X, y)
-        cnnRunner.train()
+    # elif(training_flow == "cnn"):
+    #     logger.info("start to train with model: CNN")
+    #     cnnRunner = cnnModel(X, y)
+    #     cnnRunner.train()
 
     elif (training_flow == "plot_word_evo"):
         

@@ -10,7 +10,7 @@
         "dont_kfold_in_lda": true
     },
     "house_keeping": {
-        "raw_data_path": "/mnt/ntfs/data",
+        "raw_data_path": "/home/dataset/Data/gw_data/download",
         "log_level": "DEBUG",
         "result_metrics_save_path": "./results",
         "to_print_interim_csv": true
