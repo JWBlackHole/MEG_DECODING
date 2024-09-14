@@ -12,9 +12,30 @@ from app.my_models.cnn_torch.torchCnnModel import SimpleTorchCNNModel
 class SimpleTorchCNNModelRunner:
     def __init__(self, X, y):
         n, nchans, ntimes = X.shape
+        self.nchans = nchans
+        self.ntimes = ntimes
         logger.info(f"X.shape: {n}, {nchans}, {ntimes}")
-        X = torch.tensor(X).to(torch.float32).reshape(-1, 1, nchans, ntimes)  # Ensure 4D shape
+        logger.debug(f"before reshape, X shape: {X.shape}, y shape: {y.shape}")
+        # before reshape, 
+        # X.shape = (#event, #channel, # timepoint)
+        # y.shape = (#event, )
+        
+        X = torch.tensor(X).to(torch.float32).reshape(-1, 1, nchans, ntimes)  # Ensure 4D shape       
         y = torch.tensor(y.astype(bool)).to(torch.float32).reshape(-1, 1)
+        logger.debug(f"after reshape, X shape: {X.shape}, y shape: {y.shape}")
+        # after reshape and to tensor
+        # X.shape=torch.Size([#event, 1, #channel, #timepoint]), y shape=torch.Size([#event, 1])
+
+        """
+        notes: what should be shape of tensor? -> (batch_size, num_channels, height, width)
+        batch_size = Number of data samples -> should = #event
+        num_channels-> 1 (not the channel in MEG) why 1?->with reference EEGNet and typical usage
+        height-> for time serise, often correspond to time domain
+        width ->for time serise, often correspond to spatial domain (MEG channel)
+
+        supposingly, flipping time and MEG channel should work too, (but look like cnn will focus more on height (not sure))
+
+        """
 
         self.X = X
         self.y = y
@@ -32,7 +53,7 @@ class SimpleTorchCNNModelRunner:
         test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
         # Initialize the model, loss function, and optimizer
-        model = SimpleTorchCNNModel()
+        model = SimpleTorchCNNModel(self.nchans, self.ntimes)
         criterion = nn.BCELoss()
         optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
@@ -41,7 +62,7 @@ class SimpleTorchCNNModelRunner:
         for epoch in range(epochs):
             running_loss = 0.0
             for inputs, labels in train_loader:
-                optimizer.zero_grad()
+                optimizer.zero_grad()   # empty gradient
                 outputs = model(inputs)
                 loss = criterion(outputs, labels)
                 loss.backward()

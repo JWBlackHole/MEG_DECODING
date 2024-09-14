@@ -6,10 +6,14 @@ import numpy as np
 from loguru import logger
 
 class SimpleTorchCNNModel(nn.Module):
-    def __init__(self):
+    def __init__(self, nchans, ntimes):
         super(SimpleTorchCNNModel, self).__init__()
-        self.conv1 = nn.Conv2d(1, 32, kernel_size=(3, 3))
-        self.conv2 = nn.Conv2d(32, 64, kernel_size=(3, 3))
+        self.nchans = nchans
+        self.ntimes = ntimes
+
+        # nn.Conv2d(input_size, output_size, kernel_size )
+        self.conv1 = nn.Conv2d(1, 32, kernel_size=(1, 5))
+        self.conv2 = nn.Conv2d(32, 64, kernel_size=(self.nchans, 1))
         self.flatten = nn.Flatten()
         
         self.fc1 = nn.Linear(64 * 204 * 37, 128)  # last number = output feature
