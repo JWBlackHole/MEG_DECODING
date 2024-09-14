@@ -126,10 +126,15 @@ if __name__ == "__main__":
         exit(0)
     
     elif (training_flow== "cnn_batch"):
+        logger.info("start to train with model: CNN (load data by batch)")
         megData = TorchMegLoader(subject, until_session, until_task, raw_data_path, target_label, 
                                  low_pass_filter, high_pass_filter, to_print_interim_csv)
         
         torch_cnn_model = SimpleTorchCNNModelRunner(megData)
+        torch_cnn_model.train(epochs=2, batch_size=32, learning_rate=0.001)
+        logger.info("cnn training finished.")
+        exit(0)
+        
 
     X, y = preprocessor.prepare_X_y(subject, until_session, until_task, raw_data_path, target_label, 
                                  low_pass_filter, high_pass_filter, to_print_interim_csv)
@@ -153,6 +158,7 @@ if __name__ == "__main__":
             exit(0)
         except Exception as err:
             logger.error(err)
+        exit(0)
             
     if(target_label == TargetLabel.VOICED_PHONEME):
         phonemes_epochs = preprocessor.get_metadata("phonemes")     # get the epochs only considering is phoneme voiced / not voiced

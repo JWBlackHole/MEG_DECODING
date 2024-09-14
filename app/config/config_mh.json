@@ -1,10 +1,10 @@
 {
     "training": {
         "flow": "cnn_batch",
-        "target_label": "word_freq",
+        "target_label": "voiced",
         "until_subject": 1,
         "until_session": 0,
-        "until_task": 1,
+        "until_task": 0,
         "preprocess_low_pass": 35,
         "preprocess_high_pass": 180,
         "dont_kfold_in_lda": true

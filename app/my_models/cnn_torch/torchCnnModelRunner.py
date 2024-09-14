@@ -10,7 +10,13 @@ from app.my_models.cnn_torch.torchCnnModel import SimpleTorchCNNModel
 
 class SimpleTorchCNNModelRunner:
     def __init__(self, megData):
+        logger.info("SimpleTorchCNNModelRunner is inited")
         self.megData = megData
+
+    
+    def check_gpu():
+        if torch.cuda.is_available():
+            logger.info(f"GPU: {torch.cuda.get_device_name(0)} is available")
 
 
 
@@ -30,7 +36,10 @@ class SimpleTorchCNNModelRunner:
 
         # Initialize the model, loss function, and optimizer
         model = SimpleTorchCNNModel()
-        criterion = nn.BCELoss()
+        criterion = nn.BCELoss()    
+        # notes:
+        # using BCELoss expect X, y both in type float32
+        
         optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
         # Training loop
@@ -38,7 +47,8 @@ class SimpleTorchCNNModelRunner:
         for epoch in range(epochs):
             running_loss = 0.0
             for inputs, labels in train_loader:
-                inputs = inputs.unsqueeze(1)  # Add the channel dimension [batch_size, 1, nchans, ntimes]
+                inputs = inputs.unsqueeze(1)  # Add the channel dimension 
+                # expexted dimension of inputs: [batch_size, 1, nchans, ntimes]
                 # not sure if above is needed
                 optimizer.zero_grad()
                 outputs = model(inputs)

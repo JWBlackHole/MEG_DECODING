@@ -209,14 +209,15 @@ class MEGSignal():
         #events
         # 1st col: onset time
 
-        # threshold
-        th = np.percentile(np.abs(epochs._data), 95)
-        epochs._data[:] = np.clip(epochs._data, -th, th)
-        epochs.apply_baseline()
-        th = np.percentile(np.abs(epochs._data), 95)
-        epochs._data[:] = np.clip(epochs._data, -th, th)
-        epochs.apply_baseline()
-        
+        if self.preload:    # this cannot be done if preload==False, as data is not loaded
+            # threshold
+            th = np.percentile(np.abs(epochs._data), 95)
+            epochs._data[:] = np.clip(epochs._data, -th, th)
+            epochs.apply_baseline()
+            th = np.percentile(np.abs(epochs._data), 95)
+            epochs._data[:] = np.clip(epochs._data, -th, th)
+            epochs.apply_baseline()
+            
         # logger.debug(meta.wordfreq)
         if(to_save_csv):
             meta.to_csv(util.get_unique_file_name(file_name="epochs.csv", dir="./"))

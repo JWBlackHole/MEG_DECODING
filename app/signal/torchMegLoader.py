@@ -23,6 +23,7 @@ import app.utils.my_utils as util
 class TorchMegLoader(Dataset):
     def __init__(self, subject, until_session, until_task, raw_data_path, target_label, 
                 low_pass_filter, high_pass_filter, to_print_interim_csv=False):
+        logger.info("TorchMegLoader is inited")
         self.subjcet = subject
         self.until_session = until_session
         self.until_task = until_task
@@ -33,41 +34,49 @@ class TorchMegLoader(Dataset):
         # ---   target label checking ------ #
         if type(target_label) is str:   # convert to TargetLabel class if it is str
             if target_label  == "voiced":
-                preprocess_setting = TargetLabel.VOICED_PHONEME
+                target_label = TargetLabel.VOICED_PHONEME
                 logger.info("target label to predicted got: \"voiced\"")
             elif target_label  == "word_freq":
-                preprocess_setting = TargetLabel.WORD_FREQ
+                target_label = TargetLabel.WORD_FREQ
             elif target_label  == "word_onset":
-                preprocess_setting = TargetLabel.WORD_ONSET
+                target_label = TargetLabel.WORD_ONSET
             elif target_label == "is_sound":
-                preprocess_setting = TargetLabel.IS_SOUND
+                target_label = TargetLabel.IS_SOUND
             elif target_label == "plot_word":
-                preprocess_setting = TargetLabel.PLOT_WORD_ONSET
+                target_label = TargetLabel.PLOT_WORD_ONSET
 
             #     preprocess_setting = TargetLabel.DEFAULT
             else:
                 raise NotImplementedError
                 
         elif type(target_label) is TargetLabel:
-            preprocess_setting = target_label
+            target_label = target_label
 
         
         # set default setting
-        if preprocess_setting == TargetLabel.DEFAULT:
-            preprocess_setting = TargetLabel.VOICED_PHONEME   # assume voiced is default
+        if target_label == TargetLabel.DEFAULT:
+            target_label = TargetLabel.VOICED_PHONEME   # assume voiced is default
             logger.info("use default target label to predicted: \"voiced\"")
 
+        self.target_label = target_label
         
         # -----  prepare concatenated epoch
-        concated_epoch = self.load_all_epochs(subject, until_session, until_task, raw_data_path, preprocess_setting, low_pass_filter, high_pass_filter)
+        self.load_all_epochs(subject, until_session, until_task, raw_data_path, target_label, low_pass_filter, high_pass_filter)
 
+    def get_voiced_phoneme_epoch(self):
+        if self.concated_epochs is not None:
+            return self.concated_epochs["not is_word"]
+        else:
+            raise ValueError("self.concated_epochs is not properly set!")
+        
     def __len__(self):
         """
         this method is required by Torch Dataset
         this define the len of data
         """
         try:
-            return len(self.concated_epochs)  # Total number of epochs
+            epoch = self.get_voiced_phoneme_epoch()
+            return len(epoch)  # Total number of epochs
         except Exception as err:
             logger.error(err)
             logger.error(f"type of self.concated_epochs: {type(self.concated_epochs)}")
@@ -78,17 +87,54 @@ class TorchMegLoader(Dataset):
         Load a single epoch (and corresponding label) into memory for training.
         this method is required by Torch Dataset
         this define what is each data sample
+
+        everything applied to data should be run here
+        cuz here is where the data actually loaded
         """
         # Load the specific epoch and its corresponding metadata
-        epoch = self.concated_epochs[idx]
-        X = epoch.get_data()  # Get the data as a 3D array (n_channels, n_times)
-        y = epoch.events[:, -1]  # Example: label from events array
+        if self.target_label == TargetLabel.VOICED_PHONEME:
+            epoch = self.get_voiced_phoneme_epoch()
+            epoch = epoch[idx]
+            epoch.apply_baseline(verbose="WARNING")  # Apply baseline correction
+            X = epoch.get_data(copy=True)   # Get the data as a 3D array (n_channels, n_times)
+            y = epoch.metadata["voiced"].values
 
-        # Convert to PyTorch tensors
-        X_tensor = torch.tensor(X, dtype=torch.float32).squeeze(0)  # Remove batch dimension
-        y_tensor = torch.tensor(y, dtype=torch.long)  # Assuming classification task
+            # clip to 95 percentile
+            th = np.percentile(np.abs(X), 95)
+            X = np.clip(X, -th, th)
+            
+            if(idx < 100):
+                logger.debug(f"type of X: {type(X)}")   # numpy.ndarray
+                try:
+                    logger.debug(f"X.shape: {X.shape}") # (1, 208, 41)
+                except Exception as err:
+                    logger.error(err)
+                logger.debug(f"type of y: {type(y)}")   # numpy.ndarray
+                try:
+                    logger.debug(f"y.shape: {y.shape}") # (1,)
+                except Exception as err:
+                    logger.error(err)
+         
 
-        return X_tensor, y_tensor
+            # Convert to PyTorch tensors
+            X_tensor = torch.tensor(X, dtype=torch.float32).squeeze(0)  
+            
+            '''
+            original X: (1,nchans, ntime)
+            after .squeeze(0):
+                 (nchans, ntime)  (first dimension removed)
+            why need to do this?
+            looks like is create dimensino that CNN expect? (TBC)
+
+            '''
+
+            y_tensor = torch.tensor(y.astype(int), dtype=torch.float32) 
+            # BCE loss expect dtype float32
+            # if change to other loss function, may need to look for what dtype expected
+
+            return X_tensor, y_tensor
+        else:
+            raise NotImplementedError
     
     def load_all_epochs(self, subject, until_session, until_task, raw_data_path, setting,
                          low_pass_filter, high_pass_filter):
@@ -120,6 +166,7 @@ class TorchMegLoader(Dataset):
             raise ValueError
 
         self.concated_epochs = concatenate_epochs(epochs_list)
+        logger.debug(f"self.concated_epochs is set, type: {type(self.concated_epochs)}")
         return self.concated_epochs
     
 
