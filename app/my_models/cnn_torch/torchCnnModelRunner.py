@@ -17,6 +17,9 @@ class SimpleTorchCNNModelRunner:
     def check_gpu():
         if torch.cuda.is_available():
             logger.info(f"GPU: {torch.cuda.get_device_name(0)} is available")
+        else:
+            logger.error("no GPu available, program exit")
+            raise RuntimeError
 
 
 
@@ -35,6 +38,14 @@ class SimpleTorchCNNModelRunner:
         test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
         # Initialize the model, loss function, and optimizer
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        try:
+            assert device.type == "cuda"
+        except Exception as e:
+            logger.error(f"device is: {device}")
+            logger.error(f"device.type: {device.type},  is not cuda! program exit!")
+            raise AssertionError
+
         model = SimpleTorchCNNModel()
         criterion = nn.BCELoss()    
         # notes:
