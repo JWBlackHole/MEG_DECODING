@@ -103,7 +103,7 @@ class TorchMegLoader(Dataset):
             th = np.percentile(np.abs(X), 95)
             X = np.clip(X, -th, th)
             
-            if(idx < 100):
+            if(idx < 10):
                 logger.debug(f"type of X: {type(X)}")   # numpy.ndarray
                 try:
                     logger.debug(f"X.shape: {X.shape}") # (1, 208, 41)
