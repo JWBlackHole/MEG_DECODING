@@ -12,9 +12,10 @@ class SimpleTorchCNNModelRunner:
     def __init__(self, megData):
         logger.info("SimpleTorchCNNModelRunner is inited")
         self.megData = megData
+        self.check_gpu()
 
     
-    def check_gpu():
+    def check_gpu(self):
         if torch.cuda.is_available():
             logger.info(f"GPU: {torch.cuda.get_device_name(0)} is available")
         else:
@@ -23,13 +24,21 @@ class SimpleTorchCNNModelRunner:
 
 
 
-    def train(self, epochs=10, batch_size=32, learning_rate=0.001, train_test_ratio=0.8):
+    def train(self, epochs=10, batch_size=32, learning_rate=0.001, train_test_ratio=0.1):
         # Split the data into training and testing sets
-        train_size = int(train_test_ratio * len(self.megData))
-        test_size = len(self.megData) - train_size
+
+        # for testing
+        ratio = (0.2, 0.1, 0.7)
+        
+        train_size = int(ratio[0] * len(self.megData))
+        test_size = int(ratio[1] * len(self.megData))
+        not_used = len(self.megData) - train_size - test_size  # remaining data for test
+
+        #train_size = int(train_test_ratio * len(self.megData))
+        #test_size = len(self.megData) - train_size
         rand_generator = torch.Generator().manual_seed(33)      # use for fix random seede
-        train_dataset, test_dataset = random_split(self.megData, 
-                                                    lengths=[train_size, test_size], 
+        train_dataset, test_dataset, not_used_dataset = random_split(self.megData, 
+                                                    lengths=[train_size, test_size, not_used], 
                                                     generator=rand_generator)
 
 
@@ -46,26 +55,25 @@ class SimpleTorchCNNModelRunner:
             logger.error(f"device.type: {device.type},  is not cuda! program exit!")
             raise AssertionError
 
-        model = SimpleTorchCNNModel()
+        model = SimpleTorchCNNModel().to(device)
         criterion = nn.BCELoss()    
         # notes:
         # using BCELoss expect X, y both in type float32
         
-        optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+        # optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
         # Training loop
         model.train()
         for epoch in range(epochs):
             running_loss = 0.0
             for inputs, labels in train_loader:
+                inputs, labels = inputs.to(device), labels.to(device)
                 inputs = inputs.unsqueeze(1)  # Add the channel dimension 
                 # expexted dimension of inputs: [batch_size, 1, nchans, ntimes]
                 # not sure if above is needed
-                optimizer.zero_grad()
                 outputs = model(inputs)
                 loss = criterion(outputs, labels)
                 loss.backward()
-                optimizer.step()
                 running_loss += loss.item()
             print(f'Epoch {epoch+1}/{epochs}, Loss: {running_loss/len(train_loader):.4f}')
 
@@ -75,9 +83,10 @@ class SimpleTorchCNNModelRunner:
         y_true = []
         with torch.no_grad():
             for inputs, labels in test_loader:
+                inputs, labels = inputs.to(device), labels.to(device)
                 outputs = model(inputs)
-                y_pred.extend(outputs.numpy())
-                y_true.extend(labels.numpy())
+                y_pred.extend(outputs.cpu().numpy())
+                y_true.extend(labels.cpu().numpy())
 
         y_pred = (np.array(y_pred) >= 0.5).astype(int)
         accuracy = accuracy_score(y_true, y_pred)
