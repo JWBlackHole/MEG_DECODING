@@ -18,8 +18,8 @@ class SimpleTorchCNNModelRunner:
         if torch.cuda.is_available():
             logger.info(f"GPU: {torch.cuda.get_device_name(0)} is available")
         else:
-            logger.error("no GPu available, program exit")
-            raise RuntimeError
+            logger.error("no GPU, program exit")
+            raise Exception
 
 
 
