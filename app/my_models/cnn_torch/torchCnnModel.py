@@ -45,7 +45,7 @@ class SimpleTorchCNNModel(nn.Module):
         notes: forward is automatically called on outputs = model(inputs)
         Forward pass with dynamic computation of fully connected layer input size.
         """
-
+        logger.debug(f"x.shape: {x.shape}")
         x = torch.relu(self.conv1(x))
         #print(f"After conv1: {x.shape}")  # Inspect dimensions after conv1
 

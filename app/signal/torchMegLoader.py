@@ -35,6 +35,8 @@ class TorchMegLoader(Dataset):
         self.nchans:int = None
         self.ntimes:int = None
         self.getitem_debug_printed=False
+        self.num_batch: int = None
+        self.voiced_phoneme_epoch = None
 
         required_keys = ["tmin", "tmax", "decim", "low_pass", "high_pass"]
         for key in required_keys:
@@ -77,12 +79,15 @@ class TorchMegLoader(Dataset):
         # -----  prepare concatenated epoch
         self.load_all_epochs(subject, until_session, until_task, raw_data_path, target_label)
 
+        if self.target_label == TargetLabel.VOICED_PHONEME:
+            self.voiced_phoneme_epoch = self.create_batch_id(self.concated_epochs["not is_word"], batch_size=100)
+
+
     def get_voiced_phoneme_epoch(self):
-        if self.concated_epochs is not None:
-            epoch = self.create_batch_id(self.concated_epochs["not is_word"], 100)
-            return epoch
+        if self.voiced_phoneme_epoch is not None:
+            return self.voiced_phoneme_epoch
         else:
-            raise ValueError("self.concated_epochs is not properly set!")
+            raise ValueError("self.voiced_phoneme_epoch is not properly set!")
         
     def __len__(self):
         """
@@ -90,7 +95,9 @@ class TorchMegLoader(Dataset):
         this define the len of data
         """
         logger.debug("__len__ of loader ran")
-        # old version
+        # notes
+        # len(self.concated_epochs) = total #event in all tasks
+        # len(epoch[0]) also is  total #event in all tasks
         # try:
         #     epoch = self.get_voiced_phoneme_epoch()
         #     logger.debug(f"epoch : {epoch}")
@@ -108,14 +115,33 @@ class TorchMegLoader(Dataset):
         # except Exception as err:
         #     logger.error(err)
         #     logger.error(f"type of self.concated_epochs: {type(self.concated_epochs)}")
-        if isinstance(self.subjcet, int) and isinstance(self.until_session, int) and isinstance(self.until_task, int):
-            num = self.subjcet * (self.until_session+1) * (self.until_task+1)
-            logger.info(f"len of data: {num}")
-            return num
-        else:
-            logger.error(f"type subject: {type(self.subjcet)},type until session: {type(self.until_session)}, type until task: {type(self.until_task)}")
-            logger.error("not all int!")
-            raise ValueError
+
+        if self.target_label == TargetLabel.VOICED_PHONEME:
+            assert self.voiced_phoneme_epoch is not None
+
+            if (not ("batch_id" in self.voiced_phoneme_epoch.metadata.columns.values.tolist())):
+                logger.error("cols:")
+                for col in self.concated_epochs.metadata.columns.values.tolist():
+                    print(col)
+                
+                logger.error("no batch_id ! (which shld have been set in create_batch_id called by __init__)")
+                raise ValueError
+            elif not self.num_batch:
+                logger.error(f"num_batch: {self.num_batch}")
+                logger.error("num_batch not set! (which shld have been set in create_batch_id called by __init__)")
+                raise ValueError
+            else:
+                return self.num_batch
+
+
+        # if isinstance(self.subjcet, int) and isinstance(self.until_session, int) and isinstance(self.until_task, int):
+        #     num = self.subjcet * (self.until_session+1) * (self.until_task+1)
+        #     logger.info(f"len of data: {num}")
+        #     return num
+        # else:
+        #     logger.error(f"type subject: {type(self.subjcet)},type until session: {type(self.until_session)}, type until task: {type(self.until_task)}")
+        #     logger.error("not all int!")
+        #     raise ValueError
 
     
     def __getitem__(self, idx):
@@ -128,7 +154,8 @@ class TorchMegLoader(Dataset):
 
         everything applied to data should be run here
         """
-        logger.debug("__getitem__ of loader ran")
+        if not not self.getitem_debug_printed:
+            logger.debug("__getitem__ of loader ran")
         verbose = True
         # Load the specific epoch and its corresponding metadata
         if self.target_label == TargetLabel.VOICED_PHONEME:
@@ -179,6 +206,8 @@ class TorchMegLoader(Dataset):
             if verbose  and not self.getitem_debug_printed:
                 logger.debug(f"unsqueeze(0) 2 times, X_tensor shape: {X_tensor.shape}")
 
+
+
             '''
             original: X.shape: (#event, 208, 41)
             x_tensor need to be:(#event, 1, 208, 41)
@@ -188,6 +217,10 @@ class TorchMegLoader(Dataset):
             if verbose and not self.getitem_debug_printed:
                 logger.debug(f"X_tensor shape: {X_tensor.shape}")
             
+            X_tensor = X_tensor.unsqueeze(1)
+            if verbose and not self.getitem_debug_printed:
+                logger.debug(f"after unsqeeze(1), X_tensor shape: {X_tensor.shape}")
+
 
             y_tensor = torch.tensor(y.astype(int), dtype=torch.float32) 
             # BCE loss expect dtype float32
@@ -295,15 +328,15 @@ class TorchMegLoader(Dataset):
         else:
             raise ValueError
     
-    def create_batch_id(self, epoch, batsize):
+    def create_batch_id(self, epoch, batch_size):
         """
-        Adds a 'batch_id' column to the metadata DataFrame in self.concated_epochs.
+        Adds a 'batch_id' column to the epoch
 
-        Each batch of size `batsize` is assigned a unique ID. Rows are grouped into batches,
+        Each batch of size `batch_size` is assigned a unique ID. Rows are grouped into batches,
         Parameters:
         -----------
-        batsize : int
-        The size of each batch. Each batch will contain `batsize` rows, and each batch
+        batch_size : int
+        The size of each batch. Each batch will contain `batch_size` rows, and each batch
         will be assigned a unique ID.
 
         Returns:
@@ -311,23 +344,20 @@ class TorchMegLoader(Dataset):
         None
         """
         logger.info("create batch id")
-        if epoch:
-
-            
-            # Calculate the number of complete batches
-            num_complete_batches =  len(epoch) // batsize    # //= divde then take floor
-            logger.debug(num_complete_batches)
-            epoch = epoch[:num_complete_batches * batsize]    # drop last part to ensure #event is multiple of batch size
-
-
-            
-            # Create batch IDs
-            batch_ids = np.repeat(np.arange(num_complete_batches), batsize)
-            
-            # Assign batch IDs to the DataFrame
-            epoch.metadata = epoch.metadata.iloc[:num_complete_batches * batsize]  # Keep only complete batches
-            epoch.metadata['batch_id'] = batch_ids
-            return epoch
+         
+        # Calculate the number of complete batches
+        num_complete_batches =  len(epoch) // batch_size    # //= divde then take floor
+        self.num_batch = int(num_complete_batches)
+        logger.debug(f"num_batch: {self.num_batch}")
+        epoch = epoch[:num_complete_batches * batch_size]    # drop last part to ensure #event is multiple of batch size
+                                                            # because tensor expect each batch to have same dimension 
+        # Create batch IDs
+        batch_ids = np.repeat(np.arange(num_complete_batches), batch_size) 
+        # this create arr like [0,0,0,..1,1,1...] each repeat batch_size times
+        
+        # Assign batch IDs to the DataFrame
+        epoch.metadata['batch_id'] = batch_ids
+        return epoch
 
 
     def extract_epochs_by_id(self, epochs, id):

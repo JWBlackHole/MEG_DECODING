@@ -31,13 +31,6 @@ class SimpleTorchCNNModelRunner:
 
     def train(self, epochs=10, batch_size=32, learning_rate=0.001, train_test_ratio=0.1, test_ratio=None, to_save_res=True):
         
-        all_data_loader = DataLoader(self.megData, batch_size=len(self.megData), shuffle=False)
-        all_data = next(iter(all_data_loader))
-        
-        # Inspect the length of all_data
-        total_length = len(all_data[0])  # Assuming all_data is a tuple (inputs, labels)
-        print(f'Total length of data: {total_length}')
-        exit(0)
 
         # for testing
         ratio = (0.2, 0.1, 0.7)
@@ -53,7 +46,7 @@ class SimpleTorchCNNModelRunner:
                                                     lengths=[train_size, test_size, not_used], 
                                                     generator=rand_generator)
 
-        all_data = ...
+
         # Create DataLoaders
         train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
         test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
@@ -79,10 +72,18 @@ class SimpleTorchCNNModelRunner:
         for epoch in range(epochs):
             running_loss = 0.0
             for inputs, labels in train_loader:
+                inputs = inputs.view(-1, 1, self.nchans, self.ntimes)
+                labels = labels.view(-1, 1)
                 inputs, labels = inputs.to(device), labels.to(device)
+                # now dim of inputs: [batch (10), 100(#event), 1, 208 (#chan), 41(#timepoint)]
+                # batch likely controlled by batch_size in pytorch Dataloader
+                # #event come from how __getitem__ of my torchMegLoader return the epoch (batch_size in torchMegLoader)
+                # need to flatten batch and event dim
+                
 
-                if epoch ==1:
-                    logger.debug(f"inputs: {inputs.shape}")
+                
+                logger.debug(f"inputs: {inputs.shape}")
+                logger.debug(f"labels: {labels.shape}")
 
                 # expexted dimension of inputs: [batch_size(#event), 1, nchans, ntimes]
 
@@ -100,6 +101,8 @@ class SimpleTorchCNNModelRunner:
         y_true = []
         with torch.no_grad():
             for inputs, labels in test_loader:
+                inputs = inputs.view(-1, 1, self.nchans, self.ntimes)
+                labels = labels.view(-1, 1)
                 inputs, labels = inputs.to(device), labels.to(device)
                 outputs = model(inputs)
                 y_pred.extend(outputs.cpu().numpy())
