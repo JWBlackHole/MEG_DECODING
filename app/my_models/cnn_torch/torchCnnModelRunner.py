@@ -99,6 +99,7 @@ class SimpleTorchCNNModelRunner:
                 y_true.extend(labels.cpu().numpy())
 
         y_pred = (np.array(y_pred) >= 0.5).astype(int)
+        y_true = np.array(y_true) 
         accuracy = accuracy_score(y_true, y_pred)
         print(f'Accuracy: {accuracy:.2f}')
 
