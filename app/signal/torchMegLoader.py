@@ -23,7 +23,8 @@ import app.utils.my_utils as util
 class TorchMegLoader(Dataset):
     def __init__(self, subject, until_session, until_task, raw_data_path, target_label,
                   to_print_interim_csv=False, 
-                  meg_param:dict={"tmin":None, "tmax":None, "decim":None, "low_pass": None, "high_pass":None}):
+                  meg_param:dict={"tmin":None, "tmax":None, "decim":None, "low_pass": None, "high_pass":None}, 
+                  batch_size: int=100):
         logger.info("TorchMegLoader is inited")
         self.subjcet:int = subject
         self.until_session:int = until_session
@@ -37,6 +38,7 @@ class TorchMegLoader(Dataset):
         self.getitem_debug_printed=False
         self.num_batch: int = None
         self.voiced_phoneme_epoch = None
+        self.batch_size: int = batch_size
 
         required_keys = ["tmin", "tmax", "decim", "low_pass", "high_pass"]
         for key in required_keys:
@@ -80,7 +82,7 @@ class TorchMegLoader(Dataset):
         self.load_all_epochs(subject, until_session, until_task, raw_data_path, target_label)
 
         if self.target_label == TargetLabel.VOICED_PHONEME:
-            self.voiced_phoneme_epoch = self.create_batch_id(self.concated_epochs["not is_word"], batch_size=100)
+            self.voiced_phoneme_epoch = self.create_batch_id(self.concated_epochs["not is_word"], batch_size=self.batch_size)
 
 
     def get_voiced_phoneme_epoch(self):
@@ -154,8 +156,8 @@ class TorchMegLoader(Dataset):
 
         everything applied to data should be run here
         """
-        #if not self.getitem_debug_printed:
-        logger.debug("__getitem__ of loader is called")
+        if not self.getitem_debug_printed:
+            logger.debug("__getitem__ of loader is called")
         verbose = True
         # Load the specific epoch and its corresponding metadata
         if self.target_label == TargetLabel.VOICED_PHONEME:

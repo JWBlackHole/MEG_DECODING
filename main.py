@@ -41,6 +41,7 @@ if __name__ == "__main__":
         meg_tmin          = training_config.get('meg_tmin', None) 
         meg_tmax          = training_config.get('meg_tmax', None) 
         meg_decim          = training_config.get('meg_decim', None) 
+        load_batch_size    = training_config.get('load_batch_size', None) 
         low_pass_filter   = training_config.get('preprocess_low_pass', None)
         high_pass_filter  = training_config.get('preprocess_high_pass', None)
         training_flow     = training_config.get('flow', None)
@@ -139,7 +140,7 @@ if __name__ == "__main__":
     elif (training_flow== "cnn_batch"):
         logger.info("start to train with model: CNN (load data by batch)")
         megData = TorchMegLoader(subject, until_session, until_task, raw_data_path, target_label, 
-                                  to_print_interim_csv, meg_param)
+                                  to_print_interim_csv, meg_param, load_batch_size)
         
         nchans, ntimes = megData.get_signal_dim()
         
