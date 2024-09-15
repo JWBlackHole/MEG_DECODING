@@ -6,18 +6,30 @@ from sklearn.metrics import accuracy_score
 import numpy as np
 import pandas as pd
 from loguru import logger
+import random
 
 
 from app.my_models.cnn_torch.torchCnnModel import SimpleTorchCNNModel
 from app.utils import my_utils as util
 
 class SimpleTorchCNNModelRunner:
-    def __init__(self, megData, nchans, ntimes):
+    def __init__(self, megData, nchans, ntimes, p_drop_true=0.572):
+        """
+        Parameters:
+        -----------
+
+        p_drop_true : float
+            The drop probability for `True` labels when balancing the classes. set to 0 to not apply balancing
+
+        
+        
+        """
         logger.info("SimpleTorchCNNModelRunner is inited")
         self.check_gpu()
         self.megData = megData      # instance of TorchMegLoader
         self.nchans: int = nchans
         self.ntimes: int = ntimes
+        self.p_drop_true: float = p_drop_true     # Drop probability for `True` labels
 
     
     def check_gpu(self):
@@ -69,17 +81,48 @@ class SimpleTorchCNNModelRunner:
 
         # Training loop
         model.train()
+                # Counters for `True` and `False` labels used in training
+        true_count = 0
+        false_count = 0
+
         for epoch in range(epochs):
             running_loss = 0.0
             for inputs, labels in train_loader:
-                inputs = inputs.view(-1, 1, self.nchans, self.ntimes)
-                labels = labels.view(-1, 1)
-                inputs, labels = inputs.to(device), labels.to(device)
-                # now dim of inputs: [batch (10), 100(#event), 1, 208 (#chan), 41(#timepoint)]
+
+                # before .view, dim of inputs: [batch (10), 100(#event), 1, 208 (#chan), 41(#timepoint)]
                 # batch likely controlled by batch_size in pytorch Dataloader
                 # #event come from how __getitem__ of my torchMegLoader return the epoch (batch_size in torchMegLoader)
                 # need to flatten batch and event dim
-                
+                inputs = inputs.view(-1, 1, self.nchans, self.ntimes)
+                labels = labels.view(-1, 1)
+
+
+                if self.p_drop_true > 0:
+
+                    filtered_inputs = []
+                    filtered_labels = []
+
+                    for i in range(len(labels)):
+                        label = labels[i].item()
+                        if label == 1.0:
+                            # Drop the data with 0.572 probability if the label is `True`
+                            if random.random() > self.p_drop_true:
+                                filtered_inputs.append(inputs[i])
+                                filtered_labels.append(labels[i])
+                                true_count += 1
+                        else:
+                            # Always keep the `False` labels
+                            filtered_inputs.append(inputs[i])
+                            filtered_labels.append(labels[i])
+                            false_count += 1
+
+                    if len(filtered_inputs) == 0:
+                        continue  # Skip if all data was dropped in this batch
+
+                    # Convert filtered lists back to tensors
+                    inputs = torch.stack(filtered_inputs).to(device)
+                    labels = torch.stack(filtered_labels).to(device)
+
 
                 
                 logger.debug(f"inputs: {inputs.shape}")
@@ -94,6 +137,7 @@ class SimpleTorchCNNModelRunner:
                 #optimizer.step()
                 running_loss += loss.item()
             print(f'Epoch {epoch+1}/{epochs}, Loss: {running_loss/len(train_loader):.4f}')
+            print(f'Truthy samples used: {true_count}, Falsy samples used: {false_count}')
 
         # Evaluation
         model.eval()
