@@ -4,9 +4,12 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset, random_split
 from sklearn.metrics import accuracy_score
 import numpy as np
+import pandas as pd
 from loguru import logger
 
+
 from app.my_models.cnn_torch.torchCnnModel import SimpleTorchCNNModel
+from app.utils import my_utils as util
 
 class SimpleTorchCNNModelRunner:
     def __init__(self, megData, nchans, ntimes):
@@ -26,7 +29,7 @@ class SimpleTorchCNNModelRunner:
 
 
 
-    def train(self, epochs=10, batch_size=32, learning_rate=0.001, train_test_ratio=0.1, test_ratio=None):
+    def train(self, epochs=10, batch_size=32, learning_rate=0.001, train_test_ratio=0.1, test_ratio=None, to_save_res=True):
         # Split the data into training and testing sets
 
         # for testing
@@ -98,6 +101,35 @@ class SimpleTorchCNNModelRunner:
         y_pred = (np.array(y_pred) >= 0.5).astype(int)
         accuracy = accuracy_score(y_true, y_pred)
         print(f'Accuracy: {accuracy:.2f}')
+
+        # Save predictions and ground truth to DataFrame
+        prediction_df = pd.DataFrame({
+            'prediction': y_pred.flatten(),
+            'ground_truth': y_true.flatten()
+        })
+        # calculate metrics
+        prediction_df = util.add_comparison_column(prediction_df)
+        if to_save_res:
+            try:
+                prediction_df.to_csv(util.get_unique_file_name("voiced_prediction_cnn.csv", "./results"))
+            except Exception as err:
+                logger.error(err)
+                logger.error("fail to output csv, skipping output csv")
+
+            dstr = """epoch: 2\n
+                    tmin: -0.1\n
+                    tmax: 0.3\n
+                    preprocess_low_pass: 35,\n
+                    preprocess_high_pass: 180, \n
+                    data: sub 0, ses 0 , task 0\n
+                    cnn layer: 1--32 (K=1,5)--64(k=208,1)--128(linear)--1\n
+                    result: accuracy: 0.69
+                    """
+
+            util.get_eval_metrics(prediction_df, 
+                              file_name="voiced_metrics_cnn", save_path="./results", 
+                              description_str=dstr)
+
 
 # Example usage
 # Assuming you have your data in variables X and y
