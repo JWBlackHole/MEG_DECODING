@@ -5,6 +5,9 @@
         "until_subject": 1,
         "until_session": 0,
         "until_task": 3,
+        "meg_tmin": -0.1,
+        "meg_tmax": 0.3,
+        "meg_decim": 10,
         "preprocess_low_pass": 35,
         "preprocess_high_pass": 180,
         "dont_kfold_in_lda": true

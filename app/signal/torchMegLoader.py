@@ -21,8 +21,9 @@ from app.common.commonSetting import TargetLabel
 import app.utils.my_utils as util
 
 class TorchMegLoader(Dataset):
-    def __init__(self, subject, until_session, until_task, raw_data_path, target_label, 
-                low_pass_filter, high_pass_filter, to_print_interim_csv=False):
+    def __init__(self, subject, until_session, until_task, raw_data_path, target_label,
+                  to_print_interim_csv=False, 
+                  meg_param:dict={"tmin":None, "tmax":None, "decim":None, "low_pass": None, "high_pass":None}):
         logger.info("TorchMegLoader is inited")
         self.subjcet = subject
         self.until_session = until_session
@@ -30,6 +31,7 @@ class TorchMegLoader(Dataset):
         self.raw_data_path = raw_data_path
         self.concated_epochs: EpochsArray | None = None
         self.to_print_interim_csv = to_print_interim_csv
+        self.meg_param = meg_param
         
         # ---   target label checking ------ #
         if type(target_label) is str:   # convert to TargetLabel class if it is str
@@ -61,7 +63,7 @@ class TorchMegLoader(Dataset):
         self.target_label = target_label
         
         # -----  prepare concatenated epoch
-        self.load_all_epochs(subject, until_session, until_task, raw_data_path, target_label, low_pass_filter, high_pass_filter)
+        self.load_all_epochs(subject, until_session, until_task, raw_data_path, target_label)
 
     def get_voiced_phoneme_epoch(self):
         if self.concated_epochs is not None:
@@ -136,8 +138,7 @@ class TorchMegLoader(Dataset):
         else:
             raise NotImplementedError
     
-    def load_all_epochs(self, subject, until_session, until_task, raw_data_path, setting,
-                         low_pass_filter, high_pass_filter):
+    def load_all_epochs(self, subject, until_session, until_task, raw_data_path, setting):
         """
         load epochs of all sessions, all tasks for one subject to self.concated_epochs
         """
@@ -154,7 +155,7 @@ class TorchMegLoader(Dataset):
         # load epochs for each session each task
         for session in range(until_session + 1):
             for task in range(until_task + 1):
-                cur_epochs = self.load_epochs_one_task(subject, session, task, raw_data_path, setting, low_pass_filter, high_pass_filter)
+                cur_epochs = self.load_epochs_one_task(subject, session, task, raw_data_path, setting)
                 
                 # make columns task and session to record the current handling task and session
                 cur_epochs.metadata["task"] = task
@@ -170,8 +171,7 @@ class TorchMegLoader(Dataset):
         return self.concated_epochs
     
 
-    def load_epochs_one_task(self, subject, session, task, raw_data_path, setting: TargetLabel,
-                low_pass_filter, high_pass_filter) -> None:
+    def load_epochs_one_task(self, subject, session, task, raw_data_path, setting: TargetLabel) -> None:
         """
         prepare mne epoch of one task of one session one subject
         """
@@ -183,9 +183,18 @@ class TorchMegLoader(Dataset):
         
 
         # --- signal processing --- #
-        
-        signal_handler = MEGSignal(setting, low_pass=low_pass_filter, high_pass=high_pass_filter, to_print_interim_csv=self.to_print_interim_csv,
-                                   preload=False)   # must set preload=False, this mean only load data when accessed [MUST !!!] 
+
+        signal_handler = MEGSignal(             # must set preload=False, this mean only load data when accessed [MUST !!!] 
+            setting, 
+            low_pass=self.meg_param.low_pass if self.meg_param.low_pass else None, 
+            high_pass=self.meg_param.high_pass if self.meg_param.high_pass else None,
+            to_print_interim_csv=self.to_print_interim_csv if self.to_print_interim_csv else None,
+            preload=False, 
+            tmin=self.meg_param.tmin if self.meg_param.tmin else None,
+            tmax=self.meg_param.tmax if self.meg_param.tmax else None,
+            decim=self.meg_param.decim if self.meg_param.decim else None
+        ) 
+
 
         # set mne epoch for each session, each task
         # Specify a path to a epoch

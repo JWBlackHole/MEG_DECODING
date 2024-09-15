@@ -32,7 +32,8 @@ class MEGSignal():
         init -> load_raw -> load-meta -> load_epochs
     
     """
-    def __init__(self, setting: TargetLabel, low_pass:float = 0.5, high_pass:float = 30.0, n_jobs:int = 1, to_print_interim_csv=False, preload=True):
+    def __init__(self, setting: TargetLabel, low_pass:float = 0.5, high_pass:float = 30.0, n_jobs:int = 1, to_print_interim_csv=False, preload=True,
+                 tmin: float=-0.1, tmax: float=0.3, decim:int=10):
        self.raw:  Raw|None          = None
        self.meta: pd.DataFrame|None = None
        
@@ -45,7 +46,15 @@ class MEGSignal():
        self.n_jobs: int = n_jobs
        self.to_print_interim_csv: bool = to_print_interim_csv
        self.preload: bool = preload
+       self.nchans:int = 208
+       self.ntimes:int = None
        
+    def get_nchans_ntimes(self):
+        if (self.nchans and self.ntimes):
+            return self.nchans, self.ntimes
+        else:
+            logger.error(f"self.nchans: {self.nchans}, self.ntimes: {self.ntimes}, at least one is not properly set!\nnote: you need to call load_epochs first.")
+            raise ValueError
        
 
     def prepare_one_epochs(self, bids_path, supplementary_meta: pd.DataFrame = None):
@@ -54,7 +63,8 @@ class MEGSignal():
         """
         self.load_raw(bids_path)
         meta = self._load_meta(self.raw, supplementary_meta, to_save_csv=self.to_print_interim_csv)
-        epochs = self.load_epochs(self.raw, meta, to_save_csv=self.to_print_interim_csv)
+        epochs = self.load_epochs(self.raw, meta, to_save_csv=self.to_print_interim_csv,
+                                  tmin=self.tmin, tmax=self.tmix, decim=self.decim)
         return epochs
 
     """
@@ -166,7 +176,7 @@ class MEGSignal():
         return meta
 
        
-    def load_epochs(self, raw: Raw, meta: pd.DataFrame, to_save_csv: bool = False,tmin: float = None, tmax: float = None)->mne.Epochs:
+    def load_epochs(self, raw: Raw, meta: pd.DataFrame, to_save_csv: bool = False,tmin: float = -0.1, tmax: float = 0.3, decim:int=10)->mne.Epochs:
         """Get epochs by assemble "meatadata" and "raw". 
         will load epochs of the given raw and meta 
         meta and raw should correspond to the same subject same session same task
@@ -198,14 +208,17 @@ class MEGSignal():
         epochs = mne.Epochs(
             raw,
             events,
-            tmin    = -0.1,
-            tmax    = 0.3,
-            decim   = 10,
+            tmin    = tmin,
+            tmax    = tmax,
+            decim   = decim,
             baseline=(-0.1, 0.0),
             metadata=meta,
             preload =self.preload,
             event_repeated="drop",
         )
+
+        self.ntimes = (tmax-tmin)*decim +1
+
         #events
         # 1st col: onset time
 

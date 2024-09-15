@@ -38,6 +38,9 @@ if __name__ == "__main__":
         subject           = training_config.get('until_subject', 1)    # subject start from 1
         until_session     = training_config.get('until_session',0)     # session start from 0
         until_task        = training_config.get('until_task', 0)       # task start from 0
+        meg_tmin          = training_config.get('meg_tmin', None) 
+        meg_tmax          = training_config.get('meg_tmax', None) 
+        meg_decim          = training_config.get('meg_decim', None) 
         low_pass_filter   = training_config.get('preprocess_low_pass', None)
         high_pass_filter  = training_config.get('preprocess_high_pass', None)
         training_flow     = training_config.get('flow', None)
@@ -62,7 +65,15 @@ if __name__ == "__main__":
         low_pass_filter = high_pass_filter = training_flow = log_level = result_metrics_save_path = dont_kfold_in_lda = None
         target_label = None
         to_print_interim_csv = None
-        nn_total_epoch = None
+        nn_total_epoch = meg_tmin = meg_tmax = meg_decim = None
+
+    meg_param={
+        "tmin": meg_tmin,
+        "tmax": meg_tmax,
+        "decim": meg_decim,
+        "low_pass": low_pass_filter,
+        "high_pass": high_pass_filter
+    }
 
     # ----- Set logger ----- #
     util.MyLogger(logger, log_level=log_level, output="console")   # logger comes from loguru logger
@@ -128,7 +139,7 @@ if __name__ == "__main__":
     elif (training_flow== "cnn_batch"):
         logger.info("start to train with model: CNN (load data by batch)")
         megData = TorchMegLoader(subject, until_session, until_task, raw_data_path, target_label, 
-                                 low_pass_filter, high_pass_filter, to_print_interim_csv)
+                                  to_print_interim_csv, meg_param)
         
         torch_cnn_model = SimpleTorchCNNModelRunner(megData)
         torch_cnn_model.train(epochs=2, batch_size=32, learning_rate=0.001)
