@@ -70,9 +70,12 @@ class SimpleTorchCNNModelRunner:
             running_loss = 0.0
             for inputs, labels in train_loader:
                 inputs, labels = inputs.to(device), labels.to(device)
-                inputs = inputs.unsqueeze(1)  # Add the channel dimension 
-                # expexted dimension of inputs: [batch_size, 1, nchans, ntimes]
-                # not sure if above is needed
+
+                if epoch ==1:
+                    logger.debug(f"inputs: {inputs.shape}")
+
+                # expexted dimension of inputs: [batch_size(#event), 1, nchans, ntimes]
+
                 #optimizer.zero_grad()   # empty gradient
                 outputs = model(inputs)
                 loss = criterion(outputs, labels)

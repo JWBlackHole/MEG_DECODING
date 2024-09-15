@@ -34,26 +34,31 @@ class MEGSignal():
     """
     def __init__(self, setting: TargetLabel, low_pass:float = 0.5, high_pass:float = 30.0, n_jobs:int = 1, to_print_interim_csv=False, preload=True,
                  tmin: float=-0.1, tmax: float=0.3, decim:int=10):
-       self.raw:  Raw|None          = None
-       self.meta: pd.DataFrame|None = None
-       
-       # Epoches
-       self.epochs: Epochs|None     = None      #mne.Epochs object
-       # self.all_epochs: list = []               # list of mne.Epochs??
-       self.setting: TargetLabel | None = setting
-       self.low_pass: float = low_pass
-       self.high_pass: float = high_pass
-       self.n_jobs: int = n_jobs
-       self.to_print_interim_csv: bool = to_print_interim_csv
-       self.preload: bool = preload
-       self.nchans:int = 208
-       self.ntimes:int = None
+        self.raw:  Raw|None          = None
+        self.meta: pd.DataFrame|None = None
+
+        # Epoches
+        self.epochs: Epochs|None     = None      #mne.Epochs object
+        # self.all_epochs: list = []               # list of mne.Epochs??
+        self.setting: TargetLabel | None = setting
+        self.low_pass: float = low_pass
+        self.high_pass: float = high_pass
+        self.n_jobs: int = n_jobs
+        self.to_print_interim_csv: bool = to_print_interim_csv
+        self.preload: bool = preload
+        self.nchans:int = 208
+        self.tmin:float = tmin
+        self.tmax:float = tmax
+        self.decim:int = decim
+        self.ntimes: int = int((tmax-tmin)*(1000/decim)) +1  # this is required for preload false, as data is not loaded, cannot infer ntimes directly from data, hence ntimes must be calculated
+                                                            # 1000 is sfreq (frequency for sampling meg)
+        logger.debug(f"ntimes= {self.ntimes}")
        
     def get_nchans_ntimes(self)->tuple[int,int]:
         if (self.nchans and self.ntimes):
             return self.nchans, self.ntimes
         else:
-            logger.error(f"self.nchans: {self.nchans}, self.ntimes: {self.ntimes}, at least one is not properly set!\nnote: you need to call load_epochs first.")
+            logger.error(f"self.nchans: {self.nchans}, self.ntimes: {self.ntimes}, at least one is not properly set!")
             raise ValueError
        
 
@@ -63,8 +68,8 @@ class MEGSignal():
         """
         self.load_raw(bids_path)
         meta = self._load_meta(self.raw, supplementary_meta, to_save_csv=self.to_print_interim_csv)
-        epochs = self.load_epochs(self.raw, meta, to_save_csv=self.to_print_interim_csv,
-                                  tmin=self.tmin, tmax=self.tmix, decim=self.decim)
+        epochs = self.load_epochs(self.raw, meta, to_save_csv=self.to_print_interim_csv
+                                  )
         return epochs
 
     """
@@ -176,7 +181,7 @@ class MEGSignal():
         return meta
 
        
-    def load_epochs(self, raw: Raw, meta: pd.DataFrame, to_save_csv: bool = False,tmin: float = -0.1, tmax: float = 0.3, decim:int=10)->mne.Epochs:
+    def load_epochs(self, raw: Raw, meta: pd.DataFrame, to_save_csv: bool = False)->mne.Epochs:
         """Get epochs by assemble "meatadata" and "raw". 
         will load epochs of the given raw and meta 
         meta and raw should correspond to the same subject same session same task
@@ -208,16 +213,16 @@ class MEGSignal():
         epochs = mne.Epochs(
             raw,
             events,
-            tmin    = tmin,
-            tmax    = tmax,
-            decim   = decim,
+            tmin    = self.tmin,      #note: must use tmin, tmax, decim in self, because ntimes is only calculated in init according to value in init
+            tmax    = self.tmax,
+            decim   = self.decim,
             baseline=(-0.1, 0.0),
             metadata=meta,
             preload =self.preload,
             event_repeated="drop",
         )
 
-        self.ntimes = (tmax-tmin)*decim +1
+        
 
         #events
         # 1st col: onset time

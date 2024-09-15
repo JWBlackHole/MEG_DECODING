@@ -34,6 +34,16 @@ class TorchMegLoader(Dataset):
         self.meg_param: dict = meg_param
         self.nchans:int = None
         self.ntimes:int = None
+        self.getitem_debug_printed=False
+
+        required_keys = ["tmin", "tmax", "decim", "low_pass", "high_pass"]
+        for key in required_keys:
+            if key not in self.meg_param:
+                for k, v in self.meg_param.items():
+                    print(f"{k}: {v}")
+                raise ValueError(f"meg_param is missing required key: {key}")
+
+
         
         # ---   target label checking ------ #
         if type(target_label) is str:   # convert to TargetLabel class if it is str
@@ -102,8 +112,10 @@ class TorchMegLoader(Dataset):
 
             epoch = self.get_voiced_phoneme_epoch()
             epoch = epoch[idx]
-            if verbose:
+
+            if verbose and not self.getitem_debug_printed:
                 logger.debug(f"idx= {idx}, epoch: {epoch}, type: {type(epoch)}")
+
             epoch.apply_baseline(verbose="WARNING")  # Apply baseline correction
             X = epoch.get_data(copy=True)   # Get the data as a 3D array (n_channels, n_times)
             y = epoch.metadata["voiced"].values
@@ -114,7 +126,7 @@ class TorchMegLoader(Dataset):
             th = np.percentile(np.abs(X), 95)
             X = np.clip(X, -th, th)
             
-            if(idx < 10 and verbose):
+            if(verbose and not self.getitem_debug_printed):
                 logger.debug(f"type of X: {type(X)}")   # numpy.ndarray
                 try:
                     logger.debug(f"X.shape: {X.shape}") # (1, 208, 41)
@@ -128,21 +140,36 @@ class TorchMegLoader(Dataset):
          
 
             # Convert to PyTorch tensors
-            X_tensor = torch.tensor(X, dtype=torch.float32).squeeze(0)  
-            
-            '''
-            original X: (1,nchans, ntime)
-            after .squeeze(0):
-                 (nchans, ntime)  (first dimension removed)
-            why need to do this?
-            looks like is create dimensino that CNN expect? (TBC)
+
+            # investigation
+            # X_tensor = torch.tensor(X, dtype=torch.float32)  # torch.Size([1, 208, 41])
+            # if verbose:
+            #     logger.debug(f"not squeezed, X_tensor shape: {X_tensor.shape}")
+            # X_tensor = X_tensor.squeeze(0)  #torch.Size([208, 41])
+            # if verbose:
+            #     logger.debug(f"squeeze(0), X_tensor shape: {X_tensor.shape}")   # 
+            # X_tensor = X_tensor.unsqueeze(0)    # torch.Size([1, 208, 41])
+            # if verbose:
+            #     logger.debug(f"unsqueeze(0) 1 time, X_tensor shape: {X_tensor.shape}")
+            # X_tensor = X_tensor.unsqueeze(0)    #torch.Size([1, 1, 208, 41])
+            # if verbose :
+            #     logger.debug(f"unsqueeze(0) 2 times, X_tensor shape: {X_tensor.shape}")
 
             '''
+            original: X.shape: (#event, 208, 41)
+            x_tensor need to be:(#event, 1, 208, 41)
+            '''
+
+            X_tensor = torch.tensor(X, dtype=torch.float32)
+            if verbose and not self.getitem_debug_printed:
+                logger.debug(f"X_tensor shape: {X_tensor.shape}")
+            
 
             y_tensor = torch.tensor(y.astype(int), dtype=torch.float32) 
             # BCE loss expect dtype float32
             # if change to other loss function, may need to look for what dtype expected
-
+            
+            self.getitem_debug_printed = True
             return X_tensor, y_tensor
         else:
             raise NotImplementedError
@@ -202,18 +229,18 @@ class TorchMegLoader(Dataset):
 
         # --- signal processing --- #
 
-        signal_handler = MEGSignal(             # must set preload=False, this mean only load data when accessed [MUST !!!] 
+        signal_handler = MEGSignal(             # must set preload=False, this means only load data when accessed [MUST !!!] 
             setting, 
-            low_pass=self.meg_param.low_pass if self.meg_param.low_pass else None, 
-            high_pass=self.meg_param.high_pass if self.meg_param.high_pass else None,
+            low_pass=self.meg_param["low_pass"] if self.meg_param["low_pass"] else None, 
+            high_pass=self.meg_param["high_pass"] if self.meg_param["high_pass"] else None,
             to_print_interim_csv=self.to_print_interim_csv if self.to_print_interim_csv else None,
             preload=False, 
-            tmin=self.meg_param.tmin if self.meg_param.tmin else None,
-            tmax=self.meg_param.tmax if self.meg_param.tmax else None,
-            decim=self.meg_param.decim if self.meg_param.decim else None
+            tmin=self.meg_param["tmin"] if self.meg_param["tmin"] else None,
+            tmax=self.meg_param["tmax"] if self.meg_param["tmax"] else None,
+            decim=self.meg_param["decim"] if self.meg_param["decim"] else None
         ) 
+        
         self.nchans, self.ntimes = signal_handler.get_nchans_ntimes()
-
 
         # set mne epoch for each session, each task
         # Specify a path to a epoch
