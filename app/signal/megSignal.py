@@ -49,7 +49,7 @@ class MEGSignal():
        self.nchans:int = 208
        self.ntimes:int = None
        
-    def get_nchans_ntimes(self):
+    def get_nchans_ntimes(self)->tuple[int,int]:
         if (self.nchans and self.ntimes):
             return self.nchans, self.ntimes
         else:

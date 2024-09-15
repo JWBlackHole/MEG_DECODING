@@ -9,10 +9,12 @@ from loguru import logger
 from app.my_models.cnn_torch.torchCnnModel import SimpleTorchCNNModel
 
 class SimpleTorchCNNModelRunner:
-    def __init__(self, megData):
+    def __init__(self, megData, nchans, ntimes):
         logger.info("SimpleTorchCNNModelRunner is inited")
-        self.megData = megData
         self.check_gpu()
+        self.megData = megData      # instance of TorchMegLoader
+        self.nchans: int = nchans
+        self.ntimes: int = ntimes
 
     
     def check_gpu(self):
@@ -24,7 +26,7 @@ class SimpleTorchCNNModelRunner:
 
 
 
-    def train(self, epochs=10, batch_size=32, learning_rate=0.001, train_test_ratio=0.1):
+    def train(self, epochs=10, batch_size=32, learning_rate=0.001, train_test_ratio=0.1, test_ratio=None):
         # Split the data into training and testing sets
 
         # for testing
@@ -55,7 +57,7 @@ class SimpleTorchCNNModelRunner:
             logger.error(f"device.type: {device.type},  is not cuda! program exit!")
             raise AssertionError
 
-        model = SimpleTorchCNNModel().to(device)
+        model = SimpleTorchCNNModel(self.nchans, self.ntimes).to(device)
         criterion = nn.BCELoss()    
         # notes:
         # using BCELoss expect X, y both in type float32
@@ -71,9 +73,11 @@ class SimpleTorchCNNModelRunner:
                 inputs = inputs.unsqueeze(1)  # Add the channel dimension 
                 # expexted dimension of inputs: [batch_size, 1, nchans, ntimes]
                 # not sure if above is needed
+                #optimizer.zero_grad()   # empty gradient
                 outputs = model(inputs)
                 loss = criterion(outputs, labels)
                 loss.backward()
+                #optimizer.step()
                 running_loss += loss.item()
             print(f'Epoch {epoch+1}/{epochs}, Loss: {running_loss/len(train_loader):.4f}')
 

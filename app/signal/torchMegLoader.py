@@ -31,7 +31,9 @@ class TorchMegLoader(Dataset):
         self.raw_data_path = raw_data_path
         self.concated_epochs: EpochsArray | None = None
         self.to_print_interim_csv = to_print_interim_csv
-        self.meg_param = meg_param
+        self.meg_param: dict = meg_param
+        self.nchans:int = None
+        self.ntimes:int = None
         
         # ---   target label checking ------ #
         if type(target_label) is str:   # convert to TargetLabel class if it is str
@@ -86,26 +88,33 @@ class TorchMegLoader(Dataset):
     
     def __getitem__(self, idx):
         """
-        Load a single epoch (and corresponding label) into memory for training.
+        Load a single epoch (and corresponding label) into memory.
+        here is where the data *actually* loaded
+
         this method is required by Torch Dataset
         this define what is each data sample
 
         everything applied to data should be run here
-        cuz here is where the data actually loaded
         """
+        verbose = True
         # Load the specific epoch and its corresponding metadata
         if self.target_label == TargetLabel.VOICED_PHONEME:
+
             epoch = self.get_voiced_phoneme_epoch()
             epoch = epoch[idx]
+            if verbose:
+                logger.debug(f"idx= {idx}, epoch: {epoch}, type: {type(epoch)}")
             epoch.apply_baseline(verbose="WARNING")  # Apply baseline correction
             X = epoch.get_data(copy=True)   # Get the data as a 3D array (n_channels, n_times)
             y = epoch.metadata["voiced"].values
 
-            # clip to 95 percentile
+            # clip to 95 percentile for twice
+            th = np.percentile(np.abs(X), 95)
+            X = np.clip(X, -th, th)
             th = np.percentile(np.abs(X), 95)
             X = np.clip(X, -th, th)
             
-            if(idx < 10):
+            if(idx < 10 and verbose):
                 logger.debug(f"type of X: {type(X)}")   # numpy.ndarray
                 try:
                     logger.debug(f"X.shape: {X.shape}") # (1, 208, 41)
@@ -137,6 +146,15 @@ class TorchMegLoader(Dataset):
             return X_tensor, y_tensor
         else:
             raise NotImplementedError
+        
+    def get_signal_dim(self):
+        if isinstance(self.nchans, int) and isinstance(self.ntimes, int):
+            return self.nchans, self.ntimes
+        else:
+            logger.error("nchans, ntimes is not of int!")
+            logger.error(f"nchans: {self.nchans}, ntimes: {self.ntimes}")
+            raise ValueError
+
     
     def load_all_epochs(self, subject, until_session, until_task, raw_data_path, setting):
         """
@@ -194,6 +212,7 @@ class TorchMegLoader(Dataset):
             tmax=self.meg_param.tmax if self.meg_param.tmax else None,
             decim=self.meg_param.decim if self.meg_param.decim else None
         ) 
+        self.nchans, self.ntimes = signal_handler.get_nchans_ntimes()
 
 
         # set mne epoch for each session, each task
