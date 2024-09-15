@@ -97,7 +97,7 @@ if __name__ == "__main__":
         logger.error("target_label is not valid, program exit.")
         exit(0)
     
-    logger.warning(f"currently only training for one subject is supported. Will train for subject {subject:02}")
+    # logger.warning(f"currently only training for one subject is supported. Will train for subject {subject:02}")
 
     logger.info(f"target label to predicted got: \"{target_label}\"")
     if target_label  == "voiced":
@@ -145,7 +145,7 @@ if __name__ == "__main__":
         nchans, ntimes = megData.get_signal_dim()
         
         torch_cnn_model = SimpleTorchCNNModelRunner(megData, nchans, ntimes, p_drop_true=0.572)
-        torch_cnn_model.train(epochs=2, batch_size=1, learning_rate=0.001)
+        torch_cnn_model.train(epochs=100, batch_size=1, learning_rate=0.001)
         logger.info("cnn training finished.")
         exit(0)
         

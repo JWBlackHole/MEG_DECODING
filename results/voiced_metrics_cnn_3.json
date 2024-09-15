@@ -1,0 +1,11 @@
+{
+    "description": "epoch: 2\n\n                    tmin: -0.1\n\n                    tmax: 0.3\n\n                    preprocess_low_pass: 35,\n\n                    preprocess_high_pass: 180, \n\n                    data: sub 0, ses 0 , task 0\n\n                    cnn layer: 1--32 (K=1,5)--64(k=208,1)--128(linear)--1\n\n                    result: accuracy: 0.69\n                    ",
+    "recall": 0.0,
+    "precision": 0,
+    "accuracy": 0.2933,
+    "f1_score": 0,
+    "tp": 0,
+    "fp": 0,
+    "tn": 2933,
+    "fn": 7067
+}

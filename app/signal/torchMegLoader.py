@@ -21,12 +21,13 @@ from app.common.commonSetting import TargetLabel
 import app.utils.my_utils as util
 
 class TorchMegLoader(Dataset):
-    def __init__(self, subject, until_session, until_task, raw_data_path, target_label,
+    def __init__(self, until_subject, until_session, until_task, raw_data_path, target_label,
                   to_print_interim_csv=False, 
                   meg_param:dict={"tmin":None, "tmax":None, "decim":None, "low_pass": None, "high_pass":None}, 
                   batch_size: int=100):
         logger.info("TorchMegLoader is inited")
-        self.subjcet:int = subject
+        logger.info(f"load batch size: {batch_size}")
+        self.until_subjcet:int = until_subject
         self.until_session:int = until_session
         self.until_task:int = until_task
         self.raw_data_path = raw_data_path
@@ -79,7 +80,7 @@ class TorchMegLoader(Dataset):
         self.target_label = target_label
         
         # -----  prepare concatenated epoch
-        self.load_all_epochs(subject, until_session, until_task, raw_data_path, target_label)
+        self.load_all_epochs(until_subject, until_session, until_task, raw_data_path, target_label)
 
         if self.target_label == TargetLabel.VOICED_PHONEME:
             self.voiced_phoneme_epoch = self.create_batch_id(self.concated_epochs["not is_word"], batch_size=self.batch_size)
@@ -242,7 +243,7 @@ class TorchMegLoader(Dataset):
             raise ValueError
 
     
-    def load_all_epochs(self, subject, until_session, until_task, raw_data_path, setting):
+    def load_all_epochs(self, until_subject, until_session, until_task, raw_data_path, setting):
         """
         load epochs of all sessions, all tasks for one subject to self.concated_epochs
         """
@@ -257,18 +258,19 @@ class TorchMegLoader(Dataset):
 
         
         # load epochs for each session each task
-        glob_id = 0
-        for session in range(until_session + 1):
-            for task in range(until_task + 1):
-                cur_epochs = self.load_epochs_one_task(subject, session, task, raw_data_path, setting)
-                
-                # make columns task and session to record the current handling task and session
-                cur_epochs.metadata["task"] = task
-                cur_epochs.metadata["session"] = session
-                cur_epochs.metadata["subject"] = subject
-                #cur_epochs.metadata["global_id"] = glob_id  # to identify each task
-                epochs_list.append(cur_epochs)
-                glob_id +=1
+        #glob_id = 0
+        for subject in range(1, until_subject + 1):
+            for session in range(until_session + 1):
+                for task in range(until_task + 1):
+                    cur_epochs = self.load_epochs_one_task(subject, session, task, raw_data_path, setting)
+                    
+                    # make columns task and session to record the current handling task and session
+                    cur_epochs.metadata["task"] = task
+                    cur_epochs.metadata["session"] = session
+                    cur_epochs.metadata["subject"] = subject
+                    #cur_epochs.metadata["global_id"] = glob_id  # to identify each task
+                    epochs_list.append(cur_epochs)
+                    #glob_id +=1
         
         if not len(epochs_list):
             logger.error("error in loading all epochs, program exit.")

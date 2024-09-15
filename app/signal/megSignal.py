@@ -32,15 +32,15 @@ class MEGSignal():
         init -> load_raw -> load-meta -> load_epochs
     
     """
-    def __init__(self, setting: TargetLabel, low_pass:float = 0.5, high_pass:float = 30.0, n_jobs:int = 1, to_print_interim_csv=False, preload=True,
-                 tmin: float=-0.1, tmax: float=0.3, decim:int=10):
+    def __init__(self, setting: TargetLabel, low_pass:float = 0.5, high_pass:float = 180, n_jobs:int = 1, to_print_interim_csv=False, preload=True,
+                 tmin: float=-0.1, tmax: float=0.3, decim:int=1):
         self.raw:  Raw|None          = None
         self.meta: pd.DataFrame|None = None
 
         # Epoches
         self.epochs: Epochs|None     = None      #mne.Epochs object
         # self.all_epochs: list = []               # list of mne.Epochs??
-        self.setting: TargetLabel | None = setting
+        self.target_label: TargetLabel | None = setting
         self.low_pass: float = low_pass
         self.high_pass: float = high_pass
         self.n_jobs: int = n_jobs
@@ -134,7 +134,7 @@ class MEGSignal():
         # Computing if voicing
         # Replace voiced to True or False
 
-        if self.setting == TargetLabel.VOICED_PHONEME:
+        if self.target_label == TargetLabel.VOICED_PHONEME:
             phonemes = meta.query('kind=="phoneme"')
             for ph, d in phonemes.groupby("phoneme"):
                 # print(ph, ":\n", d)
@@ -159,7 +159,17 @@ class MEGSignal():
             meta = meta.query('kind=="phoneme"')
             if(to_save_csv):
                 meta.to_csv(util.get_unique_file_name(file_name="meta.csv", dir="./test"))
-        elif self.setting in [TargetLabel.WORD_FREQ, TargetLabel.PLOT_WORD_ONSET, TargetLabel.WORD_ONSET]:
+        elif self.target_label == TargetLabel.WORD_FREQ:
+            words = meta.query('kind=="word"').copy()
+            meta.loc[words.index + 1, "is_word"] = True
+            
+            # Merge "word frequency" with "phoneme"
+            # apply a funcion to calculate the word frequency
+            wfreq = lambda x: zipf_frequency(x, "en")  # noqa
+            meta.loc[words.index + 1, "wordfreq"] = words.word.apply(wfreq).values
+            meta = meta[meta['kind'] == 'word']
+
+        elif self.target_label in [TargetLabel.PLOT_WORD_ONSET, TargetLabel.WORD_ONSET]:
             # create colmn is_word in meta
             # if column "kind"=="word", is_word
             # else false
@@ -193,7 +203,7 @@ class MEGSignal():
         """
         # Create event that mne need
         # including time info
-        logger.debug(f"in meg signal handler, self.setting: {self.setting}")
+        logger.debug(f"in meg signal handler, self.setting: {self.target_label}")
         events = np.c_[
             meta.onset * raw.info["sfreq"], np.ones((len(meta), 2))
         ].astype(int)
@@ -210,6 +220,9 @@ class MEGSignal():
         #     preload=True,
         #     event_repeated="drop",
         # )
+
+        if self.preload:
+            logger.warning("preload is true! may cause high memory usage!!")
         epochs = mne.Epochs(
             raw,
             events,

@@ -95,7 +95,7 @@ class SimpleTorchCNNModelRunner:
                 # need to flatten batch and event dim
                 inputs = inputs.view(-1, 1, self.nchans, self.ntimes)
                 labels = labels.view(-1, 1)
-
+                inputs, labels = inputs.to(device), labels.to(device)
 
                 if self.p_drop_true > 0:
 

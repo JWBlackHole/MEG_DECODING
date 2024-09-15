@@ -28,7 +28,7 @@ class LdaModelRunner():
         prediction_df = util.add_comparison_column(prediction_df)
         if to_save_csv:
             try:
-                prediction_df.to_csv(util.get_unique_file_name("voiced_prediction_t=1.csv", "./results"))
+                prediction_df.to_csv(util.get_unique_file_name("voiced_prediction.csv", "./results"))
             except Exception as err:
                 logger.error(err)
                 logger.error("fail to output csv, skipping output csv")
