@@ -25,9 +25,9 @@ class TorchMegLoader(Dataset):
                   to_print_interim_csv=False, 
                   meg_param:dict={"tmin":None, "tmax":None, "decim":None, "low_pass": None, "high_pass":None}):
         logger.info("TorchMegLoader is inited")
-        self.subjcet = subject
-        self.until_session = until_session
-        self.until_task = until_task
+        self.subjcet:int = subject
+        self.until_session:int = until_session
+        self.until_task:int = until_task
         self.raw_data_path = raw_data_path
         self.concated_epochs: EpochsArray | None = None
         self.to_print_interim_csv = to_print_interim_csv
@@ -79,7 +79,8 @@ class TorchMegLoader(Dataset):
 
     def get_voiced_phoneme_epoch(self):
         if self.concated_epochs is not None:
-            return self.concated_epochs["not is_word"]
+            epoch = self.create_batch_id(self.concated_epochs["not is_word"], 100)
+            return epoch
         else:
             raise ValueError("self.concated_epochs is not properly set!")
         
@@ -88,12 +89,33 @@ class TorchMegLoader(Dataset):
         this method is required by Torch Dataset
         this define the len of data
         """
-        try:
-            epoch = self.get_voiced_phoneme_epoch()
-            return len(epoch)  # Total number of epochs
-        except Exception as err:
-            logger.error(err)
-            logger.error(f"type of self.concated_epochs: {type(self.concated_epochs)}")
+        logger.debug("__len__ of loader ran")
+        # old version
+        # try:
+        #     epoch = self.get_voiced_phoneme_epoch()
+        #     logger.debug(f"epoch : {epoch}")
+        #     logger.debug(f"len(epoch): {len(epoch)}")
+        #     try:
+        #         logger.debug(f"epoch[0]: {epoch[0]}")
+        #         try:
+        #             logger.debug(f"len(epoch[0])= {len(epoch[0])}")
+        #         except Exception as e:
+        #             logger.error(e)
+        #     except Exception as e:
+        #         logger.error(e)
+
+        #     return len(epoch)  # Total number of epochs
+        # except Exception as err:
+        #     logger.error(err)
+        #     logger.error(f"type of self.concated_epochs: {type(self.concated_epochs)}")
+        if isinstance(self.subjcet, int) and isinstance(self.until_session, int) and isinstance(self.until_task, int):
+            num = self.subjcet * (self.until_session+1) * (self.until_task+1)
+            logger.info(f"len of data: {num}")
+            return num
+        else:
+            logger.error(f"type subject: {type(self.subjcet)},type until session: {type(self.until_session)}, type until task: {type(self.until_task)}")
+            logger.error("not all int!")
+            raise ValueError
 
     
     def __getitem__(self, idx):
@@ -106,12 +128,14 @@ class TorchMegLoader(Dataset):
 
         everything applied to data should be run here
         """
+        logger.debug("__getitem__ of loader ran")
         verbose = True
         # Load the specific epoch and its corresponding metadata
         if self.target_label == TargetLabel.VOICED_PHONEME:
 
             epoch = self.get_voiced_phoneme_epoch()
-            epoch = epoch[idx]
+
+            epoch = self.extract_epochs_by_id(epoch, idx)
 
             if verbose and not self.getitem_debug_printed:
                 logger.debug(f"idx= {idx}, epoch: {epoch}, type: {type(epoch)}")
@@ -142,18 +166,18 @@ class TorchMegLoader(Dataset):
             # Convert to PyTorch tensors
 
             # investigation
-            # X_tensor = torch.tensor(X, dtype=torch.float32)  # torch.Size([1, 208, 41])
-            # if verbose:
-            #     logger.debug(f"not squeezed, X_tensor shape: {X_tensor.shape}")
-            # X_tensor = X_tensor.squeeze(0)  #torch.Size([208, 41])
-            # if verbose:
-            #     logger.debug(f"squeeze(0), X_tensor shape: {X_tensor.shape}")   # 
-            # X_tensor = X_tensor.unsqueeze(0)    # torch.Size([1, 208, 41])
-            # if verbose:
-            #     logger.debug(f"unsqueeze(0) 1 time, X_tensor shape: {X_tensor.shape}")
-            # X_tensor = X_tensor.unsqueeze(0)    #torch.Size([1, 1, 208, 41])
-            # if verbose :
-            #     logger.debug(f"unsqueeze(0) 2 times, X_tensor shape: {X_tensor.shape}")
+            X_tensor = torch.tensor(X, dtype=torch.float32)  # torch.Size([1, 208, 41])
+            if verbose and not self.getitem_debug_printed:
+                logger.debug(f"not squeezed, X_tensor shape: {X_tensor.shape}")
+            X_tensor = X_tensor.squeeze(0)  #torch.Size([208, 41])
+            if verbose and not self.getitem_debug_printed:
+                logger.debug(f"squeeze(0), X_tensor shape: {X_tensor.shape}")   # 
+            X_tensor = X_tensor.unsqueeze(0)    # torch.Size([1, 208, 41])
+            if verbose and not self.getitem_debug_printed:
+                logger.debug(f"unsqueeze(0) 1 time, X_tensor shape: {X_tensor.shape}")
+            X_tensor = X_tensor.unsqueeze(0)    #torch.Size([1, 1, 208, 41])
+            if verbose  and not self.getitem_debug_printed:
+                logger.debug(f"unsqueeze(0) 2 times, X_tensor shape: {X_tensor.shape}")
 
             '''
             original: X.shape: (#event, 208, 41)
@@ -198,6 +222,7 @@ class TorchMegLoader(Dataset):
 
         
         # load epochs for each session each task
+        glob_id = 0
         for session in range(until_session + 1):
             for task in range(until_task + 1):
                 cur_epochs = self.load_epochs_one_task(subject, session, task, raw_data_path, setting)
@@ -205,7 +230,10 @@ class TorchMegLoader(Dataset):
                 # make columns task and session to record the current handling task and session
                 cur_epochs.metadata["task"] = task
                 cur_epochs.metadata["session"] = session
+                cur_epochs.metadata["subject"] = subject
+                #cur_epochs.metadata["global_id"] = glob_id  # to identify each task
                 epochs_list.append(cur_epochs)
+                glob_id +=1
         
         if not len(epochs_list):
             logger.error("error in loading all epochs, program exit.")
@@ -266,3 +294,52 @@ class TorchMegLoader(Dataset):
             return self.concated_epochs
         else:
             raise ValueError
+    
+    def create_batch_id(self, epoch, batsize):
+        """
+        Adds a 'batch_id' column to the metadata DataFrame in self.concated_epochs.
+
+        Each batch of size `batsize` is assigned a unique ID. Rows are grouped into batches,
+        Parameters:
+        -----------
+        batsize : int
+        The size of each batch. Each batch will contain `batsize` rows, and each batch
+        will be assigned a unique ID.
+
+        Returns:
+        --------
+        None
+        """
+        logger.info("create batch id")
+        if epoch:
+
+            
+            # Calculate the number of complete batches
+            num_complete_batches =  len(epoch) // batsize    # //= divde then take floor
+            logger.debug(num_complete_batches)
+            epoch = epoch[:num_complete_batches * batsize]    # drop last part to ensure #event is multiple of batch size
+
+
+            
+            # Create batch IDs
+            batch_ids = np.repeat(np.arange(num_complete_batches), batsize)
+            
+            # Assign batch IDs to the DataFrame
+            epoch.metadata = epoch.metadata.iloc[:num_complete_batches * batsize]  # Keep only complete batches
+            epoch.metadata['batch_id'] = batch_ids
+            return epoch
+
+
+    def extract_epochs_by_id(self, epochs, id):
+        # Ensure the metadata exists
+        if epochs.metadata is None:
+            raise ValueError("No metadata found. Make sure metadata was properly assigned.")
+        
+        # Filter the epochs based on task, session, and subject
+        filtered_epochs = epochs[
+            (epochs.metadata["batch_id"] == id) 
+        ]
+        logger.debug(filtered_epochs)
+        
+        # Return the filtered epochs
+        return filtered_epochs

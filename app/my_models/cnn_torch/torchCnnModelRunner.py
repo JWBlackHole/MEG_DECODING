@@ -30,7 +30,14 @@ class SimpleTorchCNNModelRunner:
 
 
     def train(self, epochs=10, batch_size=32, learning_rate=0.001, train_test_ratio=0.1, test_ratio=None, to_save_res=True):
-        # Split the data into training and testing sets
+        
+        all_data_loader = DataLoader(self.megData, batch_size=len(self.megData), shuffle=False)
+        all_data = next(iter(all_data_loader))
+        
+        # Inspect the length of all_data
+        total_length = len(all_data[0])  # Assuming all_data is a tuple (inputs, labels)
+        print(f'Total length of data: {total_length}')
+        exit(0)
 
         # for testing
         ratio = (0.2, 0.1, 0.7)
@@ -46,7 +53,7 @@ class SimpleTorchCNNModelRunner:
                                                     lengths=[train_size, test_size, not_used], 
                                                     generator=rand_generator)
 
-
+        all_data = ...
         # Create DataLoaders
         train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
         test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
