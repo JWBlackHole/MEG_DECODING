@@ -41,21 +41,21 @@ class SimpleTorchCNNModelRunner:
 
 
 
-    def train(self, epochs=10, batch_size=1, learning_rate=0.001, train_test_ratio=0.1, test_ratio=None, to_save_res=True):
+    def train(self, epochs=10, batch_size=1, learning_rate=0.001, train_test_ratio=0.8, to_save_res=True):
         
 
         # for testing
-        ratio = (0.2, 0.1, 0.7)
+        ratio = (train_test_ratio, 1-train_test_ratio)
         
         train_size = int(ratio[0] * len(self.megData))
-        test_size = int(ratio[1] * len(self.megData))
-        not_used = len(self.megData) - train_size - test_size  # remaining data for test
+        test_size = len(self.megData) - train_size
+        #not_used = len(self.megData) - train_size - test_size  # remaining data for test
 
         #train_size = int(train_test_ratio * len(self.megData))
         #test_size = len(self.megData) - train_size
         rand_generator = torch.Generator().manual_seed(33)      # use for fix random seede
-        train_dataset, test_dataset, not_used_dataset = random_split(self.megData, 
-                                                    lengths=[train_size, test_size, not_used], 
+        train_dataset, test_dataset = random_split(self.megData, 
+                                                    lengths=[train_size, test_size], 
                                                     generator=rand_generator)
 
 
