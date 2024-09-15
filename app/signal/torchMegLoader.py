@@ -154,8 +154,8 @@ class TorchMegLoader(Dataset):
 
         everything applied to data should be run here
         """
-        if not not self.getitem_debug_printed:
-            logger.debug("__getitem__ of loader ran")
+        #if not self.getitem_debug_printed:
+        logger.debug("__getitem__ of loader is called")
         verbose = True
         # Load the specific epoch and its corresponding metadata
         if self.target_label == TargetLabel.VOICED_PHONEME:
@@ -369,7 +369,8 @@ class TorchMegLoader(Dataset):
         filtered_epochs = epochs[
             (epochs.metadata["batch_id"] == id) 
         ]
-        logger.debug(filtered_epochs)
+        if not self.getitem_debug_printed:
+            logger.debug(filtered_epochs)
         
         # Return the filtered epochs
         return filtered_epochs

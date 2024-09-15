@@ -144,7 +144,7 @@ if __name__ == "__main__":
         nchans, ntimes = megData.get_signal_dim()
         
         torch_cnn_model = SimpleTorchCNNModelRunner(megData, nchans, ntimes)
-        torch_cnn_model.train(epochs=2, batch_size=32, learning_rate=0.001)
+        torch_cnn_model.train(epochs=2, batch_size=1, learning_rate=0.001)
         logger.info("cnn training finished.")
         exit(0)
         
@@ -230,7 +230,7 @@ if __name__ == "__main__":
 
     elif (training_flow == "cnn"):
         torch_cnn_model = SimpleTorchCNNModelRunner(X, y)
-        torch_cnn_model.train(epochs=2, batch_size=32, learning_rate=0.001)
+        torch_cnn_model.train(epochs=2, batch_size=1, learning_rate=0.001)
 
     elif (training_flow == "plot_word_evo"):
         
