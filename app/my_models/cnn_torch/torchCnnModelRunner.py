@@ -40,7 +40,6 @@ class SimpleTorchCNNModelRunner:
             raise Exception
 
 
-
     def train(self, epochs=10, batch_size=1, learning_rate=0.001, train_test_ratio=0.8, to_save_res=True):
         
 
