@@ -239,7 +239,7 @@ class MEGSignal():
         #ep = copy.deepcopy(epochs)
 
         logger.info(f"size of epoch: ")
-        print(asizeof.asizeof(epochs))
+        print(sys.getsizeof(epochs))
 
         
 

@@ -24,9 +24,9 @@ from app.my_models.cnn_torch.torchCnnModelRunner import SimpleTorchCNNModelRunne
 if __name__ == "__main__":
     # ---  load config --- #
 
-    config_path = Path('./app/config/plot_evo.json')
+
     # config_path = Path('./app/config/config_jw.json')
-    # config_path = Path('./app/config/config_mh.json')
+    config_path = Path('./app/config/config_mh.json')
     # config_path = Path("./app/config/train_config.json")
     # config_path = Path('./app/config/my_own_config.json') # put your own config file here cuz setting of everyone may be different
     
@@ -129,15 +129,8 @@ if __name__ == "__main__":
     # ------ Data Getting and Preprocessing ------ #
     
     logger.info("start to preprocess data....")
-    preprocessor = Preprocessor(meg_param)
-
-    if training_flow == "plot_sensor":
-        logger.info("plotting sensor, not proceeding for training...")
-        preprocessor.plot_sensor_topo(raw_data_path)
-        logger.info("finish plotting, program exit")
-        exit(0)
     
-    elif (training_flow== "cnn_batch"):
+    if (training_flow== "cnn_batch"):
         logger.info("start to train with model: CNN (load data by batch)")
         megData = TorchMegLoader(subject, until_session, until_task, raw_data_path, target_label, 
                                   to_print_interim_csv, meg_param, load_batch_size)
@@ -148,6 +141,17 @@ if __name__ == "__main__":
         torch_cnn_model.train(epochs=100, batch_size=1, learning_rate=0.001)
         logger.info("cnn training finished.")
         exit(0)
+        
+    
+    preprocessor = Preprocessor(meg_param)
+
+    if training_flow == "plot_sensor":
+        logger.info("plotting sensor, not proceeding for training...")
+        preprocessor.plot_sensor_topo(raw_data_path)
+        logger.info("finish plotting, program exit")
+        exit(0)
+    
+    
         
 
     X, y = preprocessor.prepare_X_y(subject, until_session, until_task, raw_data_path, target_label, 
