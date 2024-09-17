@@ -31,7 +31,7 @@ class TorchMegLoader(Dataset):
         self.until_session:int = until_session
         self.until_task:int = until_task
         self.raw_data_path = raw_data_path
-        self.concated_epochs: EpochsArray | None = None
+        self.concated_epochs: list | None = None
         self.to_print_interim_csv = to_print_interim_csv
         self.meg_param: dict = meg_param
         self.nchans:int = None
@@ -83,7 +83,8 @@ class TorchMegLoader(Dataset):
         self.load_all_epochs(until_subject, until_session, until_task, raw_data_path, target_label)
 
         if self.target_label == TargetLabel.VOICED_PHONEME:
-            self.voiced_phoneme_epoch = self.create_batch_id(self.concated_epochs["not is_word"], batch_size=self.batch_size)
+            #self.voiced_phoneme_epoch = self.create_batch_id(self.concated_epochs["not is_word"], batch_size=self.batch_size)
+            self.voiced_phoneme_epoch = self.concated_epochs["not is_word"]
 
 
     def get_voiced_phoneme_epoch(self):
@@ -98,6 +99,8 @@ class TorchMegLoader(Dataset):
         this define the len of data
         """
         logger.debug("__len__ of loader ran")
+        logger.info(f"len is returning: {self.total_task}")
+        return self.total_task
         # notes
         # len(self.concated_epochs) = total #event in all tasks
         # len(epoch[0]) also is  total #event in all tasks
@@ -165,9 +168,9 @@ class TorchMegLoader(Dataset):
 
             epoch = self.get_voiced_phoneme_epoch()
 
-            epoch = self.extract_epochs_by_id(epoch, idx)
+            epoch = self.extract_epochs_by_global_id(epoch, idx)
 
-            if verbose and not self.getitem_debug_printed:
+            if verbose:
                 logger.debug(f"idx= {idx}, epoch: {epoch}, type: {type(epoch)}")
 
             epoch.apply_baseline(verbose="WARNING")  # Apply baseline correction
@@ -258,7 +261,7 @@ class TorchMegLoader(Dataset):
 
         
         # load epochs for each session each task
-        #glob_id = 0
+        glob_id = 0
         for subject in range(1, until_subject + 1):
             for session in range(until_session + 1):
                 for task in range(until_task + 1):
@@ -268,15 +271,16 @@ class TorchMegLoader(Dataset):
                     cur_epochs.metadata["task"] = task
                     cur_epochs.metadata["session"] = session
                     cur_epochs.metadata["subject"] = subject
-                    #cur_epochs.metadata["global_id"] = glob_id  # to identify each task
+                    cur_epochs.metadata["global_id"] = glob_id  # to identify each task
                     epochs_list.append(cur_epochs)
-                    #glob_id +=1
-        
+                    glob_id +=1
+        self.total_task = glob_id
+        logger.info(f"total task: {self.total_task}")
         if not len(epochs_list):
             logger.error("error in loading all epochs, program exit.")
             raise ValueError
 
-        self.concated_epochs = concatenate_epochs(epochs_list)
+        self.concated_epochs = concatenate_epochs(epochs_list)  # can't do concatenate_epochs(epochs_list)!! this will load data!
         logger.debug(f"self.concated_epochs is set, type: {type(self.concated_epochs)}")
         return self.concated_epochs
     
@@ -372,6 +376,21 @@ class TorchMegLoader(Dataset):
         # Filter the epochs based on task, session, and subject
         filtered_epochs = epochs[
             (epochs.metadata["batch_id"] == id) 
+        ]
+        if not self.getitem_debug_printed:
+            logger.debug(filtered_epochs)
+        
+        # Return the filtered epochs
+        return filtered_epochs
+    
+    def extract_epochs_by_global_id(self, epochs, id):
+        # Ensure the metadata exists
+        if epochs.metadata is None:
+            raise ValueError("No metadata found. Make sure metadata was properly assigned.")
+        
+        # Filter the epochs based on task, session, and subject
+        filtered_epochs = epochs[
+            (epochs.metadata["global_id"] == id) 
         ]
         if not self.getitem_debug_printed:
             logger.debug(filtered_epochs)
