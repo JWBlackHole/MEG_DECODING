@@ -128,7 +128,7 @@ if __name__ == "__main__":
     # ------ Data Getting and Preprocessing ------ #
     
     logger.info("start to preprocess data....")
-    preprocessor = Preprocessor()
+    preprocessor = Preprocessor(meg_param)
 
     if training_flow == "plot_sensor":
         logger.info("plotting sensor, not proceeding for training...")
@@ -235,7 +235,7 @@ if __name__ == "__main__":
     elif (training_flow == "plot_word_evo"):
         
         # plot each event
-        preprocessor.plot_n_events_evo("is_word", 1, True)
+        preprocessor.plot_n_events_evo("is_word", 2, True)
 
         # plot average of all event
         #preprocessor.plot_evoked_response("is_word")
