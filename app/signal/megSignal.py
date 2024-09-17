@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
-
+import sys
+import copy
+from pympler import asizeof
 import mne
 import mne_bids
 from mne    import Epochs
@@ -95,7 +97,7 @@ class MEGSignal():
         # Load raw data and filter by low and high pass
         self.raw = raw
         # print(self.low_pass, self.high_pass)
-        raw.load_data().filter(l_freq = self.low_pass, h_freq = self.high_pass, n_jobs=self.n_jobs)
+        #raw.load_data().filter(l_freq = self.low_pass, h_freq = self.high_pass, n_jobs=self.n_jobs)
         return raw
         
     def _load_meta(self, raw: mne.io.Raw, supplementary_meta: pd.DataFrame, to_save_csv:bool = False)->pd.DataFrame:
@@ -234,6 +236,10 @@ class MEGSignal():
             preload =self.preload,
             event_repeated="drop",
         )
+        #ep = copy.deepcopy(epochs)
+
+        logger.info(f"size of epoch: ")
+        print(asizeof.asizeof(epochs))
 
         
 
