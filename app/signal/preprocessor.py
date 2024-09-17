@@ -20,7 +20,7 @@ class Preprocessor():
         self.concated_epochs: Epochs | None = None  # concatenated Epochs of all sessions all tasks
         self.X = None
         self.y = None
-        self.mwg_param = meg_param
+        self.meg_param = meg_param
 
     def __len__(self):
         if isinstance(self.concated_epochs, Epochs):

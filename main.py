@@ -24,7 +24,7 @@ from app.my_models.cnn_torch.torchCnnModelRunner import SimpleTorchCNNModelRunne
 if __name__ == "__main__":
     # ---  load config --- #
 
-    config_path = Path('./app/config/config_mh.json')
+    config_path = Path('./app/config/plot_evo.json')
     # config_path = Path('./app/config/config_jw.json')
     # config_path = Path('./app/config/config_mh.json')
     # config_path = Path("./app/config/train_config.json")
@@ -53,6 +53,7 @@ if __name__ == "__main__":
         log_level               = house_keeping_config.get('log_level', "DEBUG")
         result_metrics_save_path = house_keeping_config.get('result_metrics_save_path', None)
         to_print_interim_csv     = house_keeping_config.get('to_print_interim_csv', False)
+        num_event_to_plot         =house_keeping_config.get('num_event_to_plot', 1)
 
         logger.info(f"Execution start according to config: {config_path}")
     except (FileNotFoundError, json.JSONDecodeError, KeyError):
@@ -65,7 +66,7 @@ if __name__ == "__main__":
         low_pass_filter = high_pass_filter = training_flow = log_level = result_metrics_save_path = dont_kfold_in_lda = None
         target_label = None
         to_print_interim_csv = None
-        nn_total_epoch = meg_tmin = meg_tmax = meg_decim = None
+        nn_total_epoch = meg_tmin = meg_tmax = meg_decim = num_event_to_plot = None
 
     meg_param={
         "tmin": meg_tmin,
@@ -235,7 +236,7 @@ if __name__ == "__main__":
     elif (training_flow == "plot_word_evo"):
         
         # plot each event
-        preprocessor.plot_n_events_evo("is_word", 2, True)
+        preprocessor.plot_n_events_evo("is_word", num_event_to_plot, True)
 
         # plot average of all event
         #preprocessor.plot_evoked_response("is_word")
