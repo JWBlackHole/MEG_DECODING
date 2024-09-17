@@ -9,13 +9,13 @@
         "meg_tmax": 0.3,
         "meg_decim": 10,
         "preprocess_low_pass": 0.5,
-        "preprocess_high_pass": 180,
-        "num_event_to_plot": 2
+        "preprocess_high_pass": 180
     },
     "house_keeping": {
         "raw_data_path": "D://NTHU//meta-brainmagick2//brainmagick//data//gwilliams2022//download",
         "log_level": "INFO",
         "result_metrics_save_path": "./results",
-        "to_print_interim_csv": false
+        "to_print_interim_csv": false,
+        "num_event_to_plot": 2
     }
 }
