@@ -60,11 +60,23 @@ class SimpleTorchCNNModelRunner:
         train_dataset, test_dataset = random_split(self.megData, 
                                                     lengths=[train_size, test_size], 
                                                     generator=rand_generator)
-
-
+        
+        # for i in range(epoch):
+        #     for data in self.megData:
+        #         rand_generator = torch.Generator().manual_seed(33)
+        #         train_dataset, test_dataset = random_split(self.megData, 
+        #                                                     lengths   = [train_size, test_size], 
+        #                                                     generator = rand_generator)
+        #         DataLoader(data, batch_size=batch_size, shuffle=True)
+                
+        #         for inputs, labels in train_loader:
+                    
+        
         # Create DataLoaders
         train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
         test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+        
+        
 
         # Initialize the model, loss function, and optimizer
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -96,6 +108,8 @@ class SimpleTorchCNNModelRunner:
                 # batch likely controlled by batch_size in pytorch Dataloader
                 # #event come from how __getitem__ of my torchMegLoader return the epoch (batch_size in torchMegLoader)
                 # need to flatten batch and event dim
+
+                continue
                 inputs = inputs.view(-1, 1, self.nchans, self.ntimes)
                 labels = labels.view(-1, 1)
                 inputs, labels = inputs.to(device), labels.to(device)
