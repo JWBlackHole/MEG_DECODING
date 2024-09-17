@@ -41,7 +41,10 @@ class MegDataIterator(Dataset):
         self.voiced_phoneme_epoch = None
         self.target_label = target_label
         self.cur_idx: int = 0
-        self.totaltask: int = until_subject * 8
+        self.totaltask: int = (until_subject-1) * 8 + (until_session+1) * (until_task +1)
+
+        logger.info(f"train until sub: {self.until_subjcet}, ses: {self.until_session}, task: {self.until_task}")
+        logger.info(f"total no, of task: {self.totaltask}")
 
     def __len__(self):
         return self.totaltask
@@ -148,6 +151,12 @@ class MegDataIterator(Dataset):
             logger.error(f"nchans: {self.nchans}, ntimes: {self.ntimes}")
             raise ValueError
     
+    def cal_ntimes(self):
+        try:
+            return int((self.meg_param["tmax"] - self.meg_param["tmin"])*(1000/self.meg_param["decim"])) +1
+        except Exception as e:
+            logger.error(e)
+            return None
 
         
 

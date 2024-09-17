@@ -68,7 +68,9 @@ class MEGSignal():
         """
         bids_path is path to one task of one sesion of one subject
         """
-        self.load_raw(bids_path)
+        res = self.load_raw(bids_path)
+        if res is None:
+            return None
         meta = self._load_meta(self.raw, supplementary_meta, to_save_csv=self.to_print_interim_csv)
         epochs = self.load_epochs(self.raw, meta, to_save_csv=self.to_print_interim_csv
                                   )
@@ -89,15 +91,20 @@ class MEGSignal():
         
         """ 
         # Reading associated event.tsv and channels.tsv
-        raw: Raw = mne_bids.read_raw_bids(bids_path)
-        # Specify the type of recording we want
-        raw = raw.pick_types(
-            meg=True, misc=False, eeg=False, eog=False, ecg=False
-        )
-        # Load raw data and filter by low and high pass
-        self.raw = raw
-        # print(self.low_pass, self.high_pass)
-        #raw.load_data().filter(l_freq = self.low_pass, h_freq = self.high_pass, n_jobs=self.n_jobs)
+        try:
+            raw: Raw = mne_bids.read_raw_bids(bids_path)
+            # Specify the type of recording we want
+            raw = raw.pick_types(
+                meg=True, misc=False, eeg=False, eog=False, ecg=False
+            )
+            # Load raw data and filter by low and high pass
+            self.raw = raw
+            # print(self.low_pass, self.high_pass)
+            #raw.load_data().filter(l_freq = self.low_pass, h_freq = self.high_pass, n_jobs=self.n_jobs)
+        except FileNotFoundError as err:
+            logger.warning(err)
+            logger.warning("bids path: does not exist! will skip this path.")
+            return None
         return raw
         
     def _load_meta(self, raw: mne.io.Raw, supplementary_meta: pd.DataFrame, to_save_csv:bool = False)->pd.DataFrame:
@@ -144,21 +151,10 @@ class MEGSignal():
                 match = supplementary_meta.query(f"phoneme==\"{ph}\"")
                 # print(match)
                 assert len(match) == 1
-                meta.loc[d.index, "voiced"] = (match.iloc[0].phonation == "v") # True or False
-                
-                
-            # Compute word frequency
-            meta["is_word"] = False
-            words = meta.query('kind=="word"').copy()
-            meta.loc[words.index + 1, "is_word"] = True
-            
-            # Merge "word frequency" with "phoneme"
-            # apply a funcion to calculate the word frequency
-            wfreq = lambda x: zipf_frequency(x, "en")  # noqa
-            meta.loc[words.index + 1, "wordfreq"] = words.word.apply(wfreq).values
-            
+                meta.loc[d.index, "voiced"] = (match.iloc[0].phonation == "v") # True or False            
 
-            meta = meta.query('kind=="phoneme"')
+            meta = meta[meta['kind'] == 'phoneme']
+
             if(to_save_csv):
                 meta.to_csv(util.get_unique_file_name(file_name="meta.csv", dir="./test"))
         elif self.target_label == TargetLabel.WORD_FREQ:
@@ -185,10 +181,8 @@ class MEGSignal():
             meta["is_word"] = True
             
 
-
             if(to_save_csv):
                 meta.to_csv(util.get_unique_file_name(file_name="meta_from_megsignal.csv", dir="./results"))
-
 
         return meta
 

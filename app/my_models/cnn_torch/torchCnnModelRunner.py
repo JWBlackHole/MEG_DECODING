@@ -10,6 +10,7 @@ import random
 
 
 from app.my_models.cnn_torch.torchCnnModel import SimpleTorchCNNModel
+from app.signal.newTorchMegLoader import MegDataIterator
 from app.utils import my_utils as util
 
 class SimpleTorchCNNModelRunner:
@@ -31,6 +32,7 @@ class SimpleTorchCNNModelRunner:
         self.ntimes: int = ntimes
         self.p_drop_true: float = p_drop_true     # Drop probability for `True` labels
 
+
     
     def check_gpu(self):
         if torch.cuda.is_available():
@@ -38,6 +40,8 @@ class SimpleTorchCNNModelRunner:
         else:
             logger.error("no GPU, program exit")
             raise Exception
+        
+    
 
 
     def train(self, epochs=10, batch_size=1, learning_rate=0.001, train_test_ratio=0.8, to_save_res=True):

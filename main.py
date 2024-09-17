@@ -10,6 +10,7 @@ from loguru import logger
 # custom import
 from app.signal.preprocessor import Preprocessor
 from app.signal.torchMegLoader import TorchMegLoader
+from app.signal.newTorchMegLoader import MegDataIterator
 from app.my_models.nn.nnModelRunner import NNModelRunner
 from app.my_models.lda.ldaModelRunner import LdaModelRunner
 from app.my_models.svm.svmModel import svmModel # new added
@@ -131,17 +132,23 @@ if __name__ == "__main__":
     logger.info("start to preprocess data....")
     
     if (training_flow== "cnn_batch"):
-        logger.info("start to train with model: CNN (load data by batch)")
-        megData = TorchMegLoader(subject, until_session, until_task, raw_data_path, target_label, 
-                                  to_print_interim_csv, meg_param, load_batch_size)
+        # new code
+        megDataIter = MegDataIterator(subject, until_session, until_task, raw_data_path, target_label, to_print_interim_csv, meg_param)
+        ntimes = megDataIter.cal_ntimes()
+        torch_cnn_model = SimpleTorchCNNModelRunner(megDataIter, 208, ntimes, p_drop_true=0.572)
+
+        # old code
+        # logger.info("start to train with model: CNN (load data by batch)")
+        # megData = TorchMegLoader(subject, until_session, until_task, raw_data_path, target_label, 
+        #                           to_print_interim_csv, meg_param, load_batch_size)
         
-        nchans, ntimes = megData.get_signal_dim()
+        # nchans, ntimes = megData.get_signal_dim()
         
-        torch_cnn_model = SimpleTorchCNNModelRunner(megData, nchans, ntimes, p_drop_true=0.572)
-        torch_cnn_model.train(epochs=100, batch_size=1, learning_rate=0.001)
+        # torch_cnn_model = SimpleTorchCNNModelRunner(megData, nchans, ntimes, p_drop_true=0.572)
+        torch_cnn_model.train(epochs=2, batch_size=1, learning_rate=0.001)
         logger.info("cnn training finished.")
         exit(0)
-        
+
     
     preprocessor = Preprocessor(meg_param)
 
