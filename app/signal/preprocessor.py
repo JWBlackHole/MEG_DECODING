@@ -110,7 +110,7 @@ class Preprocessor():
 
         
         if preprocess_setting == TargetLabel.VOICED_PHONEME:
-            phonemes = self.concated_epochs["not is_word"]      # for now not is_word means phoneme, in the future may change to more intuitive way
+            phonemes = self.concated_epochs      # for now not is_word means phoneme, in the future may change to more intuitive way
             self.X = phonemes.get_data(copy=True)   # use copy=True to avoid changing the original data
             self.y = phonemes.metadata["voiced"].values
         
@@ -233,7 +233,7 @@ class Preprocessor():
     
     def get_metadata(self, target: str="phonemes"):
         if target == "phonemes":
-            return self.concated_epochs["not is_word"]
+            return self.concated_epochs
         else:
             logger.error("for now only \"phonemes\" is supported! returning None")
             return None
