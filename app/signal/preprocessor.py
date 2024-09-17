@@ -16,10 +16,11 @@ from app.common.commonSetting import TargetLabel
 import app.utils.my_utils as util
 
 class Preprocessor():
-    def __init__(self):
+    def __init__(self,meg_param:dict={"tmin":None, "tmax":None, "decim":None, "low_pass": None, "high_pass":None}):
         self.concated_epochs: Epochs | None = None  # concatenated Epochs of all sessions all tasks
         self.X = None
         self.y = None
+        self.mwg_param = meg_param
 
     def __len__(self):
         if isinstance(self.concated_epochs, Epochs):
@@ -186,8 +187,16 @@ class Preprocessor():
 
         # --- signal processing --- #
         
-        signal_handler = MEGSignal(setting, low_pass=low_pass_filter, high_pass=high_pass_filter, to_print_interim_csv=self.to_print_interim_csv)
-
+        signal_handler = MEGSignal(             # must set preload=False, this means only load data when accessed [MUST !!!] 
+            setting, 
+            low_pass=self.meg_param["low_pass"] if self.meg_param["low_pass"] else None, 
+            high_pass=self.meg_param["high_pass"] if self.meg_param["high_pass"] else None,
+            to_print_interim_csv=self.to_print_interim_csv if self.to_print_interim_csv else None,
+            preload=True, 
+            tmin=self.meg_param["tmin"] if self.meg_param["tmin"] else None,
+            tmax=self.meg_param["tmax"] if self.meg_param["tmax"] else None,
+            decim=self.meg_param["decim"] if self.meg_param["decim"] else None
+        ) 
         # set mne epoch for each session, each task
         # Specify a path to a epoch
         bids_path = mne_bids.BIDSPath(
@@ -293,7 +302,8 @@ class Preprocessor():
                                     dpi=200)
                     plt.close(fig_evo)  # for closing the file before writing next graph
 
-                    if show_last_fig and i == n:
+                    #if show_last_fig and i == n:
+                    if True:
                         evo.plot(spatial_colors=True, show=True)
                     
                     i=i+1
