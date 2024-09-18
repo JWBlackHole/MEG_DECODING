@@ -17,10 +17,7 @@ class MyLDA():
     def __init__(self):
         pass
 
-    def train(self, X: np.ndarray, y: np.ndarray, 
-                      times= None, to_print_csv = False,
-                      prediction_mode = "collapse", 
-                      dont_kfold = False)-> Tuple[pd.DataFrame, pd.DataFrame]:
+    def train(self, X: np.ndarray, y: np.ndarray, train_test_ratio)-> Tuple[pd.DataFrame, pd.DataFrame]:
         """
         y is expected to be binary with value True or False
 
@@ -38,13 +35,14 @@ class MyLDA():
             - "each_timepoint": Predict a probability for each time point in each window
 
         """
-        logger.info(f"decod_binary is running with prediction_mode: {prediction_mode}")
+        self.train_test_ratio = train_test_ratio
+        
         try:
             assert len(X) == len(y)
         except AssertionError:
             logger.error(f"X, y meta is not of same length, len(X)={len(X)}, len(y)={len(y)}")
             return None
-        logger.debug(f"in decod, len(x)=len(y)=len(meta)={len(X)}")
+        logger.debug(f"in decod, len(x)=len(y)={len(X)}")
         logger.debug(f"X.shape: {X.shape}")
         logger.debug(f"y.shape: {y.shape}")
 
@@ -54,7 +52,7 @@ class MyLDA():
         y = np.array(y, dtype = bool)   # LDA expects y to be np arr with dtype numeric or bool
 
 
-        pred_df = scores = None
+        pred_df = None
 
         # call function for LDA according to prediction_mode
         pred_df = self.predict_each_window(X, y)
@@ -94,7 +92,7 @@ class MyLDA():
 
 
         # Split the data into training and test sets
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=(1-self.train_test_ratio), random_state=0)
         scores = []        
         
         
