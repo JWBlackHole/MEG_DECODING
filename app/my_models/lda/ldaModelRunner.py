@@ -16,7 +16,7 @@ class LdaModelRunner():
 
         lda_model = MyLDA()
         
-        prediction_df , scores = lda_model.decode_binary(X, y, meta, target_label, dont_kfold=dont_kfold)
+        prediction_df  = lda_model.train(X, y, meta, target_label, dont_kfold=dont_kfold)
         logger.debug(f"type of predictions (returned from model): {type(prediction_df)}")
         logger.debug(f"type of scores  (returned from model): {type(scores)}")
         
