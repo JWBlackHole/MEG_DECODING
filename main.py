@@ -27,10 +27,11 @@ if __name__ == "__main__":
 
 
     # config_path = Path('./app/config/config_jw.json')
-    config_path = Path('./app/config/config_mh.json')
+    # config_path = Path('./app/config/config_mh.json')
     # config_path = Path("./app/config/train_config.json")
     # config_path = Path('./app/config/my_own_config.json') # put your own config file here cuz setting of everyone may be different
-    
+    config_path = Path('./app/config/lda_config.json')
+
     try:
         with config_path.open('r') as file:
             config = json.load(file)
@@ -98,7 +99,7 @@ if __name__ == "__main__":
         logger.error("target_label is not valid, program exit.")
         exit(0)
     
-    # logger.warning(f"currently only training for one subject is supported. Will train for subject {subject:02}")
+    logger.warning(f"currently only training for one subject is supported. Will train for subject {subject:02}")
 
     logger.info(f"target label to predicted got: \"{target_label}\"")
     if target_label  == "voiced":
@@ -185,11 +186,6 @@ if __name__ == "__main__":
             logger.error(err)
         exit(0)
             
-    if(target_label == TargetLabel.VOICED_PHONEME):
-        phonemes_epochs = preprocessor.get_metadata("phonemes")     # get the epochs only considering is phoneme voiced / not voiced
-        phoneme_meta = phonemes_epochs.metadata
-    else:
-        phoneme_meta = None
 
     if to_print_interim_csv:
         whole_meta_table = preprocessor.get_concated_metadata() # get the df of metadata of all sessions, all tasks
@@ -208,7 +204,7 @@ if __name__ == "__main__":
     elif(training_flow == "lda"):
         logger.info("start to train with model: LDA")
 
-        ldaRunner = LdaModelRunner(X, y, phoneme_meta, target_label, dont_kfold=dont_kfold_in_lda, to_save_csv=True)
+        ldaRunner = LdaModelRunner(X, y, 0.8, to_save_result=True, option=extra_option)
 
     elif(training_flow == "svm"):
         logger.info("start to train with model: SVM")

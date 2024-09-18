@@ -3,16 +3,15 @@
         "flow": "lda",
         "target_label": "voiced",
         "until_subject": 1,
-        "until_session": 1,
-        "until_task": 3,
+        "until_session": 0,
+        "until_task": 1,
         "meg_tmin": -0.1,
         "meg_tmax": 0.3,
         "meg_decim": 10,
         "load_batch_size": 2000,
         "preprocess_low_pass": 0.5,
         "preprocess_high_pass": 180,
-        "dont_kfold_in_lda": true,
-        "cannot_load_by_batch": true
+        "dont_kfold_in_lda": true
     },
     "house_keeping": {
         "raw_data_path": "/home/dataset/Data/gw_data/download",
