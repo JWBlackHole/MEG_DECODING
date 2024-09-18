@@ -4,7 +4,7 @@
         "target_label": "voiced",
         "until_subject": 1,
         "until_session": 0,
-        "until_task": 1,
+        "until_task": 0,
         "meg_tmin": -0.1,
         "meg_tmax": 0.3,
         "meg_decim": 10,

@@ -56,6 +56,8 @@ if __name__ == "__main__":
         result_metrics_save_path = house_keeping_config.get('result_metrics_save_path', None)
         to_print_interim_csv     = house_keeping_config.get('to_print_interim_csv', False)
         num_event_to_plot         =house_keeping_config.get('num_event_to_plot', 1)
+        extra_option              = config.get('extra_option', None)
+
 
         logger.info(f"Execution start according to config: {config_path}")
     except (FileNotFoundError, json.JSONDecodeError, KeyError):
@@ -68,7 +70,7 @@ if __name__ == "__main__":
         low_pass_filter = high_pass_filter = training_flow = log_level = result_metrics_save_path = dont_kfold_in_lda = None
         target_label = None
         to_print_interim_csv = None
-        nn_total_epoch = meg_tmin = meg_tmax = meg_decim = num_event_to_plot = None
+        nn_total_epoch = meg_tmin = meg_tmax = meg_decim = num_event_to_plot = extra_option =None
 
     meg_param={
         "tmin": meg_tmin,
@@ -204,7 +206,9 @@ if __name__ == "__main__":
     elif(training_flow == "lda"):
         logger.info("start to train with model: LDA")
 
-        ldaRunner = LdaModelRunner(X, y, 0.8, to_save_result=True, option=extra_option)
+        ldaRunner = LdaModelRunner(X, y, 0.8, to_save_result=True, 
+                                   option=extra_option if extra_option else {}
+                                )
 
     elif(training_flow == "svm"):
         logger.info("start to train with model: SVM")

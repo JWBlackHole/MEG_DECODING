@@ -20,7 +20,7 @@ class LdaModelRunner():
 
         lda_model = MyLDA()
         
-        prediction_df = lda_model.train(X, y)
+        prediction_df = lda_model.train(X, y, train_test_ratio)
 
         logger.debug(f"type of predictions (returned from lda model): {type(prediction_df)}")
 
@@ -29,13 +29,13 @@ class LdaModelRunner():
         prediction_df = util.add_comparison_column(prediction_df)
         if to_save_result:
             try:
-                prediction_df.to_csv(util.get_unique_file_name("voiced_prediction.csv", "./results"))
+                prediction_df.to_csv(util.get_unique_file_name("voiced_prediction_lda.csv", "./results/lda/csv"))
             except Exception as err:
                 logger.error(err)
                 logger.error("fail to output csv, skipping output csv")
 
         util.get_eval_metrics(prediction_df, 
-                              file_name="metrics_LDA", save_path="./results", 
+                              file_name="metrics_LDA", save_path="./results/lda", 
                               description_str=self.result_description)
         
         logger.info("LDA model runner finished.")
