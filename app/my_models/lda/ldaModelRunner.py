@@ -9,7 +9,7 @@ import app.utils.my_utils as util
 
 
 class LdaModelRunner():
-    def __init__(self, X: np.ndarray, y: np.ndarray, train_test_ratio:float=0.8, to_save_result = False, option: dict = {}) -> None:
+    def __init__(self, X: np.ndarray, y: np.ndarray, train_test_ratio:float=0.8, to_save_csv = False, option: dict = {}) -> None:
         
         logger.info("start to train with model: LDA")
 
@@ -27,7 +27,7 @@ class LdaModelRunner():
 
         # calculate result metrics
         prediction_df = util.add_comparison_column(prediction_df)
-        if to_save_result:
+        if to_save_csv:
             try:
                 prediction_df.to_csv(util.get_unique_file_name("voiced_prediction_lda.csv", "./results/lda/csv"))
             except Exception as err:
