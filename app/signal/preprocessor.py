@@ -40,7 +40,7 @@ class Preprocessor():
         
 
     def prepare_X_y(self, subject, until_session, until_task, raw_data_path, target_label, 
-                low_pass_filter, high_pass_filter, to_print_interim_csv, subject_start: int=None):
+                low_pass_filter, high_pass_filter, to_print_interim_csv):
         
         self.to_print_interim_csv = to_print_interim_csv
         preprocess_setting = None
