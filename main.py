@@ -26,8 +26,8 @@ if __name__ == "__main__":
     # ---  load config --- #
 
 
-    # config_path = Path('./app/config/config_jw.json')
-    config_path = Path('./app/config/config_mh.json')
+    config_path = Path('./app/config/config_jw.json')
+    # config_path = Path('./app/config/config_mh.json')
     # config_path = Path("./app/config/train_config.json")
     # config_path = Path('./app/config/my_own_config.json') # put your own config file here cuz setting of everyone may be different
     
@@ -200,9 +200,12 @@ if __name__ == "__main__":
 
     if(training_flow == "nn"):
         logger.info("start to train with model: NN")
-        nnRunner = NNModelRunner(X, y, target_label)
-        # nnRunner.train(nn_total_epoch)
-        nnRunner.train()
+        
+        megDataIter = MegDataIterator(subject, until_session, until_task, raw_data_path, target_label, to_print_interim_csv, meg_param)
+        ntimes = megDataIter.cal_ntimes()
+        
+        nnRunner = NNModelRunner(megDataIter, target_label)
+        nnRunner.train(epochs = 1000, batch_size = 512, lr = 0.001)
         
        
     elif(training_flow == "lda"):
