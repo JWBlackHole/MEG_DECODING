@@ -41,11 +41,27 @@ class SimpleTorchCNNModelRunner:
             logger.error("no GPU, program exit")
             raise Exception
         
-    
+    def run_one_epoch():
+        pass
 
 
-    def train(self, epochs=10, batch_size=1, learning_rate=0.001, train_test_ratio=0.8, to_save_res=True):
+    def train(self, epochs=10, batch_size=512, learning_rate=0.001, train_test_ratio=0.8, to_save_res=True):
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        try:
+            assert device.type == "cuda"
+        except Exception as e:
+            logger.error(f"device is: {device}")
+            logger.error(f"device.type: {device.type},  is not cuda! program exit!")
+            raise AssertionError
+
+        model = SimpleTorchCNNModel(self.nchans, self.ntimes).to(device)
+        criterion = nn.BCELoss()
+        optimizer = optim.Adam(model.parameters(), lr=learning_rate)
         
+        for i in range(epochs):
+            self.run_one_epoch(model, criterion, )
+        
+        return
 
         # for testing
         ratio = (train_test_ratio, 1-train_test_ratio)
@@ -77,7 +93,6 @@ class SimpleTorchCNNModelRunner:
         test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
         
         
-
         # Initialize the model, loss function, and optimizer
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         try:
