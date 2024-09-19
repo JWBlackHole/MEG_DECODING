@@ -22,24 +22,8 @@ class Preprocessor():
         self.y = None
         self.meg_param = meg_param
 
-    def __len__(self):
-        if isinstance(self.concated_epochs, Epochs):
-            return len(self.concated_epochs)
-        else:
-            raise ValueError("self.concated_epochs is not Epochs!")
-    
-    def __getitem__(self, idx):
-        # Extract the epoch at index `idx`
-        X = self.concated_epochs[idx].get_data()  # Get the data as a 3D array (1, n_channels, n_times)
-        y = self.concated_epochs[idx].events[:, -1]  # Example labels based on event type
-        
-        # Convert to torch tensors
-        n, nchans, ntimes = X.shape
-        logger.info(f"X.shape: {n}, {nchans}, {ntimes}")
-        X_tensor = torch.tensor(X, dtype=torch.float32).reshape(1, nchans, ntimes)  # Shape: (1, n_channels, n_times)
-        y_tensor = torch.tensor(y.astype(int), dtype=torch.long)  # Assuming classification labels are integers
-        
-        return X_tensor, y_tensor
+
+
     
     def plot_sensor_topo(self, raw_data_path):
         bids_path = mne_bids.BIDSPath(

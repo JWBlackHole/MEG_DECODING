@@ -1,0 +1,31 @@
+{
+    "train_loop": [
+        "./app/config/lda/lda_1.json",
+        "./app/config/lda/lda_2.json",
+        "./app/config/lda/lda_3.json",
+        "./app/config/lda/lda_4.json",
+        "./app/config/lda/lda_5.json",
+        "./app/config/lda/lda_6.json",
+        "./app/config/lda/lda_7.json",
+        "./app/config/lda/lda_8.json",
+        "./app/config/lda/lda_9.json",
+        "./app/config/lda/lda_10.json",
+        "./app/config/lda/lda_11.json",
+        "./app/config/lda/lda_12.json",
+        "./app/config/lda/lda_13.json",
+        "./app/config/lda/lda_14.json",
+        "./app/config/lda/lda_15.json",
+        "./app/config/lda/lda_16.json",
+        "./app/config/lda/lda_17.json",
+        "./app/config/lda/lda_18.json",
+        "./app/config/lda/lda_19.json",
+        "./app/config/lda/lda_20.json",
+        "./app/config/lda/lda_21.json",
+        "./app/config/lda/lda_22.json",
+        "./app/config/lda/lda_23.json",
+        "./app/config/lda/lda_24.json",
+        "./app/config/lda/lda_25.json",
+        "./app/config/lda/lda_26.json",
+        "./app/config/lda/lda_27.json"
+    ]
+}

@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 from loguru import logger
+import argparse
 
 
 # custom import
@@ -21,19 +22,25 @@ from app.signal.sensorTools import plot_sensor
 from app.my_models.cnn_torch.torchCnnModelRunner import SimpleTorchCNNModelRunner
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="Run training with specified config file.")
+    parser.add_argument('-o', '--config', type=str, required=True, help='Path to the config file')
+    return parser.parse_args()
 
-if __name__ == "__main__":
-    # ---  load config --- #
-
-
-    config_path = Path('./app/config/config_jw.json')
-    # config_path = Path('./app/config/config_mh.json')
-    # config_path = Path("./app/config/train_config.json")
-    # config_path = Path('./app/config/my_own_config.json') # put your own config file here cuz setting of everyone may be different
-    
+def load_config(config_path):
+    logger.info(f"try to read config:  {config_path}")
     try:
         with config_path.open('r') as file:
             config = json.load(file)
+        logger.info(f"success open config: {config_path}")
+        return config
+    except (FileNotFoundError, json.JSONDecodeError, KeyError) as e:
+        logger.error(f"Error loading config file: {os.path.abspath(config_path)} - {e}")
+        return None
+
+def train_loop(config: json):
+
+    try:
         training_config   = config.get('training', {})
         subject           = training_config.get('until_subject', 1)    # subject start from 1
         until_session     = training_config.get('until_session',0)     # session start from 0
@@ -46,7 +53,6 @@ if __name__ == "__main__":
         high_pass_filter  = training_config.get('preprocess_high_pass', None)
         training_flow     = training_config.get('flow', None)
         target_label      = training_config.get('target_label', None)
-        dont_kfold_in_lda = training_config.get('dont_kfold_in_lda', None)
         nn_total_epoch    = training_config.get('nn_total_epoch', None)
 
         house_keeping_config    = config.get('house_keeping', {})
@@ -55,19 +61,14 @@ if __name__ == "__main__":
         result_metrics_save_path = house_keeping_config.get('result_metrics_save_path', None)
         to_print_interim_csv     = house_keeping_config.get('to_print_interim_csv', False)
         num_event_to_plot         =house_keeping_config.get('num_event_to_plot', 1)
+        extra_option              = config.get('extra_option', None)
+    
+    except Exception as e:
+        logger.error(e)
+        logger.error("Error happened in pasrsing config, skip this config")
+        return
 
-        logger.info(f"Execution start according to config: {config_path}")
-    except (FileNotFoundError, json.JSONDecodeError, KeyError):
-        logger.error(f"config file: {os.path.abspath(config_path)} not exist, use fall back values")
-        # Use hardcoded values if the config file is not found or is invalid
-        subject = 1
-        until_session = 0
-        until_task = 0
-        raw_data_path = './data'
-        low_pass_filter = high_pass_filter = training_flow = log_level = result_metrics_save_path = dont_kfold_in_lda = None
-        target_label = None
-        to_print_interim_csv = None
-        nn_total_epoch = meg_tmin = meg_tmax = meg_decim = num_event_to_plot = None
+
 
     meg_param={
         "tmin": meg_tmin,
@@ -98,7 +99,7 @@ if __name__ == "__main__":
         logger.error("target_label is not valid, program exit.")
         exit(0)
     
-    # logger.warning(f"currently only training for one subject is supported. Will train for subject {subject:02}")
+    logger.warning(f"currently only training for one subject is supported. Will train for subject {subject:02}")
 
     logger.info(f"target label to predicted got: \"{target_label}\"")
     if target_label  == "voiced":
@@ -185,11 +186,6 @@ if __name__ == "__main__":
             logger.error(err)
         exit(0)
             
-    if(target_label == TargetLabel.VOICED_PHONEME):
-        phonemes_epochs = preprocessor.get_metadata("phonemes")     # get the epochs only considering is phoneme voiced / not voiced
-        phoneme_meta = phonemes_epochs.metadata
-    else:
-        phoneme_meta = None
 
     if to_print_interim_csv:
         whole_meta_table = preprocessor.get_concated_metadata() # get the df of metadata of all sessions, all tasks
@@ -211,7 +207,9 @@ if __name__ == "__main__":
     elif(training_flow == "lda"):
         logger.info("start to train with model: LDA")
 
-        ldaRunner = LdaModelRunner(X, y, phoneme_meta, target_label, dont_kfold=dont_kfold_in_lda, to_save_csv=True)
+        ldaRunner = LdaModelRunner(X, y, 0.8, to_save_csv=False, 
+                                   option=extra_option if extra_option else {}
+                                )
 
     elif(training_flow == "svm"):
         logger.info("start to train with model: SVM")
@@ -263,3 +261,40 @@ if __name__ == "__main__":
     
 
     logger.info("training finished.")
+
+
+if __name__ == "__main__":
+    # ---  load config --- #
+
+    args = parse_args()
+
+    config_path = Path(args.config)      # this allow pass config path by -o flag when run python
+    # example:
+    # python main.py -o ./app/config/config_mh.json
+    
+    # config_path  = Path('./app/config/config_mh.json')  # you can also hard-code config path here
+
+    logger.info(f"using config:  {config_path}")
+
+    config = load_config(config_path)
+    if config:
+        if 'train_loop' in config:
+            logger.info("config for train loop detected.")
+            files = config['train_loop']
+            for file in files:
+                train_loop_path = Path(file)
+                cur_config = load_config(train_loop_path)
+                
+                if cur_config:
+                    logger.info(f"start to train with {cur_config}")
+                    train_loop(cur_config)
+        else:
+            logger.info(f"start to train with {config}")
+            train_loop(config)
+    else:
+        logger.error(f"config file: {os.path.abspath(config_path)} not exist!")
+
+    
+    logger.info("all config processed.")
+
+
