@@ -5,6 +5,7 @@ from datetime import date
 import numpy as np
 import pandas as pd
 import json
+from matplotlib import pyplot as plt
 
 def get_unique_file_name(file_name: str, dir: str = "./", verbose: bool = True):
     """Get a unique file name in a directory for saving file to avoid overwriting.
@@ -47,9 +48,9 @@ def add_comparison_column(pred_df: pd.DataFrame)->pd.DataFrame:
         return pred_df
     
     
-def get_eval_metrics(pred_df: pd.DataFrame, file_name: str="metrics", save_path: str = "./", description_str: str="") -> json:
+def get_eval_metrics(pred_df: pd.DataFrame, file_name: str="metrics", save_path: str = "./", description_str: str="") -> dict:
     """
-    calculate evaluation matrics from column "TP/FP/TN/FN", then save matrics as json
+    calculate evaluation matrics from column "TP/FP/TN/FN", then save matrics as .json
 
     Parameters
     ---------
@@ -97,6 +98,30 @@ def get_eval_metrics(pred_df: pd.DataFrame, file_name: str="metrics", save_path:
         print("Error in saving metrics, skip saving")
 
     return metrics
+
+def plot_loss_accu_across_epoch(train_losses: list, train_acc: list, test_losses: list, test_acc: list, total_epoch: int, save_path: str):
+    """
+    Plot training and test loss and accuracy across epochs.
+    """
+    epochs = range(total_epoch)
+    
+    plt.figure(figsize=(10, 5))
+    
+    # Plotting losses
+    plt.plot(epochs, train_losses, label='Training Loss', color='tab:blue')
+    plt.plot(epochs, test_losses, label='Test Loss', color='tab:orange')
+    
+    # Plotting accuracies
+    plt.plot(epochs, train_acc, label='Training Accuracy', color='tab:green', linestyle='--')
+    plt.plot(epochs, test_acc, label='Test Accuracy', color='tab:red', linestyle='--')
+    
+    plt.xlabel('Epoch')
+    plt.ylabel('Value')
+    plt.title('Training and Test Loss and Accuracy vs. Epoch')
+    plt.legend()
+    plt.savefig(save_path)
+    plt.show()
+
 
 class MyLogger:
     """

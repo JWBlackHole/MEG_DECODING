@@ -44,7 +44,7 @@ class MegDataIterator(Dataset):
         self.totaltask: int = (until_subject-1) * 8 + (until_session+1) * (until_task +1)
 
         logger.info(f"train until sub: {self.until_subjcet}, ses: {self.until_session}, task: {self.until_task}")
-        logger.info(f"total no, of task: {self.totaltask}")
+        logger.info(f"total no. of task: {self.totaltask}")
 
     def __len__(self):
         return self.totaltask
