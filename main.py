@@ -265,7 +265,11 @@ if __name__ == "__main__":
 
     args = parse_args()
 
-    config_path = Path(args.config)
+    config_path = Path(args.config)      # this allow pass config path by -o flag when run python
+    # example:
+    # python main.py -o ./app/config/config_mh.json
+    
+    # config_path  = Path('./app/config/config_mh.json')  # you can also hard-code config path here
 
     logger.info(f"using config:  {config_path}")
 
