@@ -161,15 +161,6 @@ def train_loop(config: json):
     
     
         
-
-    X, y = preprocessor.prepare_X_y(subject, until_session, until_task, raw_data_path, target_label, 
-                                 low_pass_filter, high_pass_filter, to_print_interim_csv)
-   
-    # X=X[:100]
-    # y=y[:100]
-    # X, y is for the subject for all sessions to `until_session` and all tasks to `until_task`
-    # X is the "features" 
-    # y is the label 
     if(training_flow=="debug"):
         epochs = preprocessor.get_concated_epochs()
         logger.info(f"type of get_concated_epochs: {type(epochs)}") # <class 'mne.epochs.EpochsArray'>
@@ -187,9 +178,6 @@ def train_loop(config: json):
         exit(0)
             
 
-    if to_print_interim_csv:
-        whole_meta_table = preprocessor.get_concated_metadata() # get the df of metadata of all sessions, all tasks
-        whole_meta_table.to_csv(util.get_unique_file_name("whole_meta.csv", "./results"))
 
     # ---- train model ---- #
     logger.info("start to train...")
@@ -205,6 +193,9 @@ def train_loop(config: json):
         
        
     elif(training_flow == "lda"):
+        X, y = preprocessor.prepare_X_y(subject, until_session, until_task, raw_data_path, target_label, 
+                                 low_pass_filter, high_pass_filter, to_print_interim_csv)
+   
         logger.info("start to train with model: LDA")
 
         ldaRunner = LdaModelRunner(X, y, 0.8, to_save_csv=False, 
@@ -212,6 +203,9 @@ def train_loop(config: json):
                                 )
 
     elif(training_flow == "svm"):
+        X, y = preprocessor.prepare_X_y(subject, until_session, until_task, raw_data_path, target_label, 
+                                 low_pass_filter, high_pass_filter, to_print_interim_csv)
+   
         logger.info("start to train with model: SVM")
         svmRunner = svmModel(X, y, target_label)
         
@@ -242,10 +236,14 @@ def train_loop(config: json):
     #     cnnRunner.train()
 
     elif (training_flow == "cnn"):
+        X, y = preprocessor.prepare_X_y(subject, until_session, until_task, raw_data_path, target_label, 
+                                 low_pass_filter, high_pass_filter, to_print_interim_csv)
+   
         torch_cnn_model = SimpleTorchCNNModelRunner(X, y)
         torch_cnn_model.train(epochs=2, batch_size=1, learning_rate=0.001)
 
     elif (training_flow == "plot_word_evo"):
+        
         
         # plot each event
         preprocessor.plot_n_events_evo("is_word", num_event_to_plot, True)
