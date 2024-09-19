@@ -89,9 +89,9 @@ class MegDataIterator(Dataset):
                 logger.error(err)
 
         X_tensor = torch.tensor(X, dtype=torch.float32)
-        X_tensor = X_tensor.unsqueeze(1)
-        if verbose :
-                logger.debug(f"after unsqeeze(1), X_tensor shape: {X_tensor.shape}")
+        # X_tensor = X_tensor.unsqueeze(1)
+        # if verbose :
+        #         logger.debug(f"after unsqeeze(1), X_tensor shape: {X_tensor.shape}")
         
         y_tensor = torch.tensor(y.astype(int), dtype=torch.float32) 
         # BCE loss expect dtype float32

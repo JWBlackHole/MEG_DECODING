@@ -196,9 +196,12 @@ def train_loop(config: json):
 
     if(training_flow == "nn"):
         logger.info("start to train with model: NN")
-        nnRunner = NNModelRunner(X, y, target_label)
-        # nnRunner.train(nn_total_epoch)
-        nnRunner.train()
+        
+        megDataIter = MegDataIterator(subject, until_session, until_task, raw_data_path, target_label, to_print_interim_csv, meg_param)
+        ntimes = megDataIter.cal_ntimes()
+        
+        nnRunner = NNModelRunner(megDataIter, target_label)
+        nnRunner.train(epochs = 1000, batch_size = 512, lr = 0.001)
         
        
     elif(training_flow == "lda"):

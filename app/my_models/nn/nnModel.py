@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.functional as F
 
 class MyNNModel(nn.Module):
-    def __init__(self, num_classes = 2):
+    def __init__(self):
         super().__init__()
         self.input = nn.Sequential(
             nn.Linear(in_features = 10, out_features = 100),
