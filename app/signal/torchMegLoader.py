@@ -212,8 +212,6 @@ class TorchMegLoader(Dataset):
             if verbose  and not self.getitem_debug_printed:
                 logger.debug(f"unsqueeze(0) 2 times, X_tensor shape: {X_tensor.shape}")
 
-
-
             '''
             original: X.shape: (#event, 208, 41)
             x_tensor need to be:(#event, 1, 208, 41)
@@ -223,9 +221,9 @@ class TorchMegLoader(Dataset):
             if verbose and not self.getitem_debug_printed:
                 logger.debug(f"X_tensor shape: {X_tensor.shape}")
             
-            X_tensor = X_tensor.unsqueeze(1)
-            if verbose and not self.getitem_debug_printed:
-                logger.debug(f"after unsqeeze(1), X_tensor shape: {X_tensor.shape}")
+            # X_tensor = X_tensor.unsqueeze(1)
+            # if verbose and not self.getitem_debug_printed:
+            #     logger.debug(f"after unsqeeze(1), X_tensor shape: {X_tensor.shape}")
 
 
             y_tensor = torch.tensor(y.astype(int), dtype=torch.float32) 

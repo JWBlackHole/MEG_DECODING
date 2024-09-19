@@ -2,7 +2,6 @@ import os
 from pathlib import Path
 import sys
 import copy
-from pympler import asizeof
 import mne
 import mne_bids
 from mne    import Epochs
