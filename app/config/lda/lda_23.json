@@ -1,0 +1,24 @@
+{
+    "training": {
+        "flow": "lda",
+        "target_label": "voiced",
+        "until_subject": 23,
+        "until_session": 1,
+        "until_task": 1,
+        "meg_tmin": -0.1,
+        "meg_tmax": 0.3,
+        "meg_decim": 10,
+        "preprocess_low_pass": 0.5,
+        "preprocess_high_pass": 180,
+        "dont_kfold_in_lda": true
+    },
+    "house_keeping": {
+        "raw_data_path": "/home/dataset/Data/gw_data/download",
+        "log_level": "DEBUG",
+        "result_metrics_save_path": "./results",
+        "to_print_interim_csv": false
+    },
+    "extra_option": {
+        "result_description": "lda, voiced_phoneme, subject 23, all tasks, tmin -0.1, tmax 0.3, decim 10, lowpass 0.5, high pass 180"
+    }
+}
