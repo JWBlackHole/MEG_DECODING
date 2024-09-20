@@ -99,7 +99,7 @@ def train_loop(config: json):
         logger.error("target_label is not valid, program exit.")
         exit(0)
     
-    logger.warning(f"currently only training for one subject is supported. Will train for subject {subject:02}")
+    
 
     logger.info(f"target label to predicted got: \"{target_label}\"")
     if target_label  == "voiced":
@@ -193,6 +193,7 @@ def train_loop(config: json):
         
        
     elif(training_flow == "lda"):
+        logger.warning(f"currently only training for one subject is supported. Will train for subject {subject:02}")
         X, y = preprocessor.prepare_X_y(subject, until_session, until_task, raw_data_path, target_label, 
                                  low_pass_filter, high_pass_filter, to_print_interim_csv)
    
@@ -203,6 +204,7 @@ def train_loop(config: json):
                                 )
 
     elif(training_flow == "svm"):
+        logger.warning(f"currently only training for one subject is supported. Will train for subject {subject:02}")
         X, y = preprocessor.prepare_X_y(subject, until_session, until_task, raw_data_path, target_label, 
                                  low_pass_filter, high_pass_filter, to_print_interim_csv)
    
@@ -266,11 +268,19 @@ if __name__ == "__main__":
 
     args = parse_args()
 
-    #config_path = Path(args.config)      # this allow pass config path by -o flag when run python
+    try:
+        config_path = Path(args.config)      # this allow pass config path by -o flag when run python
+    except Exception:
+        config_path = None
+
     # example:
     # python main.py -o ./app/config/config_mh.json
     
     config_path  = Path('./app/config/test_nn_config.json')  # you can also hard-code config path here
+
+    if config_path is None:
+        logger.error("config_path is None! you should hard-code the path or pass by -o flag!")
+        raise ValueError
 
     logger.info(f"using config:  {config_path}")
 

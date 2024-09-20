@@ -109,7 +109,7 @@ class MegDataIterator(Dataset):
     
     def get_meg_epoch(self, subject, session, task):
 
-        logger.info("try to meg epoch from MegSignal class")
+        logger.info("try get to meg epoch from MegSignal class")
 
         signal_handler = MEGSignal(             # must set preload=False, this means only load data when accessed [MUST !!!] 
             self.target_label, 
