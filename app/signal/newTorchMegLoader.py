@@ -44,7 +44,7 @@ class MegDataIterator(Dataset):
         self.totaltask: int = (until_subject-1) * 8 + (until_session+1) * (until_task +1)
 
         logger.info(f"train until sub: {self.until_subjcet}, ses: {self.until_session}, task: {self.until_task}")
-        logger.info(f"total no, of task: {self.totaltask}")
+        logger.info(f"total no. of task: {self.totaltask}")
 
     def __len__(self):
         return self.totaltask
@@ -102,9 +102,9 @@ class MegDataIterator(Dataset):
 
 
     def idx_to_bids_path_num(self, idx: int)->Tuple[int, int, int]:
-        sub = (idx // 8) + 1
-        ses = (idx // 4)%2
-        task = idx %4
+        sub = (idx // (( self.until_task + 1) * (self.until_session + 1))) + 1
+        ses = (idx // 4) % (self.until_session + 1)
+        task = idx % ( self.until_task + 1)
         return sub, ses, task
     
     def get_meg_epoch(self, subject, session, task):
@@ -153,7 +153,9 @@ class MegDataIterator(Dataset):
     
     def cal_ntimes(self):
         try:
-            return int((self.meg_param["tmax"] - self.meg_param["tmin"])*(1000/self.meg_param["decim"])) +1
+            ntimes = int((self.meg_param["tmax"] - self.meg_param["tmin"])*(1000/self.meg_param["decim"])) +1
+            logger.info(f"ntimes (# timepoints in each window) calculated by megDataIter is: {ntimes}")
+            return ntimes
         except Exception as e:
             logger.error(e)
             return None

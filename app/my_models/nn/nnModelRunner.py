@@ -19,6 +19,7 @@ import pandas as pd
 # cutom import
 from app.my_models.nn.nnModel import MyNNModel
 from app.common.commonSetting import TargetLabel
+import app.utils.my_utils as util
 
 def accuracy_fn(y_true, y_pred):
     correct = torch.eq(y_true, y_pred).sum().item() # torch.eq() calculates where two tensors are equal
@@ -65,14 +66,22 @@ def balance_label(X: Tensor, y: Tensor):
 
 class NNModelRunner():
     BATCH_SIZE = 2048
-    def __init__(self, megData, target_label) -> None:
+    def __init__(self, megData, target_label, nchans:int, ntimes: int) -> None:
         
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.megData = megData
         self.target_label =  target_label
+        self.nchans = nchans
+        self.ntimes = ntimes
         
         
-    def train(self, epochs, batch_size, lr):
+    def train(self, epochs, batch_size, lr)->dict:
+        """
+        return
+        ------------
+        metircs: dict of metrics of training result
+        
+        """
         print("Start Training...")
         
         if self.target_label != TargetLabel.VOICED_PHONEME:
@@ -80,10 +89,20 @@ class NNModelRunner():
             exit(0)
         
         # Our "model", "loss function" and "optimizer"
-        model_0   = MyNNModel().to(self.device)
+        model_0   = MyNNModel(self.nchans, self.ntimes).to(self.device)
         loss_fn   = torch.nn.BCELoss().to(self.device)
         optimizer = torch.optim.SGD(params = model_0.parameters(), lr = lr, momentum=0.9, weight_decay = 1e-4)
         
+        total_epoch = 0
+        train_losses = []
+        test_losses = []
+        train_accuracies = []
+        test_accuracies = []
+
+        final_test_pred = None
+        final_y_test = None
+
+
         for i, task in enumerate(self.megData):
             print(f"In task {i}")
             print("-------------------------")
@@ -106,12 +125,18 @@ class NNModelRunner():
                     print(f"Epoch {epoch}")
                     print("-----------------------")
                 
+                loss_item = train_acc = None
+                
                 for id_batch, (X_batch, y_batch) in enumerate(dataloader):
                     # set to training mode
                     model_0.train()
                     
                     # Binary classification, just using sigmoid to predict output
                     # Round: <0.5 class 1, >0.5 class2
+                    if (i==0) and (epoch==0):
+                        logger.debug(f"shape of X_batch: {X_batch.shape}")
+                        logger.debug(f"shape of y_batch: {y_batch.shape}")
+
                     y_logits = model_0(X_batch).squeeze()
                         
                     # Calculate loss
@@ -124,18 +149,65 @@ class NNModelRunner():
                     # Optimizer step
                     optimizer.step()
                     
-                    if(epoch % 100 == 0):
+                    if(epoch % 1== 0):
                         y_pred = torch.round(y_logits)
                         train_acc = accuracy_fn(y_true = y_batch, y_pred = y_pred)
                             
                         loss_item, current = loss.item(), (id_batch + 1) * batch_size
                         print(f"Loss: {loss_item:>7f}  [{current:>5d}/{dataset_size:>5d}], Accuracy: {train_acc:>7f}%")
                         
-                if epoch % 100 == 0:
+                if epoch % 1 == 0:
                     test_logits = model_0(X_test).squeeze() 
                     test_pred = torch.round(test_logits)
 
                     test_loss = loss_fn(test_logits, y_test)
                     test_acc = accuracy_fn(y_true=y_test, y_pred=test_pred)
-                    print(f"Test Loss: {test_loss:>7f}, Test Accuracy: {test_acc:>7f}%\n")  
-        return
+                    print(f"Test Loss: {test_loss:>7f}, Test Accuracy: {test_acc:>7f}%\n")
+                
+                # record loss and accuracy for plot graph
+                train_losses.append(loss_item)
+                train_accuracies.append(train_acc)
+                test_losses.append(test_loss.item())        # .item will convert the var to float (CPU-bound)
+                test_accuracies.append(test_acc)
+
+                # print(f"i={i}, epoch={epoch}")
+                # print("train loss:")
+                # print([el for el in train_losses])
+                # print("train accuracy:")
+                # print([el for el in train_accuracies])
+                # print("test loss:")
+                # print([el for el in test_losses])
+                # print("test accuracy:")
+                # print([el for el in test_accuracies])
+
+                
+                # save the pred and y in last epoch of last task for later use
+                if (epoch == (epochs -1)) and ( i== (len(self.megData)-1) ):
+                    final_test_pred = test_pred.cpu().detach()  # .detach() explicitly free gpu memory
+                    final_y_test = y_test.cpu().detach()
+
+                total_epoch += 1
+
+        
+        metrics = self.save_result(final_test_pred, final_y_test, train_losses, train_accuracies, test_losses, test_accuracies, total_epoch)
+        return metrics
+    
+    def save_result(self, test_pred, y_test, train_losses, train_accuracies, test_losses, test_accuracies, total_epoch)->dict:
+
+        graph_save_path = util.get_unique_file_name("NN_loss_accuracy_graph.png", "./results/nn/graph")
+
+        util.plot_loss_accu_across_epoch(train_losses, train_accuracies, test_losses, test_accuracies, total_epoch, graph_save_path)
+        # Save the result metrics
+        prediction_df = pd.DataFrame({
+            'prediction': test_pred.cpu().numpy().flatten(),
+            'ground_truth': y_test.cpu().numpy().flatten()
+        })
+
+        # Calculate metrics
+        prediction_df = util.add_comparison_column(prediction_df)
+        dstr = "Description of the training configuration"
+        metrics = util.get_eval_metrics(prediction_df, 
+                            file_name="voiced_metrics_cnn", save_path="./results", 
+                            description_str=dstr)
+        
+        return metrics

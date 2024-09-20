@@ -146,7 +146,7 @@ def train_loop(config: json):
         # nchans, ntimes = megData.get_signal_dim()
         
         # torch_cnn_model = SimpleTorchCNNModelRunner(megData, nchans, ntimes, p_drop_true=0.572)
-        torch_cnn_model.train(epochs=2, batch_size=1, learning_rate=0.001)
+        torch_cnn_model.train(epochs=4, batch_size=1, learning_rate=0.001)
         logger.info("cnn training finished.")
         exit(0)
 
@@ -188,8 +188,8 @@ def train_loop(config: json):
         megDataIter = MegDataIterator(subject, until_session, until_task, raw_data_path, target_label, to_print_interim_csv, meg_param)
         ntimes = megDataIter.cal_ntimes()
         
-        nnRunner = NNModelRunner(megDataIter, target_label)
-        nnRunner.train(epochs = 1000, batch_size = 512, lr = 0.001)
+        nnRunner = NNModelRunner(megDataIter, target_label, nchans=208, ntimes=ntimes)
+        nnRunner.train(epochs = 4, batch_size = 128, lr = 0.001)
         
        
     elif(training_flow == "lda"):
@@ -276,7 +276,7 @@ if __name__ == "__main__":
     # example:
     # python main.py -o ./app/config/config_mh.json
     
-    # config_path  = Path('./app/config/config_mh.json')  # you can also hard-code config path here
+    config_path  = Path('./app/config/test_nn_config.json')  # you can also hard-code config path here
 
     if config_path is None:
         logger.error("config_path is None! you should hard-code the path or pass by -o flag!")
