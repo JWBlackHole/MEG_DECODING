@@ -217,7 +217,7 @@ class MEGSignal():
         # )
 
         if self.preload:
-            logger.warning("preload is true! may cause high memory usage!!")
+            logger.warning("preload is true. will load data of this epoch to memory immediately.")
         epochs = mne.Epochs(
             raw,
             events,
