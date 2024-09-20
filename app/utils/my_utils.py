@@ -104,12 +104,13 @@ def plot_loss_accu_across_epoch(train_losses: list, train_acc: list, test_losses
     Plot training and test loss and accuracy across epochs.
     """
     verbose = False
+    epochs = range(total_epoch)
     if verbose:
         logger.debug(f"len of train_losses: {len(train_losses)}")
         logger.debug(f"len of train_acc: {len(train_acc)}")
         logger.debug(f"len of test_losses: {len(test_losses)}")
         logger.debug(f"len of test_acc: {len(test_acc)}")
-        epochs = range(total_epoch)
+        
 
         logger.debug("train loss:")
         print([i for i in train_losses])
@@ -121,7 +122,7 @@ def plot_loss_accu_across_epoch(train_losses: list, train_acc: list, test_losses
     # Subplot for losses
     plt.subplot(2, 1, 1)
     plt.plot(epochs, test_losses, label='Test Loss', color='dodgerblue',linewidth=2)
-    plt.plot(epochs, train_losses, label='Training Loss', color='choclate', linestyle='--', linewidth=1.5, alpha=0.9)
+    plt.plot(epochs, train_losses, label='Training Loss', color='chocolate', linestyle='--', linewidth=1.5, alpha=0.9)
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
     plt.title('Training and Test Loss vs. Epoch')
