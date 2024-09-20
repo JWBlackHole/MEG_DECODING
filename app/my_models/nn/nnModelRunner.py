@@ -133,8 +133,9 @@ class NNModelRunner():
                     
                     # Binary classification, just using sigmoid to predict output
                     # Round: <0.5 class 1, >0.5 class2
-                    logger.debug(f"shape of X_batch: {X_batch.shape}")
-                    logger.debug(f"shape of y_batch: {y_batch.shape}")
+                    if (i==0) and (epoch==0):
+                        logger.debug(f"shape of X_batch: {X_batch.shape}")
+                        logger.debug(f"shape of y_batch: {y_batch.shape}")
 
                     y_logits = model_0(X_batch).squeeze()
                         
@@ -148,14 +149,14 @@ class NNModelRunner():
                     # Optimizer step
                     optimizer.step()
                     
-                    if(epoch % 100 == 0):
+                    if(epoch % 1== 0):
                         y_pred = torch.round(y_logits)
                         train_acc = accuracy_fn(y_true = y_batch, y_pred = y_pred)
                             
                         loss_item, current = loss.item(), (id_batch + 1) * batch_size
                         print(f"Loss: {loss_item:>7f}  [{current:>5d}/{dataset_size:>5d}], Accuracy: {train_acc:>7f}%")
                         
-                if epoch % 100 == 0:
+                if epoch % 1 == 0:
                     test_logits = model_0(X_test).squeeze() 
                     test_pred = torch.round(test_logits)
 
@@ -168,6 +169,16 @@ class NNModelRunner():
                 train_accuracies.append(train_acc)
                 test_losses.append(test_loss.item())        # .item will convert the var to float (CPU-bound)
                 test_accuracies.append(test_acc)
+
+                # print(f"i={i}, epoch={epoch}")
+                # print("train loss:")
+                # print([el for el in train_losses])
+                # print("train accuracy:")
+                # print([el for el in train_accuracies])
+                # print("test loss:")
+                # print([el for el in test_losses])
+                # print("test accuracy:")
+                # print([el for el in test_accuracies])
 
                 
                 # save the pred and y in last epoch of last task for later use

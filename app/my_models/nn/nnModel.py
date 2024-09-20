@@ -29,17 +29,17 @@ class MyNNModel(nn.Module):
         )
 
     def forward(self, x):
-        logger.debug(f"initial x shape: {x.shape}")
+        #logger.debug(f"initial x shape: {x.shape}")
 
         x = self.input(x)
         # x should have shape (batch_size, #meg_channel , #timepoint)   # batch_size indicate number of event processing
-        print(f"After input layer, x.shape: {x.shape}")
+        #print(f"After input layer, x.shape: {x.shape}")
         for module in self.hidden:
             x = module(x)
 
-        print(f"After all hiden layers, x.shape: {x.shape}")
+        #print(f"After all hiden layers, x.shape: {x.shape}")
         x = self.output(x)
-        print(f"After output layer, x.shape: {x.shape}")
+        #print(f"After output layer, x.shape: {x.shape}")
 
         # now x have dimension (batch_size, #meg_channel, 1) 
         # which indicate it made a prediction for each meg channel for each evet, which is not we want
