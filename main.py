@@ -24,7 +24,7 @@ from app.my_models.cnn_torch.torchCnnModelRunner import SimpleTorchCNNModelRunne
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Run training with specified config file.")
-    parser.add_argument('-o', '--config', type=str, required=True, help='Path to the config file')
+    parser.add_argument('-o', '--config', type=str, required=False, help='Path to the config file')
     return parser.parse_args()
 
 def load_config(config_path):
@@ -268,11 +268,19 @@ if __name__ == "__main__":
 
     args = parse_args()
 
-    config_path = Path(args.config)      # this allow pass config path by -o flag when run python
+    try:
+        config_path = Path(args.config)      # this allow pass config path by -o flag when run python
+    except Exception:
+        config_path = None
+
     # example:
     # python main.py -o ./app/config/config_mh.json
     
     # config_path  = Path('./app/config/config_mh.json')  # you can also hard-code config path here
+
+    if config_path is None:
+        logger.error("config_path is None! you should hard-code the path or pass by -o flag!")
+        raise ValueError
 
     logger.info(f"using config:  {config_path}")
 
