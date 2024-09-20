@@ -75,8 +75,16 @@ class NNModelRunner():
         self.ntimes = ntimes
         
         
-    def train(self, epochs, batch_size, lr)->dict:
+    def train(self, epochs, batch_size, lr, graph_interval: int=1, print_interval: int=100)->dict:
         """
+        parameters
+        -----------
+        graph_interval: how often to plot a point on loss and accuracy vs epoch graph 
+                        (and hence need to calculate loss and accuracy up to that point)
+
+        print_interval: how often to print the loss and accuracy on console log
+                        need to be a multiple of graph_interval
+                         (e.g. graph_interval=10, print_interval=100)
         return
         ------------
         metircs: dict of metrics of training result
@@ -121,7 +129,7 @@ class NNModelRunner():
             dataset_size = len(dataloader.dataset)
             
             for epoch in range(epochs):
-                if(epoch % 100 == 0):
+                if(epoch % print_interval == 0):
                     print(f"Epoch {epoch}")
                     print("-----------------------")
                 
@@ -149,19 +157,21 @@ class NNModelRunner():
                     # Optimizer step
                     optimizer.step()
                     
-                    if(epoch % 1== 0):
+                    if(epoch % graph_interval== 0):
                         y_pred = torch.round(y_logits)
                         train_acc = accuracy_fn(y_true = y_batch, y_pred = y_pred)
                             
                         loss_item, current = loss.item(), (id_batch + 1) * batch_size
+                    if(epoch % print_interval == 0):
                         print(f"Loss: {loss_item:>7f}  [{current:>5d}/{dataset_size:>5d}], Accuracy: {train_acc:>7f}%")
                         
-                if epoch % 1 == 0:
+                if epoch % graph_interval == 0:
                     test_logits = model_0(X_test).squeeze() 
                     test_pred = torch.round(test_logits)
 
                     test_loss = loss_fn(test_logits, y_test)
                     test_acc = accuracy_fn(y_true=y_test, y_pred=test_pred)
+                if(epoch % print_interval == 0):
                     print(f"Test Loss: {test_loss:>7f}, Test Accuracy: {test_acc:>7f}%\n")
                 
                 # record loss and accuracy for plot graph
