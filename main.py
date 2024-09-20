@@ -24,7 +24,7 @@ from app.my_models.cnn_torch.torchCnnModelRunner import SimpleTorchCNNModelRunne
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Run training with specified config file.")
-    parser.add_argument('-o', '--config', type=str, required=True, help='Path to the config file')
+    parser.add_argument('-o', '--config', type=str, required=False, help='Path to the config file')
     return parser.parse_args()
 
 def load_config(config_path):
@@ -188,8 +188,8 @@ def train_loop(config: json):
         megDataIter = MegDataIterator(subject, until_session, until_task, raw_data_path, target_label, to_print_interim_csv, meg_param)
         ntimes = megDataIter.cal_ntimes()
         
-        nnRunner = NNModelRunner(megDataIter, target_label)
-        nnRunner.train(epochs = 1000, batch_size = 512, lr = 0.001)
+        nnRunner = NNModelRunner(megDataIter, target_label, nchans=208, ntimes=ntimes)
+        nnRunner.train(epochs = 2, batch_size = 128, lr = 0.001)
         
        
     elif(training_flow == "lda"):
@@ -266,11 +266,11 @@ if __name__ == "__main__":
 
     args = parse_args()
 
-    config_path = Path(args.config)      # this allow pass config path by -o flag when run python
+    #config_path = Path(args.config)      # this allow pass config path by -o flag when run python
     # example:
     # python main.py -o ./app/config/config_mh.json
     
-    # config_path  = Path('./app/config/config_mh.json')  # you can also hard-code config path here
+    config_path  = Path('./app/config/test_nn_config.json')  # you can also hard-code config path here
 
     logger.info(f"using config:  {config_path}")
 

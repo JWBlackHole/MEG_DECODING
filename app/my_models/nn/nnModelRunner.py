@@ -66,11 +66,13 @@ def balance_label(X: Tensor, y: Tensor):
 
 class NNModelRunner():
     BATCH_SIZE = 2048
-    def __init__(self, megData, target_label) -> None:
+    def __init__(self, megData, target_label, nchans:int, ntimes: int) -> None:
         
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.megData = megData
         self.target_label =  target_label
+        self.nchans = nchans
+        self.ntimes = ntimes
         
         
     def train(self, epochs, batch_size, lr)->dict:
@@ -87,7 +89,7 @@ class NNModelRunner():
             exit(0)
         
         # Our "model", "loss function" and "optimizer"
-        model_0   = MyNNModel().to(self.device)
+        model_0   = MyNNModel(self.nchans, self.ntimes).to(self.device)
         loss_fn   = torch.nn.BCELoss().to(self.device)
         optimizer = torch.optim.SGD(params = model_0.parameters(), lr = lr, momentum=0.9, weight_decay = 1e-4)
         
@@ -131,6 +133,9 @@ class NNModelRunner():
                     
                     # Binary classification, just using sigmoid to predict output
                     # Round: <0.5 class 1, >0.5 class2
+                    logger.debug(f"shape of X_batch: {X_batch.shape}")
+                    logger.debug(f"shape of y_batch: {y_batch.shape}")
+
                     y_logits = model_0(X_batch).squeeze()
                         
                     # Calculate loss
