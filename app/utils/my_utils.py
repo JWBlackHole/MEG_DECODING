@@ -103,22 +103,35 @@ def plot_loss_accu_across_epoch(train_losses: list, train_acc: list, test_losses
     """
     Plot training and test loss and accuracy across epochs.
     """
+
+    logger.debug(f"len of train_losses: {len(train_losses)}")
+    logger.debug(f"len of train_acc: {len(train_acc)}")
+    logger.debug(f"len of test_losses: {len(test_losses)}")
+    logger.debug(f"len of test_acc: {len(test_acc)}")
     epochs = range(total_epoch)
     
-    plt.figure(figsize=(10, 5))
     
-    # Plotting losses
+    plt.figure(figsize=(12, 10))
+
+    # Subplot for losses
+    plt.subplot(2, 1, 1)
     plt.plot(epochs, train_losses, label='Training Loss', color='tab:blue')
     plt.plot(epochs, test_losses, label='Test Loss', color='tab:orange')
-    
-    # Plotting accuracies
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.title('Training and Test Loss vs. Epoch')
+    plt.legend()
+
+    # Subplot for accuracies
+    plt.subplot(2, 1, 2)
     plt.plot(epochs, train_acc, label='Training Accuracy', color='tab:green', linestyle='--')
     plt.plot(epochs, test_acc, label='Test Accuracy', color='tab:red', linestyle='--')
-    
     plt.xlabel('Epoch')
-    plt.ylabel('Value')
-    plt.title('Training and Test Loss and Accuracy vs. Epoch')
+    plt.ylabel('Accuracy')
+    plt.title('Training and Test Accuracy vs. Epoch')
     plt.legend()
+
+    plt.tight_layout()
     plt.savefig(save_path)
     plt.show()
 
