@@ -103,7 +103,7 @@ class MegDataIterator(Dataset):
 
     def idx_to_bids_path_num(self, idx: int)->Tuple[int, int, int]:
         sub = (idx // (( self.until_task + 1) * (self.until_session + 1))) + 1
-        ses = (idx // 4) % (self.until_session + 1)
+        ses = (idx // ( self.until_task + 1)) % (self.until_session + 1)
         task = idx % ( self.until_task + 1)
         return sub, ses, task
     
