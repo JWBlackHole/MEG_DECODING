@@ -112,6 +112,12 @@ class Preprocessor():
             self.y = meta # not important for now
 
             self.is_word = words
+        
+        elif preprocess_setting == TargetLabel.WORD_ONSET:
+            self.X = self.concated_epochs.get_data(copy=True)
+            self.y = self.concated_epochs.metadata["is_word_onset"].values
+            if self.to_print_interim_csv:
+                self.concated_epochs.metadata.to_csv(util.get_unique_file_name("meta_from_preprocessor.csv", "./results"))
 
         else:
             raise NotImplementedError
@@ -171,7 +177,7 @@ class Preprocessor():
 
         # --- signal processing --- #
         
-        signal_handler = MEGSignal(             # must set preload=False, this means only load data when accessed [MUST !!!] 
+        signal_handler = MEGSignal(
             setting, 
             low_pass=self.meg_param["low_pass"] if self.meg_param["low_pass"] else None, 
             high_pass=self.meg_param["high_pass"] if self.meg_param["high_pass"] else None,
@@ -195,7 +201,7 @@ class Preprocessor():
             ph_info:pd.DataFrame = pd.read_csv("./phoneme_data/phoneme_info.csv")   # file path is relative to root dir
             return signal_handler.prepare_one_epochs(bids_path, supplementary_meta = ph_info)
 
-        elif setting in [TargetLabel.PLOT_WORD_ONSET,  TargetLabel.WORD_FREQ] :
+        elif setting in [TargetLabel.PLOT_WORD_ONSET,  TargetLabel.WORD_FREQ, TargetLabel.WORD_ONSET] :
             return signal_handler.prepare_one_epochs(bids_path, None)
         
         return

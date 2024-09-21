@@ -105,7 +105,23 @@ class MEGSignal():
             logger.warning("bids path: does not exist! will skip this path.")
             return None
         return raw
-        
+    
+    def _get_last_el(self, lst):
+        if len(lst) == 0:
+            return None
+        elif len(lst) == 1:
+            return lst[0]
+        else:
+            return lst[-1]
+
+    def _get_2nd_last_el(self, lst):
+        if len(lst) == 0:
+            return None
+        elif len(lst) == 1:
+            return lst[0]
+        else:
+            return lst[-2]
+    
     def _load_meta(self, raw: mne.io.Raw, supplementary_meta: pd.DataFrame, to_save_csv:bool = False)->pd.DataFrame:
         """Load meta data
         set slef.meta fom information in meta_data_src
@@ -157,16 +173,15 @@ class MEGSignal():
             if(to_save_csv):
                 meta.to_csv(util.get_unique_file_name(file_name="meta.csv", dir="./test"))
         elif self.target_label == TargetLabel.WORD_FREQ:
-            words = meta.query('kind=="word"').copy()
-            meta.loc[words.index + 1, "is_word"] = True
-            
-            # Merge "word frequency" with "phoneme"
-            # apply a funcion to calculate the word frequency
-            wfreq = lambda x: zipf_frequency(x, "en")  # noqa
-            meta.loc[words.index + 1, "wordfreq"] = words.word.apply(wfreq).values
             meta = meta[meta['kind'] == 'word']
 
-        elif self.target_label in [TargetLabel.PLOT_WORD_ONSET, TargetLabel.WORD_ONSET]:
+
+            wfreq = lambda x: zipf_frequency(x, "en")   # lambda func for cal word frequency
+
+            # Create the 'wordfreq' column and set its values
+            meta['wordfreq'] = meta['word'].apply(wfreq)
+
+        elif self.target_label in [TargetLabel.PLOT_WORD_ONSET]:
             # create colmn is_word in meta
             # if column "kind"=="word", is_word
             # else false
@@ -178,10 +193,69 @@ class MEGSignal():
 
             meta = meta[meta['kind'] == 'word']
             meta["is_word"] = True
-            
 
-            if(to_save_csv):
-                meta.to_csv(util.get_unique_file_name(file_name="meta_from_megsignal.csv", dir="./results"))
+        elif self.target_label == TargetLabel.WORD_ONSET:
+
+
+            # -------------- non randomo fashion  ----------------
+            # non onset time 設成word onset 往上數兩row
+
+            non_onset_idx = []
+            onset_idx = []
+
+            for idx in range(len(meta)):
+                if meta.iloc[idx]['kind'] == 'word':
+                    if idx - 2 >= 0:  # Ensure the index is valid
+                        cur_non_onset = meta.iloc[idx-2]['onset']
+
+                        #  avoid duplicate onset time
+                        last_onset_idx = self._get_last_el(onset_idx)
+                        if last_onset_idx is not None:
+                            if cur_non_onset != meta.iloc[last_onset_idx]['onset']:
+                                non_onset_idx.append(idx - 2)                          
+
+                    onset_idx.append(idx)
+
+            meta['is_word_onset'] = False
+
+            meta.loc[onset_idx, 'is_word_onset'] = True
+
+    
+            valid_indices = list(set(non_onset_idx + onset_idx))
+            valid_indices.sort()  # Optional: Sort the indices to maintain order
+            meta = meta.iloc[valid_indices].reset_index(drop=True)
+
+
+
+
+            # -----------   random fashion --------------
+            # goal:
+            # generate random non word_onset time sameple,
+            # for the model to predict is /is not word onset
+
+            # meta = meta[meta['kind'] == 'word']
+            # sfreq = raw.info['sfreq']  # Sampling frequency
+
+            # # Step 1: Create a new column 'is_word_onset' and set it to True for all rows
+            # meta['is_word_onset'] = True
+
+            # # Step 2: Generate random time points for non-word onset events
+            # word_onset_samples = (meta['onset'].values * sfreq).astype(int)  # Convert onset times to sample points
+            # num_non_word_onset = len(word_onset_samples)  # Number of non-word onset events to generate
+            # non_word_onset_samples = np.random.randint(word_onset_samples[0], word_onset_samples[-1], num_non_word_onset)
+
+            # # Step 3: Create new rows for non-word onset events
+            # non_word_onset_df = pd.DataFrame({
+            #     'onset': non_word_onset_samples / sfreq,  # Convert sample points back to time
+            #     'is_word_onset': False
+            # })
+
+            # # Combine the original meta DataFrame with the new non-word onset events
+            # meta = pd.concat([meta, non_word_onset_df], ignore_index=True)
+                        
+
+        if(to_save_csv):
+            meta.to_csv(util.get_unique_file_name(file_name="meta_from_megsignal.csv", dir="./results"))
 
         return meta
 
@@ -199,9 +273,21 @@ class MEGSignal():
         # Create event that mne need
         # including time info
         logger.debug(f"in meg signal handler, self.setting: {self.target_label}")
+        
+        events = None
+
+        # ----------   set up events  --------
+
+
         events = np.c_[
-            meta.onset * raw.info["sfreq"], np.ones((len(meta), 2))
-        ].astype(int)
+                meta.onset * raw.info["sfreq"], np.ones((len(meta), 2))
+            ].astype(int)
+        
+
+
+
+        #  ---------  create mne epoch   ---------
+
         # logger.debug(f"SFREQ: {raw.info["sfreq"]}")
 
         # epochs = mne.Epochs(
@@ -216,6 +302,7 @@ class MEGSignal():
         #     event_repeated="drop",
         # )
 
+
         if self.preload:
             logger.warning("preload is true. will load data of this epoch to memory immediately.")
         epochs = mne.Epochs(
@@ -229,7 +316,7 @@ class MEGSignal():
             preload =self.preload,
             event_repeated="drop",
         )
-        #ep = copy.deepcopy(epochs)
+
 
         logger.info(f"size of epoch: ")
         print(sys.getsizeof(epochs))

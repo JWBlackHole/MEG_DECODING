@@ -1,10 +1,10 @@
 {
     "training": {
-        "flow": "cnn_batch",
-        "target_label": "voiced",
+        "flow": "lda",
+        "target_label": "word_onset",
         "until_subject": 1,
-        "until_session": 1,
-        "until_task": 3,
+        "until_session": 0,
+        "until_task": 0,
         "meg_tmin": -0.1,
         "meg_tmax": 0.3,
         "meg_decim": 10,
@@ -17,6 +17,9 @@
         "raw_data_path": "/home/dataset/Data/gw_data/download",
         "log_level": "DEBUG",
         "result_metrics_save_path": "./results",
-        "to_print_interim_csv": false
+        "to_print_interim_csv": true
+    },
+    "extra_option": {
+        "result_description": "___, ____, subject _, __, tmin -0.1, tmax 0.3, decim 10, lowpass 0.5, high pass 180"
     }
 }
