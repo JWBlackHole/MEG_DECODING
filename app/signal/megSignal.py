@@ -240,8 +240,8 @@ class MEGSignal():
         #events
         # 1st col: onset time
 
-        #if self.preload:    # this cannot be done if preload==False, as data is not loaded
-        if False:
+        if self.preload:    # this cannot be done if preload==False, as data is not loaded
+        #if False:
             # threshold
             th = np.percentile(np.abs(epochs._data), 95)
             epochs._data[:] = np.clip(epochs._data, -th, th)
