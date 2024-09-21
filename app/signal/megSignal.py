@@ -159,12 +159,12 @@ class MEGSignal():
         # --- Convert meatdata to form of DataFrame --- #
         meta = pd.DataFrame(meta_list)
         #meta["intercept"] = 1.0
-        
-        # all onset displace forward by 0.05 (from observation, looks like there is a average 0.05s delay in labelling)
-        meta['onset'] = meta['onset'] - 0.05
+
+        # all onset offset forward by 0.05 (from observation, looks like there is a average 0.05s delay in labelling)
+        # meta['onset'] = meta['onset'] - 0.05
         
 
-        # displace all onset by -0.05
+        # offset all onset by -0.05
         # Computing if voicing
         # Replace voiced to True or False
 
@@ -185,16 +185,18 @@ class MEGSignal():
         elif self.target_label == TargetLabel.WORD_FREQ:
 
 
-            thres = 4.0
+            thres = 6.0
             meta = meta[meta['kind'] == 'word']
             wfreq = lambda x: zipf_frequency(x, "en")   # lambda func for cal word frequency
 
             # Create the 'wordfreq' column and set its values
             meta['wordfreq'] = meta['word'].apply(wfreq)
-            meta['word_freq_above_thres'] = meta['wordfreq'] > thres
+            meta['word_freq_below_thres'] = meta['wordfreq'] < thres
 
             median_wordfreq = meta['wordfreq'].median()
             logger.info(f"median of word frequencies is: {median_wordfreq}")
+            logger.info(f"no. of words freq below {thres}: {meta['word_freq_below_thres'].sum()}")
+            logger.info(f"no. of words freq above {thres}: {len(meta) - meta['word_freq_below_thres'].sum()}")
             
             # [notes] for word frequency
             # > 6.0 ->mostly function words like a, the, with, it, is,...

@@ -17,7 +17,7 @@ class MyLDA():
     def __init__(self):
         pass
 
-    def train(self, X: np.ndarray, y: np.ndarray, train_test_ratio)-> Tuple[pd.DataFrame, pd.DataFrame]:
+    def train(self, X: np.ndarray, y: np.ndarray, train_test_ratio, balance_train_data_lda, balance_test_data_lda)-> Tuple[pd.DataFrame, pd.DataFrame]:
         """
         y is expected to be binary with value True or False
 
@@ -36,6 +36,7 @@ class MyLDA():
 
         """
         self.train_test_ratio = train_test_ratio
+        self.balance_test_data_lda = balance_test_data_lda
         
         try:
             assert len(X) == len(y)
@@ -55,6 +56,8 @@ class MyLDA():
         pred_df = None
 
         # call function for LDA according to prediction_mode
+        if balance_train_data_lda:
+            X, y = self.balance_label(X, y)
         pred_df = self.predict_each_window(X, y)
       
         return pred_df
@@ -93,8 +96,9 @@ class MyLDA():
 
         # Split the data into training and test sets
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=(1-self.train_test_ratio), random_state=0)
-        scores = []        
-        
+
+        if self.balance_test_data_lda:
+            X_test, y_test = self.balance_label(X_test, y_test)
         
         preds = np.zeros(n)
         logger.debug(f"shape of X_train: {X_train.shape}")
@@ -136,3 +140,29 @@ class MyLDA():
         
         return pred_df
     
+
+
+    def balance_label(self, X: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        print("Balancing Label...")
+
+        # Separate the data based on the labels
+        X_true = X[y]
+        X_false = X[~y]
+
+        # Determine the minimum length to balance the classes
+        min_len = min(len(X_true), len(X_false))
+
+        # Truncate the arrays to the minimum length
+        X_true = X_true[:min_len]
+        X_false = X_false[:min_len]
+        y_true = np.ones(min_len, dtype=bool)
+        y_false = np.zeros(min_len, dtype=bool)
+
+        print("X length", len(X_true), len(X_false))
+        print("Y length", len(y_true), len(y_false))
+
+        # Concatenate the balanced arrays
+        X_balanced = np.concatenate((X_true, X_false), axis=0)
+        y_balanced = np.concatenate((y_true, y_false), axis=0)
+
+        return X_balanced, y_balanced
