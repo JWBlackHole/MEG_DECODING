@@ -101,7 +101,6 @@ def train_loop(config: json):
     
     
 
-    logger.info(f"target label to predicted got: \"{target_label}\"")
     if target_label  == "voiced":
         target_label = TargetLabel.VOICED_PHONEME
         
@@ -276,7 +275,7 @@ if __name__ == "__main__":
     # example:
     # python main.py -o ./app/config/config_mh.json
     
-    config_path  = Path('./app/config/config_mh.json')  # you can also hard-code config path here
+    config_path  = Path('./app/config/lda/0921/lda_1.json')  # you can also hard-code config path here
 
     if config_path is None:
         logger.error("config_path is None! you should hard-code the path or pass by -o flag!")
