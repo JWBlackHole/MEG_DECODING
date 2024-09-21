@@ -250,20 +250,30 @@ class Preprocessor():
         if(target == "is_word"):
             if self.is_word and (isinstance(self.is_word, Epochs) or isinstance(self.is_word, EpochsArray)):
 
-                fig1 = self.is_word.plot()  # plot each channel
+                #fig1 = self.is_word.plot()  # plot each channel
                 evo = self.is_word.average()    # mne.evoked.EvokedArray of 668 events
 
-                fig_evo = evo.plot(spatial_colors=True, show=True) # type: matplotlib.figure.Figure
+                fig_evo = evo.plot(spatial_colors=True, show=False) # type: matplotlib.figure.Figure
                 #print(type(fig_evo))
+                fig_evo.set_size_inches(36,24)
+                for ax in fig_evo.get_axes():
+                    ax.grid(True, which='both', axis='x', linewidth=0.5)
+                    x_ticks = np.arange(ax.get_xlim()[0], ax.get_xlim()[1], 0.05)  # Adjust the interval as needed
+                    ax.set_xticks(x_ticks)
+                
 
-                fig_evo.savefig(util.get_unique_file_name("evoked_response.png", "./results"))
+
+                fig_evo.savefig(util.get_unique_file_name("averaged_evoked_response.png", "./graphs"),
+                                    dpi=100)
+                plt.close(fig_evo)
+                evo.plot(spatial_colors=True, show=True)
                 
 
             else:
                 raise ValueError("self.is_word is not prepared or of wrong type")
         return
             
-    def plot_n_events_evo(self, target, n: int,  show_last_fig = False, plot_only_one = False):
+    def plot_n_events_evo(self, target, n: int,  show_last_fig = False, plot_only_one = False,interval=1):
         """
         target: "is_word"
         n: how many rows to plot
@@ -275,19 +285,24 @@ class Preprocessor():
         if(target == "is_word"):
             if self.is_word and  isinstance(self.is_word, EpochsArray):
                 logger.debug(f"type of self.is_word: {type(self.is_word)}")
-                for evo in self.is_word.iter_evoked():
-                    if(i>n):
+                for idx, evo in enumerate(self.is_word.iter_evoked(), start=1):
+                    if idx < i:
+                        continue
+                    if idx > n:
                         break
+                    if idx % interval != 0:
+                        continue
+
                     
                     fig_evo = evo.plot(spatial_colors = True, show = False)
 
                     fig_evo.set_size_inches(36,24)
-                    fig_evo.savefig(util.get_unique_file_name(f"evoked_event{i}.png", "./graphs"),
+                    fig_evo.savefig(util.get_unique_file_name(f"evoked_event{idx}.png", "./graphs"),
                                     dpi=200)
                     plt.close(fig_evo)  # for closing the file before writing next graph
 
-                    #if show_last_fig and i == n:
-                    if True:
+                    if show_last_fig and i == n:
+                    #if True:
                         evo.plot(spatial_colors=True, show=True)
                     
                     i=i+1
