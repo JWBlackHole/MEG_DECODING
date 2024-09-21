@@ -54,6 +54,8 @@ def train_loop(config: json):
         training_flow     = training_config.get('flow', None)
         target_label      = training_config.get('target_label', None)
         nn_total_epoch    = training_config.get('nn_total_epoch', None)
+        balance_train_data_lda = training_config.get('balance_train_data_lda', False)
+        balance_test_data_lda = training_config.get('balance_test_data_lda', False)
 
         house_keeping_config    = config.get('house_keeping', {})
         raw_data_path           = house_keeping_config.get('raw_data_path', None)
@@ -199,7 +201,9 @@ def train_loop(config: json):
         logger.info("start to train with model: LDA")
 
         ldaRunner = LdaModelRunner(X, y, 0.8, to_save_csv=False, 
-                                   option=extra_option if extra_option else {}
+                                   option=extra_option if extra_option else {}, 
+                                   balance_train_data_lda=balance_train_data_lda,
+                                   balance_test_data_lda=balance_test_data_lda
                                 )
 
     elif(training_flow == "svm"):

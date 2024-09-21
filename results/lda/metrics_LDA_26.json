@@ -1,5 +1,5 @@
 {
-    "description": "lda, word_onset (random non onset), subject 1, task 0,1, tmin -0.1, tmax 0.3, decim 10, lowpass 1, high pass 8, time displace -0.05s, no clip, no baseline correction",
+    "description": "lda, word_onset (random non onset), subject 1, task 0,1, tmin -0.1, tmax 0.3, decim 10, lowpass 1, high pass 8, time offset -0.05s, no clip, no baseline correction",
     "recall": 0.4869762174405436,
     "precision": 0.4988399071925754,
     "accuracy": 0.4899135446685879,
