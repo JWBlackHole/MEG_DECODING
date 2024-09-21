@@ -1,0 +1,11 @@
+{
+    "description": "word_onset, subject1 ses 0 task 0 tmin -0.1, tmax 0.3, decim 10, lowpass 0.5, high pass 180",
+    "recall": 0.46206896551724136,
+    "precision": 0.5677966101694916,
+    "accuracy": 0.5113636363636364,
+    "f1_score": 0.5095057034220531,
+    "tp": 67,
+    "fp": 51,
+    "tn": 68,
+    "fn": 78
+}
