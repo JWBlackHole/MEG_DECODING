@@ -1,0 +1,24 @@
+{
+    "training": {
+        "flow": "lda",
+        "target_label": "word_freq",
+        "until_subject": 23,
+        "until_session": 1,
+        "until_task": 2,
+        "meg_tmin": -0.1,
+        "meg_tmax": 0.3,
+        "meg_decim": 10,
+        "preprocess_low_pass": 1,
+        "preprocess_high_pass": 8,
+        "balance_test_data_lda": true
+    },
+    "house_keeping": {
+        "raw_data_path": "/home/dataset/Data/gw_data/download",
+        "log_level": "INFO",
+        "result_metrics_save_path": "./results",
+        "to_print_interim_csv": false
+    },
+    "extra_option": {
+        "result_description": "lda, word frequency < 6.0, subject 23, task 0,1,2, tmin -0.1, tmax 0.3, decim 10,lowpass 1, high pass 8, test data balanced, no clip, no baseline correction"
+    }
+}
