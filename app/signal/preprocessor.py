@@ -98,20 +98,25 @@ class Preprocessor():
             self.X = phonemes.get_data(copy=True)   # use copy=True to avoid changing the original data
             self.y = phonemes.metadata["voiced"].values
         
-        elif preprocess_setting in [TargetLabel.PLOT_WORD_ONSET, TargetLabel.WORD_FREQ] :
-            ep = self.concated_epochs
-            meta = ep.metadata
-            if self.to_print_interim_csv:
-                meta.to_csv(util.get_unique_file_name("wholemeta_from_preprocessor.csv", "./results"))
-            logger.info("plot is word is doing")
-            words = self.concated_epochs["is_word"]
-            self.X = words.get_data(copy=True)
-            meta = words.metadata
-            if self.to_print_interim_csv:
-                meta.to_csv(util.get_unique_file_name("words_from_preprocessor.csv", "./results"))
-            self.y = meta # not important for now
+        elif preprocess_setting == TargetLabel.PLOT_WORD_ONSET:
 
-            self.is_word = words
+            logger.info("plot is word is doing")
+            self.X = self.concated_epochs.get_data(copy=True)
+            meta = self.concated_epochs.metadata
+            if self.to_print_interim_csv:
+                meta.to_csv(util.get_unique_file_name("meta_from_preprocessor.csv", "./results"))
+            self.y = None   # not important
+
+            self.is_word = self.concated_epochs
+
+        elif preprocess_setting == TargetLabel.WORD_FREQ:
+
+            self.X = self.concated_epochs.get_data(copy=True)
+            meta = self.concated_epochs.metadata
+            self.y = meta['word_freq_above_thres'].values
+            if self.to_print_interim_csv:
+                meta.to_csv(util.get_unique_file_name("meta_from_preprocessor.csv", "./results"))
+            
         
         elif preprocess_setting == TargetLabel.WORD_ONSET:
             self.X = self.concated_epochs.get_data(copy=True)
@@ -121,6 +126,7 @@ class Preprocessor():
 
         else:
             raise NotImplementedError
+
 
 
         return self.X, self.y
