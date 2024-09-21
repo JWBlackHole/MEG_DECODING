@@ -160,6 +160,9 @@ class MEGSignal():
         meta = pd.DataFrame(meta_list)
         #meta["intercept"] = 1.0
         
+        # all onset displace forward by 0.05 (from observation, looks like there is a average 0.05s delay in labelling)
+        meta['onset'] = meta['onset'] - 0.05
+        
 
         # displace all onset by -0.05
         # Computing if voicing
