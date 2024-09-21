@@ -5,17 +5,17 @@
         "until_subject": 1,
         "until_session": 0,
         "until_task": 0,
-        "meg_tmin": -0.1,
-        "meg_tmax": 0.3,
-        "meg_decim": 10,
-        "preprocess_low_pass": 0.5,
-        "preprocess_high_pass": 180
+        "meg_tmin":-0.4,
+        "meg_tmax": 0.4,
+        "meg_decim": 1,
+        "preprocess_low_pass":1,
+        "preprocess_high_pass": 8
     },
     "house_keeping": {
         "raw_data_path": "D://NTHU//meta-brainmagick2//brainmagick//data//gwilliams2022//download",
         "log_level": "INFO",
         "result_metrics_save_path": "./results",
         "to_print_interim_csv": false,
-        "num_event_to_plot": 2
+        "num_event_to_plot": 300
     }
 }

@@ -236,10 +236,10 @@ if __name__ == "__main__":
     elif (training_flow == "plot_word_evo"):
         
         # plot each event
-        preprocessor.plot_n_events_evo("is_word", num_event_to_plot, True)
+        #preprocessor.plot_n_events_evo("is_word", num_event_to_plot, True, False, 50)
 
         # plot average of all event
-        #preprocessor.plot_evoked_response("is_word")
+        preprocessor.plot_evoked_response("is_word")
 
 
 
