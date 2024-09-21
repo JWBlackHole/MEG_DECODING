@@ -1,5 +1,5 @@
 {
-    "description": "lda, voiced_phoneme, subject 27, all tasks, tmin -0.1, tmax 0.3, decim 10, lowpass 0.5, high pass 180",
+    "description": "lda, voiced_phoneme, subject 27, task 0,1, tmin -0.1, tmax 0.3, decim 10, lowpass 0.5, high pass 180",
     "recall": 0.6432269197584124,
     "precision": 0.7568527918781726,
     "accuracy": 0.568976897689769,
