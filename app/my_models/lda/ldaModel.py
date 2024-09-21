@@ -113,7 +113,7 @@ class MyLDA():
         pred_df["ground_truth"] = y_test.tolist()
 
         
-        logger.info("start to run kfold")
+        # logger.info("start to run kfold")
         # try:
 
         #     cv = RepeatedStratifiedKFold(n_splits=5, n_repeats = 3, random_state=1) # remark: 5 split * 3 repeats = 15 Folds
