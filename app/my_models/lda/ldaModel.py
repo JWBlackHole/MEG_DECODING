@@ -95,7 +95,7 @@ class MyLDA():
 
 
         # Split the data into training and test sets
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=(1-self.train_test_ratio), random_state=0)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=(1-self.train_test_ratio), random_state=1)
 
         if self.balance_test_data_lda:
             X_test, y_test = self.balance_label(X_test, y_test)

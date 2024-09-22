@@ -12,7 +12,8 @@ class LdaModelRunner():
     def __init__(self, X: np.ndarray, y: np.ndarray, train_test_ratio:float=0.8, to_save_csv = False, 
                  option: dict = {},
                  balance_train_data_lda=False, 
-                    balance_test_data_lda=False) -> None:
+                    balance_test_data_lda=False,
+                    res_path: str=None) -> None:
         
         logger.info("start to train with model: LDA")
 
@@ -38,7 +39,7 @@ class LdaModelRunner():
                 logger.error("fail to output csv, skipping output csv")
 
         util.get_eval_metrics(prediction_df, 
-                              file_name="metrics_LDA", save_path="./results/lda", 
+                              file_name="metrics_LDA", save_path=res_path, 
                               description_str=self.result_description)
         
         logger.info("LDA model runner finished.")

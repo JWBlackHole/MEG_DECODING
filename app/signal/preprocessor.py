@@ -113,7 +113,7 @@ class Preprocessor():
 
             self.X = self.concated_epochs.get_data(copy=True)
             meta = self.concated_epochs.metadata
-            self.y = meta['word_freq_below_thres'].values
+            self.y = meta['word_freq_thres'].values
             if self.to_print_interim_csv:
                 meta.to_csv(util.get_unique_file_name("meta_from_preprocessor.csv", "./results"))
             
@@ -191,7 +191,9 @@ class Preprocessor():
             preload=True, 
             tmin=self.meg_param["tmin"] if self.meg_param["tmin"] else None,
             tmax=self.meg_param["tmax"] if self.meg_param["tmax"] else None,
-            decim=self.meg_param["decim"] if self.meg_param["decim"] else None
+            decim=self.meg_param["decim"] if self.meg_param["decim"] else None,
+            clip_percentile=self.meg_param["clip_percentile"] if self.meg_param["clip_percentile"] else None,
+            onset_offset=self.meg_param["onset_offset"] if self.meg_param["onset_offset"] else None
         ) 
         # set mne epoch for each session, each task
         # Specify a path to a epoch

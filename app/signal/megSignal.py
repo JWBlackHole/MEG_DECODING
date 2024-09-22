@@ -34,7 +34,7 @@ class MEGSignal():
     
     """
     def __init__(self, setting: TargetLabel, low_pass:float = 0.5, high_pass:float = 180, n_jobs:int = 1, to_print_interim_csv=False, preload=True,
-                 tmin: float=-0.1, tmax: float=0.3, decim:int=1, clip_percentile: float=None):
+                 tmin: float=-0.1, tmax: float=0.3, decim:int=1, clip_percentile: float=None, onset_offset: float=0):
         self.raw:  Raw|None          = None
         self.meta: pd.DataFrame|None = None
 
@@ -54,6 +54,7 @@ class MEGSignal():
         self.ntimes: int = int((tmax-tmin)*(1000/decim)) +1  # this is required for preload false, as data is not loaded, cannot infer ntimes directly from data, hence ntimes must be calculated
                                                             # 1000 is sfreq (frequency for sampling meg)
         self.clip_percentile = clip_percentile
+        self.onset_offset = onset_offset
         
         logger.debug(f"ntimes= {self.ntimes}")
        
@@ -161,7 +162,9 @@ class MEGSignal():
         #meta["intercept"] = 1.0
 
         # all onset offset forward by 0.05 (from observation, looks like there is a average 0.05s delay in labelling)
-        # meta['onset'] = meta['onset'] - 0.05
+        logger.info(f"onset_offset got in megSignal: {self.onset_offset}")
+        if self.onset_offset:
+            meta['onset'] = meta['onset'] + self.onset_offset
         
 
         # offset all onset by -0.05
@@ -185,18 +188,18 @@ class MEGSignal():
         elif self.target_label == TargetLabel.WORD_FREQ:
 
 
-            thres = 6.0
+            thres = 4.0
             meta = meta[meta['kind'] == 'word']
             wfreq = lambda x: zipf_frequency(x, "en")   # lambda func for cal word frequency
 
             # Create the 'wordfreq' column and set its values
             meta['wordfreq'] = meta['word'].apply(wfreq)
-            meta['word_freq_below_thres'] = meta['wordfreq'] < thres
+            meta['word_freq_thres'] = meta['wordfreq'] < thres
 
             median_wordfreq = meta['wordfreq'].median()
-            logger.info(f"median of word frequencies is: {median_wordfreq}")
-            logger.info(f"no. of words freq below {thres}: {meta['word_freq_below_thres'].sum()}")
-            logger.info(f"no. of words freq above {thres}: {len(meta) - meta['word_freq_below_thres'].sum()}")
+            logger.debug(f"median of word frequencies is: {median_wordfreq}")
+            logger.debug(f"no. of words freq below {thres}: {meta['word_freq_thres'].sum()}")
+            logger.debug(f"no. of words freq above {thres}: {len(meta) - meta['word_freq_thres'].sum()}")
             
             # [notes] for word frequency
             # > 6.0 ->mostly function words like a, the, with, it, is,...
