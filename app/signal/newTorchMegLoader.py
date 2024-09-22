@@ -134,8 +134,11 @@ class MegDataIterator(Dataset):
             preload=self.preload, 
             tmin=self.meg_param["tmin"] if self.meg_param["tmin"] else None,
             tmax=self.meg_param["tmax"] if self.meg_param["tmax"] else None,
-            decim=self.meg_param["decim"] if self.meg_param["decim"] else None
+            decim=self.meg_param["decim"] if self.meg_param["decim"] else None,
+            clip_percentile=self.meg_param["clip_percentile"] if self.meg_param["clip_percentile"] else None,
+            onset_offset=self.meg_param["onset_offset"] if self.meg_param["onset_offset"] else None
         ) 
+        
         if self.nchans is None or self.ntimes is None:
             self.nchans, self.ntimes = signal_handler.get_nchans_ntimes()
 

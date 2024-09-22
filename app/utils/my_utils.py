@@ -75,6 +75,8 @@ def get_eval_metrics(pred_df: pd.DataFrame, file_name: str="metrics", save_path:
     accuracy = (tp + tn) / (tp + tn + fp + fn) if (tp + tn + fp + fn) > 0 else 0    # 猜中的比例
     f1_score = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
 
+    logger.info(f"accuracy: {accuracy}")
+
     metrics = {
         'description': description_str,
         'recall': recall,
@@ -175,7 +177,7 @@ class MyLogger:
             if not os.path.exists(log_dir):
                 os.makedirs(log_dir)
 
-            self.file_name = get_unique_file_name(f"{date.today()}_log.log", "./log")
+            self.file_name = f"./log/{date.today()}_log.log"
             logger.add(
                 self.file_name,
                 level = self.log_level
