@@ -28,6 +28,6 @@ def filter_words_by_zipf(input_file, output_file_above, output_file_below, thres
 input_file = '/home/dataset/Data/gw_data/download/stimuli/text/lw1.txt'  # Path to the input text file
 output_file_above = 'common_words.txt'  # Path to the output file for words above the threshold
 output_file_below = 'not_common_words.txt'  # Path to the output file for words below the threshold
-filter_words_by_zipf(input_file, output_file_above, output_file_below, 5.8)
+filter_words_by_zipf(input_file, output_file_above, output_file_below, 4.1)
 
 print(f"Words with Zipf frequency above and below the threshold have been written to {output_file_above} and {output_file_below}")
