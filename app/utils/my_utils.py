@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import json
 from matplotlib import pyplot as plt
+import pytz
 
 def get_unique_file_name(file_name: str, dir: str = "./", verbose: bool = True):
     """Get a unique file name in a directory for saving file to avoid overwriting.
@@ -73,6 +74,8 @@ def get_eval_metrics(pred_df: pd.DataFrame, file_name: str="metrics", save_path:
     precision = tp / (tp + fp) if (tp + fp) > 0 else 0      # predcit 成True 的之中有多少確實是True
     accuracy = (tp + tn) / (tp + tn + fp + fn) if (tp + tn + fp + fn) > 0 else 0    # 猜中的比例
     f1_score = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+
+    logger.info(f"accuracy: {accuracy}")
 
     metrics = {
         'description': description_str,
@@ -146,7 +149,7 @@ class MyLogger:
     """
     set up for loguru logger (for prettier logging)
     """
-    def __init__(self, logger, log_level, output = "console"):
+    def __init__(self, output = "console"):
         """
         Parameters
         ---------
@@ -158,27 +161,56 @@ class MyLogger:
             "no" - don't use logger for package messages
         """
         self.output = output
-        self.log_level = log_level
+        self.log_level = "DEBUG"
         
         if self.output == "no":
             logger.remove()
             return
+        
         if not (self.output in ["both", "file", "console"]):
             output = "console"
 
         
         logger.remove()
         if (self.output in ["both", "file"]):
+            log_dir = "./log"
+            if not os.path.exists(log_dir):
+                os.makedirs(log_dir)
+
+            self.file_name = f"./log/{date.today()}_log.log"
             logger.add(
-                f"./log/{date.today()}_log.log",
+                self.file_name,
                 level = self.log_level
             )
-        if output == "console":
+        if output in ["console", "both"]:
             logger.add(
                 sys.stderr,
                 level=self.log_level
             )
 
+    def set_level(self, lv):
+        """
+        Set the log level for all logger handlers.
+        
+        Parameters
+        ----------
+        lv: str
+            The log level to set (e.g., "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL")
+        """
+        self.log_level = lv
+        logger.remove()
+        if self.output in ["both", "file"]:
+            logger.add(
+                self.file_name,
+                level=self.log_level
+            )
+        if self.output in ["console", "both"]:
+            logger.add(
+                sys.stderr,
+                level=self.log_level
+            )
+
+            
 
     def writePackageMsg(self, message):
         """

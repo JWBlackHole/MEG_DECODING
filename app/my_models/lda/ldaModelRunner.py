@@ -9,7 +9,11 @@ import app.utils.my_utils as util
 
 
 class LdaModelRunner():
-    def __init__(self, X: np.ndarray, y: np.ndarray, train_test_ratio:float=0.8, to_save_csv = False, option: dict = {}) -> None:
+    def __init__(self, X: np.ndarray, y: np.ndarray, train_test_ratio:float=0.8, to_save_csv = False, 
+                 option: dict = {},
+                 balance_train_data_lda=False, 
+                    balance_test_data_lda=False,
+                    res_path: str=None) -> None:
         
         logger.info("start to train with model: LDA")
 
@@ -20,7 +24,7 @@ class LdaModelRunner():
 
         lda_model = MyLDA()
         
-        prediction_df = lda_model.train(X, y, train_test_ratio)
+        prediction_df = lda_model.train(X, y, train_test_ratio, balance_train_data_lda, balance_test_data_lda)
 
         logger.debug(f"type of predictions (returned from lda model): {type(prediction_df)}")
 
@@ -35,7 +39,7 @@ class LdaModelRunner():
                 logger.error("fail to output csv, skipping output csv")
 
         util.get_eval_metrics(prediction_df, 
-                              file_name="metrics_LDA", save_path="./results/lda", 
+                              file_name="metrics_LDA", save_path=res_path, 
                               description_str=self.result_description)
         
         logger.info("LDA model runner finished.")
