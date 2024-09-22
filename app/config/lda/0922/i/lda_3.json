@@ -2,13 +2,12 @@
     "training": {
         "flow": "lda",
         "target_label": "voiced",
-        "until_subject": 11,
+        "until_subject": 18,
         "until_session": 0,
-        "until_task": 0,
+        "until_task": 3,
         "meg_tmin": -0.1,
         "meg_tmax": 0.3,
         "meg_decim": 10,
-        "load_batch_size": 2000,
         "preprocess_low_pass": 1,
         "preprocess_high_pass": 8,
         "balance_test_data_lda": true,
@@ -17,10 +16,10 @@
     "house_keeping": {
         "raw_data_path": "/home/dataset/Data/gw_data/download",
         "log_level": "INFO",
-        "result_metrics_save_path": "./results",
+        "result_metrics_save_path": "./results/i",
         "to_print_interim_csv": false
     },
     "extra_option": {
-        "result_description": "word_onset, subject1 ses 0 task 0 tmin -0.1, tmax 0.3, decim 10, lowpass 0.5, high pass 180"
+        "result_description": "lda, voiced_phoneme, subject 18, task 0-3, ses 0, tmin -0.1, tmax 0.3, decim 10, lowpass 1, high pass 8, test data balanced, no clip, no baseline correction, onset offset -0.03"
     }
 }
