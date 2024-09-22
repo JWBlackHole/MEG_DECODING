@@ -80,12 +80,9 @@ def train_loop(config: json):
         "high_pass": high_pass_filter
     }
 
-    # ----- Set logger ----- #
-    util.MyLogger(logger, log_level=log_level, output="console")   # logger comes from loguru logger
     
-    # --- wish to redirect error message to loguru logger, but to be developped....
-    #sys.stdout = util.StreamToLogger(log_level="INFO", output="console")
-    #sys.stderr = util.StreamToLogger(log_level="ERROR", output="console")
+    
+    mylogger.set_level(log_level)
 
 
     # ------  target label checking  ----  #
@@ -266,9 +263,12 @@ def train_loop(config: json):
     logger.info("training finished.")
 
 
+# ----- Set logger ----- #
+mylogger = util.MyLogger(output="both")   # logger comes from loguru logger
+
+
 if __name__ == "__main__":
     # ---  load config --- #
-
     args = parse_args()
 
     try:
@@ -279,7 +279,7 @@ if __name__ == "__main__":
     # example:
     # python main.py -o ./app/config/config_mh.json
     
-    config_path  = Path('./app/config/lda/0921/lda_1.json')  # you can also hard-code config path here
+    #config_path  = Path('./app/config/lda/0921/e/lda_1.json')  # you can also hard-code config path here
 
     if config_path is None:
         logger.error("config_path is None! you should hard-code the path or pass by -o flag!")
