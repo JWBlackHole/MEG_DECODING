@@ -57,6 +57,7 @@ def train_loop(config: json):
         balance_test_data_lda = training_config.get('balance_test_data_lda', False)
         clip_percentile       = training_config.get('clip_percentile', None)
         onset_offset          = training_config.get('onset_offset', None)
+        baseline              = training_config.get('meg_baseline', None)
 
 
         house_keeping_config    = config.get('house_keeping', {})
@@ -81,7 +82,8 @@ def train_loop(config: json):
         "low_pass": low_pass_filter,
         "high_pass": high_pass_filter,
         "clip_percentile": clip_percentile,
-        "onset_offset": onset_offset
+        "onset_offset": onset_offset,
+        "baseline": baseline
     }
 
     

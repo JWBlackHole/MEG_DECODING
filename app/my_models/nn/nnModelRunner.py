@@ -92,9 +92,6 @@ class NNModelRunner():
         """
         print("Start Training...")
         
-        if self.target_label != TargetLabel.VOICED_PHONEME:
-            logger.error("preprocessing for setting other than \"voiced\" is not implemented. program exit")
-            exit(0)
         
         # Our "model", "loss function" and "optimizer"
         model_0   = MyNNModel(self.nchans, self.ntimes).to(self.device)

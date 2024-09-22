@@ -193,7 +193,8 @@ class Preprocessor():
             tmax=self.meg_param["tmax"] if self.meg_param["tmax"] else None,
             decim=self.meg_param["decim"] if self.meg_param["decim"] else None,
             clip_percentile=self.meg_param["clip_percentile"] if self.meg_param["clip_percentile"] else None,
-            onset_offset=self.meg_param["onset_offset"] if self.meg_param["onset_offset"] else None
+            onset_offset=self.meg_param["onset_offset"] if self.meg_param["onset_offset"] else None,
+            baseline=self.meg_param["baseline"] if self.meg_param["baseline"]  else None
         ) 
         # set mne epoch for each session, each task
         # Specify a path to a epoch

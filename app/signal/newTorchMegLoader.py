@@ -68,7 +68,10 @@ class MegDataIterator(Dataset):
 
         self.cur_idx += 1
 
-        epoch.apply_baseline(verbose="WARNING")  # Apply baseline correction
+        if not self.preload and "baseline" in self.meg_param:
+            if self.meg_param["baseline"]:
+                epoch.apply_baseline() 
+
         X = epoch.get_data(copy=True)   # Get the data as a 3D array (n_channels, n_times)
 
         y = None
@@ -83,13 +86,14 @@ class MegDataIterator(Dataset):
             y = epoch.metadata["is_word_onset"].values
 
         
-        if not self.preload:    # if preload is True, data is already clipped when preload
+        if not self.preload and "clip_percentile" in self.meg_param:
+            if isinstance(self.clip_percentile, (int, float)):    # if preload is True, data is already clipped when preload
 
-            # clip to 95 percentile for twice   (no need, )
-            th = np.percentile(np.abs(X), 95)
-            X = np.clip(X, -th, th)
-            th = np.percentile(np.abs(X), 95)
-            X = np.clip(X, -th, th)
+                # clip to 95 percentile for twice   (no need, )
+                th = np.percentile(np.abs(X), self.clip_percentile)
+                X = np.clip(X, -th, th)
+
+
 
         if(verbose):
             logger.debug(f"type of X: {type(X)}")   # numpy.ndarray
@@ -136,7 +140,8 @@ class MegDataIterator(Dataset):
             tmax=self.meg_param["tmax"] if self.meg_param["tmax"] else None,
             decim=self.meg_param["decim"] if self.meg_param["decim"] else None,
             clip_percentile=self.meg_param["clip_percentile"] if self.meg_param["clip_percentile"] else None,
-            onset_offset=self.meg_param["onset_offset"] if self.meg_param["onset_offset"] else None
+            onset_offset=self.meg_param["onset_offset"] if self.meg_param["onset_offset"] else None,
+            baseline=self.meg_param["baseline"] if self.meg_param["baseline"]  else None
         ) 
         
         if self.nchans is None or self.ntimes is None:

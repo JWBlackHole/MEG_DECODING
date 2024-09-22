@@ -34,7 +34,8 @@ class MEGSignal():
     
     """
     def __init__(self, setting: TargetLabel, low_pass:float = 0.5, high_pass:float = 180, n_jobs:int = 1, to_print_interim_csv=False, preload=True,
-                 tmin: float=-0.1, tmax: float=0.3, decim:int=1, clip_percentile: float=None, onset_offset: float=0):
+                 tmin: float=-0.1, tmax: float=0.3, decim:int=1, 
+                 clip_percentile: float=None, onset_offset: float=0, baseline=None):
         self.raw:  Raw|None          = None
         self.meta: pd.DataFrame|None = None
 
@@ -55,6 +56,7 @@ class MEGSignal():
                                                             # 1000 is sfreq (frequency for sampling meg)
         self.clip_percentile = clip_percentile
         self.onset_offset = onset_offset
+        self.baseline = baseline
         
         logger.debug(f"ntimes= {self.ntimes}")
        
@@ -354,11 +356,13 @@ class MEGSignal():
         if self.preload:    # this cannot be done if preload==False, as data is not loaded
 
             # threshold
-
             if isinstance(self.clip_percentile, (int, float)):
                 th = np.percentile(np.abs(epochs._data), self.clip_percentile)
                 epochs._data[:] = np.clip(epochs._data, -th, th)
-                epochs.apply_baseline()
+        
+            if self.baseline:
+                epochs.apply_baseline()     
+                # base line defalut is  (None, 0), mean start of epoch (start where tmin) to time 0
                
             
         # logger.debug(meta.wordfreq)
