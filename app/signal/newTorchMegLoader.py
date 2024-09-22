@@ -23,6 +23,7 @@ class MegDataIterator(Dataset):
     def __init__(self, until_subject, until_session, until_task, raw_data_path, target_label,
                   to_print_interim_csv=False, 
                   meg_param:dict={"tmin":None, "tmax":None, "decim":None, "low_pass": None, "high_pass":None},
+                  preload=True
         ):
         """
         subject start from 01
@@ -42,6 +43,7 @@ class MegDataIterator(Dataset):
         self.target_label = target_label
         self.cur_idx: int = 0
         self.totaltask: int = (until_subject-1) * 8 + (until_session+1) * (until_task +1)
+        self.preload = preload
 
         logger.info(f"train until sub: {self.until_subjcet}, ses: {self.until_session}, task: {self.until_task}")
         logger.info(f"total no. of task: {self.totaltask}")
@@ -68,13 +70,26 @@ class MegDataIterator(Dataset):
 
         epoch.apply_baseline(verbose="WARNING")  # Apply baseline correction
         X = epoch.get_data(copy=True)   # Get the data as a 3D array (n_channels, n_times)
-        y = epoch.metadata["voiced"].values
 
-        # clip to 95 percentile for twice
-        th = np.percentile(np.abs(X), 95)
-        X = np.clip(X, -th, th)
-        th = np.percentile(np.abs(X), 95)
-        X = np.clip(X, -th, th)
+        y = None
+
+        if self.target_label == TargetLabel.VOICED_PHONEME:
+            y = epoch.metadata["voiced"].values
+
+        elif self.target_label == TargetLabel.WORD_FREQ:
+           y = epoch.metadata["wordfreq"].values
+        
+        elif self.target_label == TargetLabel.WORD_ONSET:
+            y = epoch.metadata["is_word_onset"].values
+
+        
+        if not self.preload:    # if preload is True, data is already clipped when preload
+
+            # clip to 95 percentile for twice   (no need, )
+            th = np.percentile(np.abs(X), 95)
+            X = np.clip(X, -th, th)
+            th = np.percentile(np.abs(X), 95)
+            X = np.clip(X, -th, th)
 
         if(verbose):
             logger.debug(f"type of X: {type(X)}")   # numpy.ndarray
@@ -116,11 +131,14 @@ class MegDataIterator(Dataset):
             low_pass=self.meg_param["low_pass"] if self.meg_param["low_pass"] else None, 
             high_pass=self.meg_param["high_pass"] if self.meg_param["high_pass"] else None,
             to_print_interim_csv=self.to_print_interim_csv if self.to_print_interim_csv else None,
-            preload=True, 
+            preload=self.preload, 
             tmin=self.meg_param["tmin"] if self.meg_param["tmin"] else None,
             tmax=self.meg_param["tmax"] if self.meg_param["tmax"] else None,
-            decim=self.meg_param["decim"] if self.meg_param["decim"] else None
+            decim=self.meg_param["decim"] if self.meg_param["decim"] else None,
+            clip_percentile=self.meg_param["clip_percentile"] if self.meg_param["clip_percentile"] else None,
+            onset_offset=self.meg_param["onset_offset"] if self.meg_param["onset_offset"] else None
         ) 
+        
         if self.nchans is None or self.ntimes is None:
             self.nchans, self.ntimes = signal_handler.get_nchans_ntimes()
 

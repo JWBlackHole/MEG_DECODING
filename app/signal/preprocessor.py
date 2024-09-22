@@ -98,23 +98,35 @@ class Preprocessor():
             self.X = phonemes.get_data(copy=True)   # use copy=True to avoid changing the original data
             self.y = phonemes.metadata["voiced"].values
         
-        elif preprocess_setting in [TargetLabel.PLOT_WORD_ONSET, TargetLabel.WORD_FREQ] :
-            ep = self.concated_epochs
-            meta = ep.metadata
-            if self.to_print_interim_csv:
-                meta.to_csv(util.get_unique_file_name("wholemeta_from_preprocessor.csv", "./results"))
-            logger.info("plot is word is doing")
-            words = self.concated_epochs["is_word"]
-            self.X = words.get_data(copy=True)
-            meta = words.metadata
-            if self.to_print_interim_csv:
-                meta.to_csv(util.get_unique_file_name("words_from_preprocessor.csv", "./results"))
-            self.y = meta # not important for now
+        elif preprocess_setting == TargetLabel.PLOT_WORD_ONSET:
 
-            self.is_word = words
+            logger.info("plot is word is doing")
+            self.X = self.concated_epochs.get_data(copy=True)
+            meta = self.concated_epochs.metadata
+            if self.to_print_interim_csv:
+                meta.to_csv(util.get_unique_file_name("meta_from_preprocessor.csv", "./results"))
+            self.y = None   # not important
+
+            self.is_word = self.concated_epochs
+
+        elif preprocess_setting == TargetLabel.WORD_FREQ:
+
+            self.X = self.concated_epochs.get_data(copy=True)
+            meta = self.concated_epochs.metadata
+            self.y = meta['word_freq_thres'].values
+            if self.to_print_interim_csv:
+                meta.to_csv(util.get_unique_file_name("meta_from_preprocessor.csv", "./results"))
+            
+        
+        elif preprocess_setting == TargetLabel.WORD_ONSET:
+            self.X = self.concated_epochs.get_data(copy=True)
+            self.y = self.concated_epochs.metadata["is_word_onset"].values
+            if self.to_print_interim_csv:
+                self.concated_epochs.metadata.to_csv(util.get_unique_file_name("meta_from_preprocessor.csv", "./results"))
 
         else:
             raise NotImplementedError
+
 
 
         return self.X, self.y
@@ -171,7 +183,7 @@ class Preprocessor():
 
         # --- signal processing --- #
         
-        signal_handler = MEGSignal(             # must set preload=False, this means only load data when accessed [MUST !!!] 
+        signal_handler = MEGSignal(
             setting, 
             low_pass=self.meg_param["low_pass"] if self.meg_param["low_pass"] else None, 
             high_pass=self.meg_param["high_pass"] if self.meg_param["high_pass"] else None,
@@ -179,7 +191,9 @@ class Preprocessor():
             preload=True, 
             tmin=self.meg_param["tmin"] if self.meg_param["tmin"] else None,
             tmax=self.meg_param["tmax"] if self.meg_param["tmax"] else None,
-            decim=self.meg_param["decim"] if self.meg_param["decim"] else None
+            decim=self.meg_param["decim"] if self.meg_param["decim"] else None,
+            clip_percentile=self.meg_param["clip_percentile"] if self.meg_param["clip_percentile"] else None,
+            onset_offset=self.meg_param["onset_offset"] if self.meg_param["onset_offset"] else None
         ) 
         # set mne epoch for each session, each task
         # Specify a path to a epoch
@@ -195,7 +209,7 @@ class Preprocessor():
             ph_info:pd.DataFrame = pd.read_csv("./phoneme_data/phoneme_info.csv")   # file path is relative to root dir
             return signal_handler.prepare_one_epochs(bids_path, supplementary_meta = ph_info)
 
-        elif setting in [TargetLabel.PLOT_WORD_ONSET,  TargetLabel.WORD_FREQ] :
+        elif setting in [TargetLabel.PLOT_WORD_ONSET,  TargetLabel.WORD_FREQ, TargetLabel.WORD_ONSET] :
             return signal_handler.prepare_one_epochs(bids_path, None)
         
         return
