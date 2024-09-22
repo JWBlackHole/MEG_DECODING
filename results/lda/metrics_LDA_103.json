@@ -1,0 +1,11 @@
+{
+    "description": "lda, voiced_phoneme, subject 7, task 0,1,2, tmin -0.1, tmax 0.3, decim 10, lowpass 1, high pass 8, test data balanced, no clip, no baseline correction",
+    "recall": 0.8870863075924724,
+    "precision": 0.5106462457975346,
+    "accuracy": 0.518494484101233,
+    "f1_score": 0.6481744902797534,
+    "tp": 1367,
+    "fp": 1310,
+    "tn": 231,
+    "fn": 174
+}
