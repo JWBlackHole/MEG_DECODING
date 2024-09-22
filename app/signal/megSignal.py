@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
-
+import sys
+import copy
 import mne
 import mne_bids
 from mne    import Epochs
@@ -32,28 +33,46 @@ class MEGSignal():
         init -> load_raw -> load-meta -> load_epochs
     
     """
-    def __init__(self, setting: TargetLabel, low_pass:float = 0.5, high_pass:float = 30.0, n_jobs:int = 1, to_print_interim_csv=False):
-       self.raw:  Raw|None          = None
-       self.meta: pd.DataFrame|None = None
+    def __init__(self, setting: TargetLabel, low_pass:float = 0.5, high_pass:float = 180, n_jobs:int = 1, to_print_interim_csv=False, preload=True,
+                 tmin: float=-0.1, tmax: float=0.3, decim:int=1):
+        self.raw:  Raw|None          = None
+        self.meta: pd.DataFrame|None = None
+
+        # Epoches
+        self.epochs: Epochs|None     = None      #mne.Epochs object
+        # self.all_epochs: list = []               # list of mne.Epochs??
+        self.target_label: TargetLabel | None = setting
+        self.low_pass: float = low_pass
+        self.high_pass: float = high_pass
+        self.n_jobs: int = n_jobs
+        self.to_print_interim_csv: bool = to_print_interim_csv
+        self.preload: bool = preload
+        self.nchans:int = 208
+        self.tmin:float = tmin
+        self.tmax:float = tmax
+        self.decim:int = decim
+        self.ntimes: int = int((tmax-tmin)*(1000/decim)) +1  # this is required for preload false, as data is not loaded, cannot infer ntimes directly from data, hence ntimes must be calculated
+                                                            # 1000 is sfreq (frequency for sampling meg)
+        logger.debug(f"ntimes= {self.ntimes}")
        
-       # Epoches
-       self.epochs: Epochs|None     = None      #mne.Epochs object
-       # self.all_epochs: list = []               # list of mne.Epochs??
-       self.setting: TargetLabel | None = setting
-       self.low_pass: float = low_pass
-       self.high_pass: float = high_pass
-       self.n_jobs: int = n_jobs
-       self.to_print_interim_csv: bool = to_print_interim_csv
-       
+    def get_nchans_ntimes(self)->tuple[int,int]:
+        if (self.nchans and self.ntimes):
+            return self.nchans, self.ntimes
+        else:
+            logger.error(f"self.nchans: {self.nchans}, self.ntimes: {self.ntimes}, at least one is not properly set!")
+            raise ValueError
        
 
     def prepare_one_epochs(self, bids_path, supplementary_meta: pd.DataFrame = None):
         """
         bids_path is path to one task of one sesion of one subject
         """
-        self.load_raw(bids_path)
+        res = self.load_raw(bids_path)
+        if res is None:
+            return None
         meta = self._load_meta(self.raw, supplementary_meta, to_save_csv=self.to_print_interim_csv)
-        epochs = self.load_epochs(self.raw, meta, to_save_csv=self.to_print_interim_csv)
+        epochs = self.load_epochs(self.raw, meta, to_save_csv=self.to_print_interim_csv
+                                  )
         return epochs
 
     """
@@ -71,15 +90,20 @@ class MEGSignal():
         
         """ 
         # Reading associated event.tsv and channels.tsv
-        raw: Raw = mne_bids.read_raw_bids(bids_path)
-        # Specify the type of recording we want
-        raw = raw.pick_types(
-            meg=True, misc=False, eeg=False, eog=False, ecg=False
-        )
-        # Load raw data and filter by low and high pass
-        self.raw = raw
-        # print(self.low_pass, self.high_pass)
-        raw.load_data().filter(l_freq = self.low_pass, h_freq = self.high_pass, n_jobs=self.n_jobs)
+        try:
+            raw: Raw = mne_bids.read_raw_bids(bids_path)
+            # Specify the type of recording we want
+            raw = raw.pick_types(
+                meg=True, misc=False, eeg=False, eog=False, ecg=False
+            )
+            # Load raw data and filter by low and high pass
+            self.raw = raw
+            # print(self.low_pass, self.high_pass)
+            #raw.load_data().filter(l_freq = self.low_pass, h_freq = self.high_pass, n_jobs=self.n_jobs)
+        except FileNotFoundError as err:
+            logger.warning(err)
+            logger.warning("bids path: does not exist! will skip this path.")
+            return None
         return raw
         
     def _load_meta(self, raw: mne.io.Raw, supplementary_meta: pd.DataFrame, to_save_csv:bool = False)->pd.DataFrame:
@@ -118,7 +142,7 @@ class MEGSignal():
         # Computing if voicing
         # Replace voiced to True or False
 
-        if self.setting == TargetLabel.VOICED_PHONEME:
+        if self.target_label == TargetLabel.VOICED_PHONEME:
             phonemes = meta.query('kind=="phoneme"')
             for ph, d in phonemes.groupby("phoneme"):
                 # print(ph, ":\n", d)
@@ -126,11 +150,13 @@ class MEGSignal():
                 match = supplementary_meta.query(f"phoneme==\"{ph}\"")
                 # print(match)
                 assert len(match) == 1
-                meta.loc[d.index, "voiced"] = (match.iloc[0].phonation == "v") # True or False
-                
-                
-            # Compute word frequency
-            meta["is_word"] = False
+                meta.loc[d.index, "voiced"] = (match.iloc[0].phonation == "v") # True or False            
+
+            meta = meta[meta['kind'] == 'phoneme']
+
+            if(to_save_csv):
+                meta.to_csv(util.get_unique_file_name(file_name="meta.csv", dir="./test"))
+        elif self.target_label == TargetLabel.WORD_FREQ:
             words = meta.query('kind=="word"').copy()
             meta.loc[words.index + 1, "is_word"] = True
             
@@ -138,12 +164,9 @@ class MEGSignal():
             # apply a funcion to calculate the word frequency
             wfreq = lambda x: zipf_frequency(x, "en")  # noqa
             meta.loc[words.index + 1, "wordfreq"] = words.word.apply(wfreq).values
-            
+            meta = meta[meta['kind'] == 'word']
 
-            meta = meta.query('kind=="phoneme"')
-            if(to_save_csv):
-                meta.to_csv(util.get_unique_file_name(file_name="meta.csv", dir="./test"))
-        elif self.setting in [TargetLabel.WORD_FREQ, TargetLabel.PLOT_WORD_ONSET, TargetLabel.WORD_ONSET]:
+        elif self.target_label in [TargetLabel.PLOT_WORD_ONSET, TargetLabel.WORD_ONSET]:
             # create colmn is_word in meta
             # if column "kind"=="word", is_word
             # else false
@@ -157,15 +180,13 @@ class MEGSignal():
             meta["is_word"] = True
             
 
-
             if(to_save_csv):
                 meta.to_csv(util.get_unique_file_name(file_name="meta_from_megsignal.csv", dir="./results"))
-
 
         return meta
 
        
-    def load_epochs(self, raw: Raw, meta: pd.DataFrame, to_save_csv: bool = False, tmin: float = None, tmax: float = None)->mne.Epochs:
+    def load_epochs(self, raw: Raw, meta: pd.DataFrame, to_save_csv: bool = False)->mne.Epochs:
         """Get epochs by assemble "meatadata" and "raw". 
         will load epochs of the given raw and meta 
         meta and raw should correspond to the same subject same session same task
@@ -177,7 +198,7 @@ class MEGSignal():
         """
         # Create event that mne need
         # including time info
-        logger.debug(f"in meg signal handler, self.setting: {self.setting}")
+        logger.debug(f"in meg signal handler, self.setting: {self.target_label}")
         events = np.c_[
             meta.onset * raw.info["sfreq"], np.ones((len(meta), 2))
         ].astype(int)
@@ -194,28 +215,39 @@ class MEGSignal():
         #     preload=True,
         #     event_repeated="drop",
         # )
+
+        if self.preload:
+            logger.warning("preload is true. will load data of this epoch to memory immediately.")
         epochs = mne.Epochs(
             raw,
             events,
-            tmin    = -0.1,
-            tmax    = 0.3,
-            decim   = 10,
+            tmin    = self.tmin,      #note: must use tmin, tmax, decim in self, because ntimes is only calculated in init according to value in init
+            tmax    = self.tmax,
+            decim   = self.decim,
             baseline=(-0.1, 0.0),
             metadata=meta,
-            preload =True,
+            preload =self.preload,
             event_repeated="drop",
         )
+        #ep = copy.deepcopy(epochs)
+
+        logger.info(f"size of epoch: ")
+        print(sys.getsizeof(epochs))
+
+        
+
         #events
         # 1st col: onset time
 
-        # threshold
-        th = np.percentile(np.abs(epochs._data), 95)
-        epochs._data[:] = np.clip(epochs._data, -th, th)
-        epochs.apply_baseline()
-        th = np.percentile(np.abs(epochs._data), 95)
-        epochs._data[:] = np.clip(epochs._data, -th, th)
-        epochs.apply_baseline()
-        
+        if self.preload:    # this cannot be done if preload==False, as data is not loaded
+            # threshold
+            th = np.percentile(np.abs(epochs._data), 95)
+            epochs._data[:] = np.clip(epochs._data, -th, th)
+            epochs.apply_baseline()
+            th = np.percentile(np.abs(epochs._data), 95)
+            epochs._data[:] = np.clip(epochs._data, -th, th)
+            epochs.apply_baseline()
+            
         # logger.debug(meta.wordfreq)
         if(to_save_csv):
             meta.to_csv(util.get_unique_file_name(file_name="epochs.csv", dir="./"))

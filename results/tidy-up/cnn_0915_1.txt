@@ -1,0 +1,8 @@
+epoch: 2
+tmin: -0.1
+tmax: 0.3
+"preprocess_low_pass": 35,
+"preprocess_high_pass": 180,
+data: sub 0, ses 0 , task 0
+cnn layer: 1--32 (K=1,5)--64(k=208,1)--128(linear)--1
+result: accuracy: 0.69

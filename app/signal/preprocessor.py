@@ -5,6 +5,8 @@ import numpy as np
 import mne_bids
 from mne import Epochs, concatenate_epochs, EpochsArray
 import matplotlib.pyplot as plt
+import torch
+from torch.utils.data import Dataset
  
 from loguru import logger
 
@@ -13,10 +15,16 @@ from app.signal.megSignal import MEGSignal
 from app.common.commonSetting import TargetLabel
 import app.utils.my_utils as util
 
-class Preprocessor:
-    def __init__(self):
+class Preprocessor():
+    def __init__(self,meg_param:dict={"tmin":None, "tmax":None, "decim":None, "low_pass": None, "high_pass":None}):
         self.concated_epochs: Epochs | None = None  # concatenated Epochs of all sessions all tasks
+        self.X = None
+        self.y = None
+        self.meg_param = meg_param
 
+
+
+    
     def plot_sensor_topo(self, raw_data_path):
         bids_path = mne_bids.BIDSPath(
             subject = "01",     # subject need to be 2-digit str (e.g. "01" to align folder name sub-01)  
@@ -31,7 +39,7 @@ class Preprocessor:
 
         
 
-    def get_data(self, subject, until_session, until_task, raw_data_path, target_label, 
+    def prepare_X_y(self, subject, until_session, until_task, raw_data_path, target_label, 
                 low_pass_filter, high_pass_filter, to_print_interim_csv):
         
         self.to_print_interim_csv = to_print_interim_csv
@@ -43,6 +51,8 @@ class Preprocessor:
             if target_label  == "voiced":
                 preprocess_setting = TargetLabel.VOICED_PHONEME
                 logger.info("target label to predicted got: \"voiced\"")
+            elif target_label  == "word_freq":
+                preprocess_setting = TargetLabel.WORD_FREQ
             elif target_label  == "word_onset":
                 preprocess_setting = TargetLabel.WORD_ONSET
             elif target_label == "is_sound":
@@ -84,11 +94,11 @@ class Preprocessor:
 
         
         if preprocess_setting == TargetLabel.VOICED_PHONEME:
-            phonemes = self.concated_epochs["not is_word"]      # for now not is_word means phoneme, in the future may change to more intuitive way
+            phonemes = self.concated_epochs      # for now not is_word means phoneme, in the future may change to more intuitive way
             self.X = phonemes.get_data(copy=True)   # use copy=True to avoid changing the original data
             self.y = phonemes.metadata["voiced"].values
         
-        elif preprocess_setting in [TargetLabel.WORD_ONSET, TargetLabel.WORD_FREQ, TargetLabel.PLOT_WORD_ONSET] :
+        elif preprocess_setting in [TargetLabel.PLOT_WORD_ONSET, TargetLabel.WORD_FREQ] :
             ep = self.concated_epochs
             meta = ep.metadata
             if self.to_print_interim_csv:
@@ -99,16 +109,19 @@ class Preprocessor:
             meta = words.metadata
             if self.to_print_interim_csv:
                 meta.to_csv(util.get_unique_file_name("words_from_preprocessor.csv", "./results"))
-            self.y = None # not important for now
+            self.y = meta # not important for now
 
             self.is_word = words
-            return None, None
 
         else:
             raise NotImplementedError
 
 
         return self.X, self.y
+    
+    def get_X_y(self):
+        if (self.X is not None) and (self.y is not None):
+            return self.X, self.y
     
     def load_all_epochs(self, subject, until_session, until_task, raw_data_path, setting,
                          low_pass_filter, high_pass_filter):
@@ -158,8 +171,16 @@ class Preprocessor:
 
         # --- signal processing --- #
         
-        signal_handler = MEGSignal(setting, low_pass=low_pass_filter, high_pass=high_pass_filter, to_print_interim_csv=self.to_print_interim_csv)
-
+        signal_handler = MEGSignal(             # must set preload=False, this means only load data when accessed [MUST !!!] 
+            setting, 
+            low_pass=self.meg_param["low_pass"] if self.meg_param["low_pass"] else None, 
+            high_pass=self.meg_param["high_pass"] if self.meg_param["high_pass"] else None,
+            to_print_interim_csv=self.to_print_interim_csv if self.to_print_interim_csv else None,
+            preload=True, 
+            tmin=self.meg_param["tmin"] if self.meg_param["tmin"] else None,
+            tmax=self.meg_param["tmax"] if self.meg_param["tmax"] else None,
+            decim=self.meg_param["decim"] if self.meg_param["decim"] else None
+        ) 
         # set mne epoch for each session, each task
         # Specify a path to a epoch
         bids_path = mne_bids.BIDSPath(
@@ -174,7 +195,7 @@ class Preprocessor:
             ph_info:pd.DataFrame = pd.read_csv("./phoneme_data/phoneme_info.csv")   # file path is relative to root dir
             return signal_handler.prepare_one_epochs(bids_path, supplementary_meta = ph_info)
 
-        elif setting in [TargetLabel.PLOT_WORD_ONSET, TargetLabel.WORD_ONSET, TargetLabel.WORD_FREQ] :
+        elif setting in [TargetLabel.PLOT_WORD_ONSET,  TargetLabel.WORD_FREQ] :
             return signal_handler.prepare_one_epochs(bids_path, None)
         
         return
@@ -196,7 +217,7 @@ class Preprocessor:
     
     def get_metadata(self, target: str="phonemes"):
         if target == "phonemes":
-            return self.concated_epochs["not is_word"]
+            return self.concated_epochs
         else:
             logger.error("for now only \"phonemes\" is supported! returning None")
             return None
@@ -210,6 +231,12 @@ class Preprocessor:
         else:
             logger.error(f"cannot access self.concated_epochs.metadata or it is of wrong type, type of self.concated_epochs.metadata: \
                          {type(self.concated_epochs.metadata)}, returning None")
+            
+    def get_concated_epochs(self)-> Epochs:
+        if self.concated_epochs is not None:
+            return self.concated_epochs
+        else:
+            raise ValueError
             
     def plot_evoked_response(self, target: str):
         """
@@ -259,7 +286,8 @@ class Preprocessor:
                                     dpi=200)
                     plt.close(fig_evo)  # for closing the file before writing next graph
 
-                    if show_last_fig and i == n:
+                    #if show_last_fig and i == n:
+                    if True:
                         evo.plot(spatial_colors=True, show=True)
                     
                     i=i+1

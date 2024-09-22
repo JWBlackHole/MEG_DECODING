@@ -9,30 +9,34 @@ import app.utils.my_utils as util
 
 
 class LdaModelRunner():
-    def __init__(self, X, y, meta, target_label, dont_kfold = False, to_save_csv = False) -> None:
+    def __init__(self, X: np.ndarray, y: np.ndarray, train_test_ratio:float=0.8, to_save_csv = False, option: dict = {}) -> None:
         
         logger.info("start to train with model: LDA")
 
+        if isinstance(option, dict) and "result_description" in option:
+            self.result_description = option["result_description"]
+        else:
+            self.result_description = "LDA"
 
         lda_model = MyLDA()
         
-        prediction_df , scores = lda_model.decode_binary(X, y, meta, target_label, dont_kfold=dont_kfold)
-        logger.debug(f"type of predictions (returned from model): {type(prediction_df)}")
-        logger.debug(f"type of scores  (returned from model): {type(scores)}")
-        
-        if not dont_kfold:
-            logger.info("scores (returned from model):")
-            print(scores)
+        prediction_df = lda_model.train(X, y, train_test_ratio)
 
-        # calculate metrics
+        logger.debug(f"type of predictions (returned from lda model): {type(prediction_df)}")
+
+
+        # calculate result metrics
         prediction_df = util.add_comparison_column(prediction_df)
         if to_save_csv:
             try:
-                prediction_df.to_csv(util.get_unique_file_name("voiced_prediction_t=1.csv", "./results"))
+                prediction_df.to_csv(util.get_unique_file_name("voiced_prediction_lda.csv", "./results/lda/csv"))
             except Exception as err:
                 logger.error(err)
                 logger.error("fail to output csv, skipping output csv")
 
         util.get_eval_metrics(prediction_df, 
-                              file_name="metrics_LDA", save_path="./results", 
-                              description_str="LDA sub 1 task 1 ses 1")
+                              file_name="metrics_LDA", save_path="./results/lda", 
+                              description_str=self.result_description)
+        
+        logger.info("LDA model runner finished.")
+        return

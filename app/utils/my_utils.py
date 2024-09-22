@@ -5,6 +5,7 @@ from datetime import date
 import numpy as np
 import pandas as pd
 import json
+from matplotlib import pyplot as plt
 
 def get_unique_file_name(file_name: str, dir: str = "./", verbose: bool = True):
     """Get a unique file name in a directory for saving file to avoid overwriting.
@@ -47,9 +48,9 @@ def add_comparison_column(pred_df: pd.DataFrame)->pd.DataFrame:
         return pred_df
     
     
-def get_eval_metrics(pred_df: pd.DataFrame, file_name: str="metrics", save_path: str = "./", description_str: str="") -> json:
+def get_eval_metrics(pred_df: pd.DataFrame, file_name: str="metrics", save_path: str = "./", description_str: str="") -> dict:
     """
-    calculate evaluation matrics from column "TP/FP/TN/FN", then save matrics as json
+    calculate evaluation matrics from column "TP/FP/TN/FN", then save matrics as .json
 
     Parameters
     ---------
@@ -97,6 +98,49 @@ def get_eval_metrics(pred_df: pd.DataFrame, file_name: str="metrics", save_path:
         print("Error in saving metrics, skip saving")
 
     return metrics
+
+def plot_loss_accu_across_epoch(train_losses: list, train_acc: list, test_losses: list, test_acc: list, total_epoch: int, save_path: str):
+    """
+    Plot training and test loss and accuracy across epochs.
+    """
+    verbose = False
+    epochs = range(total_epoch)
+    if verbose:
+        logger.debug(f"len of train_losses: {len(train_losses)}")
+        logger.debug(f"len of train_acc: {len(train_acc)}")
+        logger.debug(f"len of test_losses: {len(test_losses)}")
+        logger.debug(f"len of test_acc: {len(test_acc)}")
+        
+
+        logger.debug("train loss:")
+        print([i for i in train_losses])
+        logger.debug("train accuracies:")
+        print([i for i in train_acc])
+    
+    plt.figure(figsize=(12, 10))
+
+    # Subplot for losses
+    plt.subplot(2, 1, 1)
+    plt.plot(epochs, test_losses, label='Test Loss', color='dodgerblue',linewidth=2)
+    plt.plot(epochs, train_losses, label='Training Loss', color='chocolate', linestyle='--', linewidth=1.5, alpha=0.9)
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.title('Training and Test Loss vs. Epoch')
+    plt.legend()
+
+    # Subplot for accuracies
+    plt.subplot(2, 1, 2)
+    plt.plot(epochs, test_acc, label='Test Accuracy', color='dodgerblue',linewidth=2)
+    plt.plot(epochs, train_acc, label='Training Accuracy', color='chocolate', linestyle='--', linewidth=1.5, alpha=0.9)
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy')
+    plt.title('Training and Test Accuracy vs. Epoch')
+    plt.legend()
+
+    plt.tight_layout()
+    plt.savefig(save_path)
+    plt.show()
+
 
 class MyLogger:
     """
