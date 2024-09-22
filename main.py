@@ -28,7 +28,6 @@ def parse_args():
     return parser.parse_args()
 
 def load_config(config_path):
-    logger.info(f"try to read config:  {config_path}")
     try:
         with config_path.open('r') as file:
             config = json.load(file)
@@ -56,6 +55,9 @@ def train_loop(config: json):
         nn_total_epoch    = training_config.get('nn_total_epoch', None)
         balance_train_data_lda = training_config.get('balance_train_data_lda', False)
         balance_test_data_lda = training_config.get('balance_test_data_lda', False)
+        clip_percentile       = training_config.get('clip_percentile', None)
+        onset_offset          = training_config.get('onset_offset', None)
+
 
         house_keeping_config    = config.get('house_keeping', {})
         raw_data_path           = house_keeping_config.get('raw_data_path', None)
@@ -77,7 +79,9 @@ def train_loop(config: json):
         "tmax": meg_tmax,
         "decim": meg_decim,
         "low_pass": low_pass_filter,
-        "high_pass": high_pass_filter
+        "high_pass": high_pass_filter,
+        "clip_percentile": clip_percentile,
+        "onset_offset": onset_offset
     }
 
     
@@ -200,7 +204,8 @@ def train_loop(config: json):
         ldaRunner = LdaModelRunner(X, y, 0.8, to_save_csv=False, 
                                    option=extra_option if extra_option else {}, 
                                    balance_train_data_lda=balance_train_data_lda,
-                                   balance_test_data_lda=balance_test_data_lda
+                                   balance_test_data_lda=balance_test_data_lda,
+                                   res_path=result_metrics_save_path
                                 )
 
     elif(training_flow == "svm"):
@@ -279,7 +284,7 @@ if __name__ == "__main__":
     # example:
     # python main.py -o ./app/config/config_mh.json
     
-    #config_path  = Path('./app/config/lda/0921/e/lda_1.json')  # you can also hard-code config path here
+    config_path  = Path('./app/config/lda/0922/j/lda_4.json')  # you can also hard-code config path here
 
     if config_path is None:
         logger.error("config_path is None! you should hard-code the path or pass by -o flag!")
