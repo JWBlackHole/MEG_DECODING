@@ -15,7 +15,7 @@
     },
     "house_keeping": {
         "raw_data_path": "/home/dataset/Data/gw_data/download",
-        "log_level": "DEBUG",
+        "log_level": "INFO",
         "result_metrics_save_path": "./results",
         "to_print_interim_csv": true
     },

@@ -1,5 +1,5 @@
 {
-    "description": "lda,word freq, subject 1, ses 0, task 0, tmin -0.1, tmax 0.3, decim 10, lowpass 1, high pass 8, time displace -0.05s, no clip, no baseline correction",
+    "description": "lda,word freq, subject 1, ses 0, task 0, tmin -0.1, tmax 0.3, decim 10, lowpass 1, high pass 8, no clip, no baseline correction",
     "recall": 0.865546218487395,
     "precision": 0.8956521739130435,
     "accuracy": 0.7910447761194029,

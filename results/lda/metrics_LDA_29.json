@@ -1,0 +1,11 @@
+{
+    "description": "lda,voiced phoneme, subject 1, ses 0, task 0, tmin -0.1, tmax 0.3, decim 10, lowpass 1, high pass 8, time offset -0.05s, no clip, no baseline correction",
+    "recall": 0.6347826086956522,
+    "precision": 0.5,
+    "accuracy": 0.5,
+    "f1_score": 0.5593869731800767,
+    "tp": 73,
+    "fp": 73,
+    "tn": 42,
+    "fn": 42
+}

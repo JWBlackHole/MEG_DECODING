@@ -54,6 +54,8 @@ def train_loop(config: json):
         training_flow     = training_config.get('flow', None)
         target_label      = training_config.get('target_label', None)
         nn_total_epoch    = training_config.get('nn_total_epoch', None)
+        balance_train_data_lda = training_config.get('balance_train_data_lda', False)
+        balance_test_data_lda = training_config.get('balance_test_data_lda', False)
 
         house_keeping_config    = config.get('house_keeping', {})
         raw_data_path           = house_keeping_config.get('raw_data_path', None)
@@ -78,12 +80,9 @@ def train_loop(config: json):
         "high_pass": high_pass_filter
     }
 
-    # ----- Set logger ----- #
-    util.MyLogger(logger, log_level=log_level, output="console")   # logger comes from loguru logger
     
-    # --- wish to redirect error message to loguru logger, but to be developped....
-    #sys.stdout = util.StreamToLogger(log_level="INFO", output="console")
-    #sys.stderr = util.StreamToLogger(log_level="ERROR", output="console")
+    
+    mylogger.set_level(log_level)
 
 
     # ------  target label checking  ----  #
@@ -199,7 +198,9 @@ def train_loop(config: json):
         logger.info("start to train with model: LDA")
 
         ldaRunner = LdaModelRunner(X, y, 0.8, to_save_csv=False, 
-                                   option=extra_option if extra_option else {}
+                                   option=extra_option if extra_option else {}, 
+                                   balance_train_data_lda=balance_train_data_lda,
+                                   balance_test_data_lda=balance_test_data_lda
                                 )
 
     elif(training_flow == "svm"):
@@ -262,9 +263,12 @@ def train_loop(config: json):
     logger.info("training finished.")
 
 
+# ----- Set logger ----- #
+mylogger = util.MyLogger(output="both")   # logger comes from loguru logger
+
+
 if __name__ == "__main__":
     # ---  load config --- #
-
     args = parse_args()
 
     try:
@@ -275,7 +279,7 @@ if __name__ == "__main__":
     # example:
     # python main.py -o ./app/config/config_mh.json
     
-    config_path  = Path('./app/config/lda/0921/lda_1.json')  # you can also hard-code config path here
+    #config_path  = Path('./app/config/lda/0921/e/lda_1.json')  # you can also hard-code config path here
 
     if config_path is None:
         logger.error("config_path is None! you should hard-code the path or pass by -o flag!")

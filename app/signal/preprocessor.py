@@ -113,7 +113,7 @@ class Preprocessor():
 
             self.X = self.concated_epochs.get_data(copy=True)
             meta = self.concated_epochs.metadata
-            self.y = meta['word_freq_above_thres'].values
+            self.y = meta['word_freq_below_thres'].values
             if self.to_print_interim_csv:
                 meta.to_csv(util.get_unique_file_name("meta_from_preprocessor.csv", "./results"))
             
