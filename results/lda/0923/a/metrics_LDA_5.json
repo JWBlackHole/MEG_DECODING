@@ -1,0 +1,11 @@
+{
+    "description": "lda, word frequency < 5.6, subject 18, task 0-3, tmin -0.1, tmax 0.4, decim 5, lowpass 0.5, high pass 180, test data balanced no clip, no baseline correction",
+    "recall": 0.4749082007343941,
+    "precision": 0.5173333333333333,
+    "accuracy": 0.5159118727050184,
+    "f1_score": 0.4952137843012125,
+    "tp": 388,
+    "fp": 362,
+    "tn": 455,
+    "fn": 429
+}

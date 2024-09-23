@@ -188,7 +188,7 @@ class MEGSignal():
         elif self.target_label == TargetLabel.WORD_FREQ:
 
 
-            thres = 4.0
+            thres = 5.6
             meta = meta[meta['kind'] == 'word']
             wfreq = lambda x: zipf_frequency(x, "en")   # lambda func for cal word frequency
 
@@ -196,10 +196,13 @@ class MEGSignal():
             meta['wordfreq'] = meta['word'].apply(wfreq)
             meta['word_freq_thres'] = meta['wordfreq'] < thres
 
-            median_wordfreq = meta['wordfreq'].median()
-            logger.debug(f"median of word frequencies is: {median_wordfreq}")
+            # median_wordfreq = meta['wordfreq'].median()
+            # mean_wordfreq = meta['wordfreq'].mean()
+            # logger.debug(f"median of word frequencies is: {median_wordfreq}")
+            # logger.debug(f"mean of word frequencies is: {mean_wordfreq}")
             logger.debug(f"no. of words freq below {thres}: {meta['word_freq_thres'].sum()}")
             logger.debug(f"no. of words freq above {thres}: {len(meta) - meta['word_freq_thres'].sum()}")
+
             
             # [notes] for word frequency
             # > 6.0 ->mostly function words like a, the, with, it, is,...
