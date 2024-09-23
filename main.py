@@ -189,7 +189,7 @@ def train_loop(config: json):
         ntimes = megDataIter.cal_ntimes()
         
         nnRunner = NNModelRunner(megDataIter, target_label, nchans=208, ntimes=ntimes)
-        nnRunner.train(epochs = 4, batch_size = 128, lr = 0.001)
+        nnRunner.train(epochs = 1000, batch_size = 128, lr = 0.001)
         
        
     elif(training_flow == "lda"):
@@ -276,7 +276,7 @@ if __name__ == "__main__":
     # example:
     # python main.py -o ./app/config/config_mh.json
     
-    config_path  = Path('./app/config/test_nn_config.json')  # you can also hard-code config path here
+    # config_path  = Path('./app/config/test_nn_config.json')  # you can also hard-code config path here
 
     if config_path is None:
         logger.error("config_path is None! you should hard-code the path or pass by -o flag!")

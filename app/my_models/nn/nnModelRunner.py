@@ -116,19 +116,21 @@ class NNModelRunner():
             print("-------------------------")
             
             X, y = task
-            X, y = balance_label(X, y)
-            # X    = pca_d(X, 10)
             X, y = X.to(self.device), y.to(self.device)
+            X, y = balance_label(X, y)
+            # for i in range(20):
+            #     print(X[i], y[i])
+            # X    = pca_d(X, 10)
             
             X_train, X_test, y_train, y_test = train_test_split(X, y, 
                                                             test_size=0.2,   # 20% test, 80% train
-                                                            random_state=25) # shffuling, making the random split reproducible
+                                                            random_state=25) # shffulinug, making the random split reproducible
             
             dataset    = TensorDataset(X_train, y_train)
             dataloader = DataLoader(dataset = dataset, batch_size = batch_size)
             dataset_size = len(dataloader.dataset)
             
-            for epoch in range(epochs):
+            for epoch in range(epochs + 1):
                 if(epoch % print_interval == 0):
                     print(f"Epoch {epoch}")
                     print("-----------------------")
@@ -141,9 +143,9 @@ class NNModelRunner():
                     
                     # Binary classification, just using sigmoid to predict output
                     # Round: <0.5 class 1, >0.5 class2
-                    if (i==0) and (epoch==0):
-                        logger.debug(f"shape of X_batch: {X_batch.shape}")
-                        logger.debug(f"shape of y_batch: {y_batch.shape}")
+                    # if (i==0) and (epoch==0):
+                    #     logger.debug(f"shape of X_batch: {X_batch.shape}")
+                    #     logger.debug(f"shape of y_batch: {y_batch.shape}")
 
                     y_logits = model_0(X_batch).squeeze()
                         

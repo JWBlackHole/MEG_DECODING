@@ -108,6 +108,7 @@ class MegDataIterator(Dataset):
         return sub, ses, task
     
     def get_meg_epoch(self, subject, session, task):
+        print(f"Subject: {subject}, Session: {session}, Task: {task}")
 
         logger.info("try get to meg epoch from MegSignal class")
 

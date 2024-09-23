@@ -224,7 +224,7 @@ class MEGSignal():
             tmin    = self.tmin,      #note: must use tmin, tmax, decim in self, because ntimes is only calculated in init according to value in init
             tmax    = self.tmax,
             decim   = self.decim,
-            baseline=(-0.1, 0.0),
+            baseline=(-0.03, 0.0),
             metadata=meta,
             preload =self.preload,
             event_repeated="drop",
@@ -239,8 +239,8 @@ class MEGSignal():
         #events
         # 1st col: onset time
 
-        if self.preload:    # this cannot be done if preload==False, as data is not loaded
-            # threshold
+        # if self.preload:    # this cannot be done if preload==False, as data is not loaded
+        if False:    # threshold
             th = np.percentile(np.abs(epochs._data), 95)
             epochs._data[:] = np.clip(epochs._data, -th, th)
             epochs.apply_baseline()
