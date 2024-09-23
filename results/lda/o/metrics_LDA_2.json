@@ -1,0 +1,11 @@
+{
+    "description": "lda, word onset, subject 18, task 0-3, ses 0, tmin -0.1, tmax 0.3, decim 5, lowpass 0.5, high pass 180, test data balanced, no clip, no baseline correction, onset offset -0.03",
+    "recall": 0.5012285012285013,
+    "precision": 0.506832298136646,
+    "accuracy": 0.5067567567567568,
+    "f1_score": 0.5040148239654108,
+    "tp": 816,
+    "fp": 794,
+    "tn": 834,
+    "fn": 812
+}
