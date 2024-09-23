@@ -20,23 +20,23 @@ class MyNNModel(nn.Module):
         )
         
         self.fn1 = nn.Sequential(
-            nn.Linear(in_features = 5000, out_features = 1000),
+            nn.Linear(in_features = 10000, out_features = 5000),
             nn.GELU()
         )
         self.fn2 = nn.Sequential(
-            nn.Linear(in_features = 1000, out_features = 100),
+            nn.Linear(in_features = 5000, out_features = 1000),
             nn.GELU()
         )
         
         self.output = nn.Sequential(
-            nn.Linear(in_features = 100, out_features = 1),
+            nn.Linear(in_features = 1000, out_features = 1),
             nn.Sigmoid()
         )
 
     def forward(self, x):
         x = x.reshape(x.shape[0], -1)
         # print(f"initial x shape: {x.shape}")
-        #logger.debug(f"initial x shape: {x.shape}")
+        # logger.debug(f"initial x shape: {x.shape}")
         
         x = self.input(x)
         # x should have shape (batch_size, #meg_channel , #timepoint)   # batch_size indicate number of event processing
