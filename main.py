@@ -214,9 +214,10 @@ def train_loop(config: json):
         logger.warning(f"currently only training for one subject is supported. Will train for subject {subject:02}")
         X, y = preprocessor.prepare_X_y(subject, until_session, until_task, raw_data_path, target_label, 
                                  low_pass_filter, high_pass_filter, to_print_interim_csv)
-   
+        ntimes, nchans = preprocessor.get_signal_dim()
+
         logger.info("start to train with model: SVM")
-        svmRunner = svmModel(X, y, target_label)
+        svmRunner = svmModel(X, y, ntimes, nchans)
         
         # import cProfile
         # import pstats
@@ -286,7 +287,7 @@ if __name__ == "__main__":
     # example:
     # python main.py -o ./app/config/config_mh.json
     
-    #config_path  = Path('./app/config/lda/0922/j/lda_4.json')  # you can also hard-code config path here
+    config_path  = Path('./app/config/svm.json')  # you can also hard-code config path here
 
     if config_path is None:
         logger.error("config_path is None! you should hard-code the path or pass by -o flag!")

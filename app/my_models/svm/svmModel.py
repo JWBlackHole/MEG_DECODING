@@ -5,18 +5,22 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC #2nd
 from sklearn.metrics import accuracy_score #3rd
 from sklearn.model_selection import GridSearchCV #4th
+from app.my_models.nn.nnModelRunner import balance_label
+
 import torch
 
 
 class svmModel():
-    def __init__(self, X, y, target_label) -> None:
+    def __init__(self, X, y, ntimes, nchans) -> None:
 
-        X = torch.tensor(X).to(torch.float32).reshape(-1, 208*81)
+        X = torch.tensor(X).to(torch.float32).reshape(-1, self.nchans * self.ntimes)
         y = torch.tensor(y.astype(bool)).to(torch.float32)
-
+        X, y = balance_label(X, y)
+        
         self.X = X
         self.y = y
-        self.target_label = target_label
+        self.ntimes = ntimes
+        self.nchans = nchans
 
     def train(self) -> None:
 
@@ -89,3 +93,28 @@ class svmModel():
         # 計算準確率
         accuracy = accuracy_score(y_test, y_pred)
         print(f'Accuracy with best parameters: {accuracy:.2f}')
+
+    def my_balance_label(self, X: np.ndarray, y: np.ndarray) :
+        print("Balancing Label...")
+
+        # Separate the data based on the labels
+        X_true = X[y]
+        X_false = X[~y]
+
+        # Determine the minimum length to balance the classes
+        min_len = min(len(X_true), len(X_false))
+
+        # Truncate the arrays to the minimum length
+        X_true = X_true[:min_len]
+        X_false = X_false[:min_len]
+        y_true = np.ones(min_len, dtype=bool)
+        y_false = np.zeros(min_len, dtype=bool)
+
+        print("X length", len(X_true), len(X_false))
+        print("Y length", len(y_true), len(y_false))
+
+        # Concatenate the balanced arrays
+        X_balanced = np.concatenate((X_true, X_false), axis=0)
+        y_balanced = np.concatenate((y_true, y_false), axis=0)
+
+        return X_balanced, y_balanced
