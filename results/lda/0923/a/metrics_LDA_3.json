@@ -1,5 +1,5 @@
 {
-    "description": "lda, word frequency < 5.6, subject 18, task 0-3, tmin -0.1, tmax 0.3, decim 5, lowpass 0.5, high pass 180, test data balanced no clip, no baseline correction",
+    "description": "lda, word frequency < 5.6, subject 18, task 0-3, tmin -0.1, tmax 0.3, decim 5, lowpass 0.5, high pass 180, test data balanced no clip, no baseline correction, onset -0.03",
     "recall": 0.47613219094247244,
     "precision": 0.5131926121372031,
     "accuracy": 0.5122399020807834,
