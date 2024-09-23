@@ -3,4 +3,5 @@ graphs_ignored/*
 results/mh_dummy/*
 __pycache__
 results/ignored/*
+*.png
 log/*
