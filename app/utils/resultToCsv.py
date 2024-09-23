@@ -2,7 +2,7 @@ import json
 import csv
 import os
 
-ok = [i for i in range(1, 25) if i not in [3, 12, 16, 20, 21]]
+ok = [11, 18]
 
 def read_json_file(file_path):
     """Read a single JSON file."""
@@ -27,18 +27,18 @@ def parse_json_data(entry, sub):
         "tn": entry["tn"],
         "fn": entry["fn"],
         "sub": sub,
-        "task": "0,1,2",
-        "session": "0,1",
-        "target_label": "voiced_phoneme",
+        "task": "0-3",
+        "session": "0",
+        "target_label": "frequency < 5.6",
         "tmin": -0.1,
         "tmax": 0.3,
-        "decim": 10,
+        "decim": 5,
         "low pass": 0.5,
         "high pass": 180,
         "clip_percentile": "no",
         "baseline_correction": "no",
-        "time_offset": 0,
-        "train_data_balanced": "TRUE",
+        "time_offset": -0.03,
+        "train_data_balanced": "FALSE",
         "test_data_balanced": "TRUE",
         "description": entry["description"]
     }
@@ -52,7 +52,7 @@ def write_to_csv(file_path, rows, fieldnames):
         writer.writerows(rows)
 
 def main(start, end):
-    csv_file_path = "../../results/csv/results_organized.csv"
+    csv_file_path = "../../../result/results_organized.csv"
     fieldnames = [
         "model", "accuracy", "precision", "recall", "f1_score", "tp", "fp", "tn", "fn",
         "sub", "task", "session", "target_label", "tmin", "tmax", "decim", "low pass",
@@ -63,7 +63,7 @@ def main(start, end):
     j=0
     rows = []
     for i in range(start, end + 1):
-        file_path = f"../../results/lda/metrics_LDA_{i}.json"
+        file_path = f"../../results/lda/0923/a/metrics_LDA_{i}.json"
         if os.path.exists(file_path):
             sub = ok[j]
             print("Reading file: ", file_path, sep='\t',  end=' ')
@@ -78,6 +78,6 @@ def main(start, end):
     write_to_csv(csv_file_path, rows, fieldnames)
 
 if __name__ == "__main__":
-    start = 98  # Replace with your start value
-    end = 116  # Replace with your end value
+    start = 2 # Replace with your start value
+    end = 3  # Replace with your end value
     main(start, end)
