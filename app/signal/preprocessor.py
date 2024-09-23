@@ -21,10 +21,19 @@ class Preprocessor():
         self.X = None
         self.y = None
         self.meg_param = meg_param
+        self.nchans = None
+        self.ntimes = None
+
+    def get_signal_dim(self):
+        if isinstance(self.nchans, int) and isinstance(self.ntimes, int):
+            return self.nchans, self.ntimes
+        else:
+            logger.error("nchans, ntimes is not of int!")
+            logger.error(f"nchans: {self.nchans}, ntimes: {self.ntimes}")
+            raise ValueError
 
 
 
-    
     def plot_sensor_topo(self, raw_data_path):
         bids_path = mne_bids.BIDSPath(
             subject = "01",     # subject need to be 2-digit str (e.g. "01" to align folder name sub-01)  
@@ -205,6 +214,8 @@ class Preprocessor():
             datatype = "meg",
             root = raw_data_path
         )
+        if self.nchans is None or self.ntimes is None:
+            self.nchans, self.ntimes = signal_handler.get_nchans_ntimes()
 
         if setting == TargetLabel.VOICED_PHONEME:
             ph_info:pd.DataFrame = pd.read_csv("./phoneme_data/phoneme_info.csv")   # file path is relative to root dir
