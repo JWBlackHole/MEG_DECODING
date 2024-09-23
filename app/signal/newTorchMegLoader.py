@@ -53,7 +53,7 @@ class MegDataIterator(Dataset):
     
     def __getitem__(self, idx):
 
-        if idx > self.totaltask: 
+        if idx >= self.totaltask: 
             raise IndexError    # define stop point of iterator
         
         
