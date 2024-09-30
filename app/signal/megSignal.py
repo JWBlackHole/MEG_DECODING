@@ -70,7 +70,10 @@ class MEGSignal():
         res = self.load_raw(bids_path)
         if res is None:
             return None
+        
+        #self.print_chan_pos()
         meta = self._load_meta(self.raw, supplementary_meta, to_save_csv=self.to_print_interim_csv)
+
         epochs = self.load_epochs(self.raw, meta, to_save_csv=self.to_print_interim_csv
                                   )
         return epochs
@@ -283,3 +286,15 @@ class MEGSignal():
         fig = mne.viz.plot_sensors(self.raw.info, show_names=True)# Plot the 2D sensor positions
         fig.suptitle("2D Sensor Topology")
         plt.show(block=True)
+
+    
+    def print_chan_pos(self):
+        print("print_chan_pos is running")
+        # for ch in self.raw.info['chs']:
+            
+        #     # Extract the 3D position (first 3 values in 'loc' field)
+        #     ch_name = ch['ch_name']
+        #     pos_3d = ch['loc'][:3]
+        #     print(f"Channel: {ch_name}, 3D Position: {np.array(pos_3d)}")
+        print(self.raw.info['chs']) 
+        exit(0)
