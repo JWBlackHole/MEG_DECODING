@@ -59,7 +59,7 @@ def train_loop(config: json):
         clip_percentile       = training_config.get('clip_percentile', None)
         onset_offset          = training_config.get('onset_offset', None)
         baseline              = training_config.get('meg_baseline', None)
-        subsestask_list         = training_config.get('sub_ses_task_list', [])
+        subsestask_list         = training_config.get('sub_ses_task_list', None)
 
 
         house_keeping_config    = config.get('house_keeping', {})
@@ -68,13 +68,21 @@ def train_loop(config: json):
         result_metrics_save_path = house_keeping_config.get('result_metrics_save_path', None)
         to_print_interim_csv     = house_keeping_config.get('to_print_interim_csv', False)
         num_event_to_plot         =house_keeping_config.get('num_event_to_plot', 1)
-        extra_option              = config.get('extra_option', None)
+    
+
 
     
     except Exception as e:
         logger.error(e)
         logger.error("Error happened in pasrsing config, skip this config")
         return
+
+    try:
+        extra_option = json.dumps(training_config)
+    except Exception as e:
+        logger.error("can't dump!")
+        logger.error(e)
+        extra_option = None
 
 
 
@@ -298,13 +306,13 @@ if __name__ == "__main__":
     # example:
     # python main.py -o ./app/config/config_mh.json
     
-    config_path  = Path('./app/config/config_jw.json')  # you can also hard-code config path here
+    #config_path  = Path('./app/config/config_jw.json')  # you can also hard-code config path here
 
     if config_path is None:
         logger.error("config_path is None! you should hard-code the path or pass by -o flag!")
         raise ValueError
 
-    logger.info(f"using config:  {config_path}")
+    logger.warning(f"using config:  {config_path}")
 
     config = load_config(config_path)
     if config:

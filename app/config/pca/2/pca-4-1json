@@ -8,9 +8,8 @@
         "preprocess_low_pass": 0.5,
         "preprocess_high_pass": 180,
         "epoch": 8000,
-        "sub_ses_task_list": [[11,0,1]],
-        "pca_model": "super light",
-        "clip_percentile": 99.5
+        "sub_ses_task_list":[[1,0,1]],
+        "pca_model": "super light"
     },
     "house_keeping": {
         "raw_data_path": "/home/dataset/Data/gw_data/download",

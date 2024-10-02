@@ -96,7 +96,7 @@ class MEGSignal():
         """ 
         # Reading associated event.tsv and channels.tsv
         try:
-            raw: Raw = mne_bids.read_raw_bids(bids_path)
+            raw: Raw = mne_bids.read_raw_bids(bids_path, verbose="ERROR")
             # Specify the type of recording we want
             raw = raw.pick_types(
                 meg=True, misc=False, eeg=False, eog=False, ecg=False
@@ -315,19 +315,7 @@ class MEGSignal():
 
         #  ---------  create mne epoch   ---------
 
-        # logger.debug(f"SFREQ: {raw.info["sfreq"]}")
 
-        # epochs = mne.Epochs(
-        #     raw,
-        #     events,
-        #     tmin=-0.200,
-        #     tmax=0.6,
-        #     decim=10,
-        #     baseline=(-0.2, 0.0),
-        #     metadata=meta,
-        #     preload=True,
-        #     event_repeated="drop",
-        # )
 
 
         if self.preload:
@@ -342,6 +330,7 @@ class MEGSignal():
             metadata=meta,
             preload =self.preload,
             event_repeated="drop",
+            verbose="ERROR"
         )
 
 

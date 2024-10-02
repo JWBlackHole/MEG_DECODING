@@ -46,12 +46,25 @@ class MegDataIterator(Dataset):
         self.totaltask: int = (until_subject-1) * 8 + (until_session+1) * (until_task +1)
         self.preload = preload
         self.use_list = False
+        try:
+            if isinstance(subsestask_list, list) and isinstance(subsestask_list[0], list):
+                self.use_list = True
+                self.sub_ses_task_list = subsestask_list
+            else:
+                self.sub_ses_task_list = [[1,0,1]]
+        except Exception as e:
+            logger.error("sub ses task is")
+            print(type(subsestask_list))
+            print("is subsestask_list list ")
+            print(isinstance(subsestask_list, list))
+            for i in subsestask_list:
+                print(i)
+                print(isinstance(i, list))
 
-        if isinstance(subsestask_list, list) and isinstance(subsestask_list[0], list):
-            self.use_list = True
-            self.sub_ses_task_list = subsestask_list
-        else:
-            self.sub_ses_task_list = [[1,0,1]]
+            print(e)
+            exit()
+
+
         
         self.totaltask= len(self.sub_ses_task_list)
 

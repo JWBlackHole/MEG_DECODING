@@ -219,7 +219,7 @@ class NNPCAModelRunner():
 
         dstr = self.result_description
         metrics = util.get_eval_metrics(prediction_df, 
-                            file_name="voiced_metrics_cnn", save_path="./results", 
+                            file_name="metrics_pca", save_path="./results", 
                             description_str=dstr)
         
         return metrics
