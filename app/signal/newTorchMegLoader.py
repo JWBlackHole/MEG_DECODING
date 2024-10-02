@@ -23,6 +23,7 @@ class MegDataIterator(Dataset):
     def __init__(self, until_subject, until_session, until_task, raw_data_path, target_label,
                   to_print_interim_csv=False, 
                   meg_param:dict={"tmin":None, "tmax":None, "decim":None, "low_pass": None, "high_pass":None},
+                  subsestask_list=None,
                   preload=True
         ):
         """
@@ -44,8 +45,17 @@ class MegDataIterator(Dataset):
         self.cur_idx: int = 0
         self.totaltask: int = (until_subject-1) * 8 + (until_session+1) * (until_task +1)
         self.preload = preload
+        self.use_list = False
 
-        logger.info(f"train until sub: {self.until_subjcet}, ses: {self.until_session}, task: {self.until_task}")
+        if isinstance(subsestask_list, list) and isinstance(subsestask_list[0], list):
+            self.use_list = True
+            self.sub_ses_task_list = subsestask_list
+        else:
+            self.sub_ses_task_list = [[1,0,1]]
+        
+        self.totaltask= len(self.sub_ses_task_list)
+
+        #logger.info(f"train until sub: {self.until_subjcet}, ses: {self.until_session}, task: {self.until_task}")
         logger.info(f"total no. of task: {self.totaltask}")
 
     def __len__(self):
@@ -58,7 +68,10 @@ class MegDataIterator(Dataset):
         verbose = True
 
         # sub, ses, task = self.idx_to_bids_path_num(idx)
-        sub, ses, task = 1, 0, 1
+        if self.use_list:
+            sub, ses, task =self.sub_ses_task_list[idx]
+        else:
+            raise NotImplementedError("not list!")
         epoch          = self.get_meg_epoch(sub, ses, task)
         if verbose:
             logger.debug(f"idx= {idx}, epoch: {epoch}, type: {type(epoch)}")
@@ -127,7 +140,7 @@ class MegDataIterator(Dataset):
     
     def get_meg_epoch(self, subject, session, task):
 
-        logger.info("try get to meg epoch from MegSignal class")
+        logger.info(f"sub{subject}, ses{session}, task{task}")
 
         signal_handler = MEGSignal(             # must set preload=False, this means only load data when accessed [MUST !!!] 
             self.target_label, 

@@ -1,0 +1,22 @@
+{
+    "training": {
+        "flow": "pca",
+        "target_label": "voiced",
+        "meg_tmin": -0.1,
+        "meg_tmax": 0.3,
+        "meg_decim": 2,
+        "preprocess_low_pass": 0.5,
+        "preprocess_high_pass": 180,
+        "epoch": 10000,
+        "sub_ses_task_list":[[18,0,1]]
+    },
+    "house_keeping": {
+        "raw_data_path": "/home/dataset/Data/gw_data/download",
+        "log_level": "DEBUG",
+        "result_metrics_save_path": "./results",
+        "to_print_interim_csv": false
+    },
+    "extra_option": {
+        "result_description": "pca, voiced, super light model, sub 18 ses 0 task 1 tmin -0.1, tmax 0.3, decim 2, lowpass 0.5, high pass 180, epoch 10000"
+    }
+}

@@ -1,0 +1,21 @@
+{
+    "training": {
+        "flow": "pca",
+        "target_label": "voiced",
+        "meg_tmin": -0.1,
+        "meg_tmax": 0.3,
+        "meg_decim": 2,
+        "preprocess_low_pass": 35,
+        "preprocess_high_pass": 180,
+        "epoch": 8000,
+        "sub_ses_task_list":[[1,0,1]],
+        "pca_model": "super light",
+        "clip_percentile": 99.5
+    },
+    "house_keeping": {
+        "raw_data_path": "/home/dataset/Data/gw_data/download",
+        "log_level": "DEBUG",
+        "result_metrics_save_path": "./results",
+        "to_print_interim_csv": false
+    }
+}

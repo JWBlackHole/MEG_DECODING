@@ -69,6 +69,7 @@ def train_loop(config: json):
         to_print_interim_csv     = house_keeping_config.get('to_print_interim_csv', False)
         num_event_to_plot         =house_keeping_config.get('num_event_to_plot', 1)
         extra_option              = config.get('extra_option', None)
+
     
     except Exception as e:
         logger.error(e)
@@ -200,11 +201,11 @@ def train_loop(config: json):
     elif(training_flow == "pca"):
         logger.info("start to train with model: NN PCA")
         
-        megDataIter = MegDataIterator(subject, until_session, until_task, raw_data_path, target_label, to_print_interim_csv, meg_param)
+        megDataIter = MegDataIterator(subject, until_session, until_task, raw_data_path, target_label, to_print_interim_csv, meg_param, subsestask_list)
         ntimes = megDataIter.cal_ntimes()
         
         nnPCARunner = NNPCAModelRunner(megDataIter, target_label, nchans=208, ntimes=ntimes)
-        nnPCARunner.train(epochs = 2000, batch_size = 512, lr = 0.001)
+        nnPCARunner.train(epochs = 2000, batch_size = 512, lr = 0.001, option=extra_option if extra_option else None)
        
     elif(training_flow == "lda"):
         logger.warning(f"currently only training for one subject is supported. Will train for subject {subject:02}")

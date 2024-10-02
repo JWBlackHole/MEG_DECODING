@@ -26,7 +26,7 @@ def accuracy_fn(y_true, y_pred):
     return acc
 
 def pca_d(X: Tensor , dimension: int) -> Tensor:
-    print("PCA ing...")
+    #print("PCA ing...")
     X = X.numpy().reshape(X.shape[0], -1)
     print(X.shape)
     
@@ -39,7 +39,7 @@ def pca_d(X: Tensor , dimension: int) -> Tensor:
     return torch.from_numpy(X_pca)
     
 def balance_label(X: Tensor, y: Tensor):
-    print("Balancing Label...")
+    #print("Balancing Label...")
     X_true,  y_true  = Tensor(), Tensor()
     X_false, y_false = Tensor(), Tensor()
     
@@ -57,8 +57,8 @@ def balance_label(X: Tensor, y: Tensor):
     X_true,  y_true  = X_true[:min_len],  y_true[:min_len]
     X_false, y_false = X_false[:min_len], y_false[:min_len]
     
-    print("X length", len(X_true), len(X_false))
-    print("Y length", len(y_true), len(y_false))
+    #print("X length", len(X_true), len(X_false))
+    #print("Y length", len(y_true), len(y_false))
     
     X, y = torch.cat((X_true, X_false), 0), torch.cat((y_true, y_false), 0)
 
@@ -74,7 +74,7 @@ class NNPCAModelRunner():
         self.ntimes = ntimes
         
         
-    def train(self, epochs, batch_size, lr, graph_interval: int=1, print_interval: int=100)->dict:
+    def train(self, epochs, batch_size, lr, graph_interval: int=1, print_interval: int=5000, option=None)->dict:
         """
         parameters
         -----------
@@ -89,7 +89,12 @@ class NNPCAModelRunner():
         metircs: dict of metrics of training result
         
         """
-        print("Start Training...")
+
+        if isinstance(option, str):
+            self.result_description = option
+        else:
+            self.result_description = "pca"
+        #print("Start Training...")
         
         if self.target_label != TargetLabel.VOICED_PHONEME:
             logger.error("preprocessing for setting other than \"voiced\" is not implemented. program exit")
@@ -113,11 +118,11 @@ class NNPCAModelRunner():
         final_y_test = None
 
         for i, task in enumerate(self.megData):
-            print(f"In task {i}")
-            print("-------------------------")
+            #print(f"In task {i}")
+            #print("-------------------------")
             
             X, y = task
-            X = pca_d(X, 100).to(self.device)
+            X = pca_d(X, 3).to(self.device)
             X, y = X.to(self.device), y.to(self.device)
             X, y = balance_label(X, y)
             
@@ -132,9 +137,9 @@ class NNPCAModelRunner():
             
             
             for epoch in range(epochs + 1):
-                if(epoch % print_interval == 0):
-                    print(f"Epoch {epoch}")
-                    print("-----------------------")
+                # if(epoch % print_interval == 0):
+                #     print(f"Epoch {epoch}")
+                #     print("-----------------------")
                 
                 loss_item = train_acc = None
                 
@@ -211,7 +216,8 @@ class NNPCAModelRunner():
 
         # Calculate metrics
         prediction_df = util.add_comparison_column(prediction_df)
-        dstr = "Description of the training configuration"
+
+        dstr = self.result_description
         metrics = util.get_eval_metrics(prediction_df, 
                             file_name="voiced_metrics_cnn", save_path="./results", 
                             description_str=dstr)
