@@ -1,0 +1,11 @@
+{
+    "description": "{\"flow\": \"pca\", \"target_label\": \"voiced\", \"meg_tmin\": -0.1, \"meg_tmax\": 0.3, \"meg_decim\": 2, \"preprocess_low_pass\": 0.5, \"preprocess_high_pass\": 180, \"epoch\": 8000, \"sub_ses_task_list\": [[1, 0, 1]], \"pca_model\": \"super light\", \"clip_percentile\": 99.5}",
+    "recall": 0.8734693877551021,
+    "precision": 0.5095238095238095,
+    "accuracy": 0.5173116089613035,
+    "f1_score": 0.643609022556391,
+    "tp": 214,
+    "fp": 206,
+    "tn": 40,
+    "fn": 31
+}
