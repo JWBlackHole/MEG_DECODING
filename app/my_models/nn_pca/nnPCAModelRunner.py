@@ -95,11 +95,7 @@ class NNPCAModelRunner():
         else:
             self.result_description = "pca"
         #print("Start Training...")
-        
-        if self.target_label != TargetLabel.VOICED_PHONEME:
-            logger.error("preprocessing for setting other than \"voiced\" is not implemented. program exit")
-            exit(0)
-        
+
         # Our "model", "loss function" and "optimizer"
         model_0   = NNPCAModel(self.nchans, self.ntimes).to(self.device)
         # loss_fn   = torch.nn.BCELoss().to(self.device)
@@ -122,7 +118,7 @@ class NNPCAModelRunner():
             #print("-------------------------")
             
             X, y = task
-            X = pca_d(X, 3).to(self.device)
+            X = pca_d(X, 10).to(self.device)
             X, y = X.to(self.device), y.to(self.device)
             X, y = balance_label(X, y)
             
