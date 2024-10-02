@@ -78,7 +78,7 @@ def main(start, end):
     write_to_csv(csv_file_path, rows, fieldnames)
 
 if __name__ == "__main__":
-    start = 22  # Replace with your start value
-    end = 28  # Replace with your end value
+    start = 29  # Replace with your start value
+    end = 34  # Replace with your end value
     main(start, end)
     print("done!")
