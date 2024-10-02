@@ -14,7 +14,7 @@ class NNPCAModel(nn.Module):
         # 2nd dimension of x need to = in_features of input!
 
         self.input = nn.Sequential(
-            nn.Linear(in_features = 3, out_features =  5),
+            nn.Linear(in_features = 10, out_features =  5),
             nn.GELU()
         )
          
