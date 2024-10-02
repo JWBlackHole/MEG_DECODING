@@ -52,17 +52,16 @@ class MegDataIterator(Dataset):
         return self.totaltask
     
     def __getitem__(self, idx):
-
         if idx >= self.totaltask: 
             raise IndexError    # define stop point of iterator
         
-        
         verbose = True
 
-        sub, ses, task = self.idx_to_bids_path_num(idx)
-        epoch = self.get_meg_epoch(sub, ses, task)
+        # sub, ses, task = self.idx_to_bids_path_num(idx)
+        sub, ses, task = 1, 0, 1
+        epoch          = self.get_meg_epoch(sub, ses, task)
         if verbose:
-                logger.debug(f"idx= {idx}, epoch: {epoch}, type: {type(epoch)}")
+            logger.debug(f"idx= {idx}, epoch: {epoch}, type: {type(epoch)}")
         if epoch is None:
             return None
 
@@ -86,12 +85,12 @@ class MegDataIterator(Dataset):
             y = epoch.metadata["is_word_onset"].values
 
         
-        if not self.preload and "clip_percentile" in self.meg_param:
-            if isinstance(self.clip_percentile, (int, float)):    # if preload is True, data is already clipped when preload
+        # if not self.preload and "clip_percentile" in self.meg_param:
+        #     if isinstance(self.clip_percentile, (int, float)):    # if preload is True, data is already clipped when preload
 
-                # clip to 95 percentile for twice   (no need, )
-                th = np.percentile(np.abs(X), self.clip_percentile)
-                X = np.clip(X, -th, th)
+        #         # clip to 95 percentile for twice   (no need, )
+        #         th = np.percentile(np.abs(X), self.clip_percentile)
+        #         X = np.clip(X, -th, th)
 
 
 

@@ -13,6 +13,7 @@ from app.signal.preprocessor import Preprocessor
 from app.signal.torchMegLoader import TorchMegLoader
 from app.signal.newTorchMegLoader import MegDataIterator
 from app.my_models.nn.nnModelRunner import NNModelRunner
+from app.my_models.nn_pca.nnPCAModelRunner import NNPCAModelRunner
 from app.my_models.lda.ldaModelRunner import LdaModelRunner
 from app.my_models.svm.svmModel import svmModel # new added
 # from app.my_models.cnn.cnnModel import cnnModel # new added
@@ -58,6 +59,7 @@ def train_loop(config: json):
         clip_percentile       = training_config.get('clip_percentile', None)
         onset_offset          = training_config.get('onset_offset', None)
         baseline              = training_config.get('meg_baseline', None)
+        subsestask_list         = training_config.get('sub_ses_task_list', [])
 
 
         house_keeping_config    = config.get('house_keeping', {})
@@ -193,8 +195,16 @@ def train_loop(config: json):
         ntimes = megDataIter.cal_ntimes()
         
         nnRunner = NNModelRunner(megDataIter, target_label, nchans=208, ntimes=ntimes)
-        nnRunner.train(epochs = 4, batch_size = 128, lr = 0.001)
+        nnRunner.train(epochs = 10000, batch_size = 128, lr = 0.001)
+    
+    elif(training_flow == "pca"):
+        logger.info("start to train with model: NN PCA")
         
+        megDataIter = MegDataIterator(subject, until_session, until_task, raw_data_path, target_label, to_print_interim_csv, meg_param)
+        ntimes = megDataIter.cal_ntimes()
+        
+        nnPCARunner = NNPCAModelRunner(megDataIter, target_label, nchans=208, ntimes=ntimes)
+        nnPCARunner.train(epochs = 2000, batch_size = 512, lr = 0.001)
        
     elif(training_flow == "lda"):
         logger.warning(f"currently only training for one subject is supported. Will train for subject {subject:02}")
@@ -287,7 +297,7 @@ if __name__ == "__main__":
     # example:
     # python main.py -o ./app/config/config_mh.json
     
-    config_path  = Path('./app/config/svm.json')  # you can also hard-code config path here
+    config_path  = Path('./app/config/config_jw.json')  # you can also hard-code config path here
 
     if config_path is None:
         logger.error("config_path is None! you should hard-code the path or pass by -o flag!")

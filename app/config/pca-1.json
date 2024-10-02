@@ -7,10 +7,9 @@
         "until_task": 0,
         "meg_tmin": -0.1,
         "meg_tmax": 0.3,
-        "meg_decim": 5,
-        "preprocess_low_pass": 100,
-        "preprocess_high_pass": 200,
-        "dont_kfold_in_lda": true
+        "meg_decim": 2,
+        "preprocess_low_pass": 0.5,
+        "preprocess_high_pass": 180
     },
     "house_keeping": {
         "raw_data_path": "/home/dataset/Data/gw_data/download",

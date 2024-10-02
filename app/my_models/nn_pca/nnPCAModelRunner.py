@@ -15,9 +15,8 @@ from loguru import logger
 
 import pandas as pd
 
-
 # cutom import
-from app.my_models.nn.nnModel import MyNNModel
+from app.my_models.nn_pca.nnPCAModel import NNPCAModel
 from app.common.commonSetting import TargetLabel
 import app.utils.my_utils as util
 
@@ -65,7 +64,7 @@ def balance_label(X: Tensor, y: Tensor):
 
     return X, y
 
-class NNModelRunner():
+class NNPCAModelRunner():
     def __init__(self, megData, target_label, nchans:int, ntimes: int) -> None:
         
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -97,8 +96,9 @@ class NNModelRunner():
             exit(0)
         
         # Our "model", "loss function" and "optimizer"
-        model_0   = MyNNModel(self.nchans, self.ntimes).to(self.device)
-        loss_fn   = torch.nn.BCELoss().to(self.device)
+        model_0   = NNPCAModel(self.nchans, self.ntimes).to(self.device)
+        # loss_fn   = torch.nn.BCELoss().to(self.device)
+        loss_fn   = torch.nn.MSELoss().to(self.device)
         # optimizer = torch.optim.SGD(params = model_0.parameters(), lr = lr, momentum=0.9, weight_decay = 1e-4)
         # optimizer = torch.optim.SGD(params = model_0.parameters(), lr = lr, momentum=0.9)
         optimizer = torch.optim.Adagrad(params = model_0.parameters(), lr = lr)
@@ -112,22 +112,24 @@ class NNModelRunner():
         final_test_pred = None
         final_y_test = None
 
-
         for i, task in enumerate(self.megData):
             print(f"In task {i}")
             print("-------------------------")
             
             X, y = task
+            X = pca_d(X, 100).to(self.device)
             X, y = X.to(self.device), y.to(self.device)
             X, y = balance_label(X, y)
+            
             
             X_train, X_test, y_train, y_test = train_test_split(X, y, 
                                                             test_size=0.2,   # 20% test, 80% train
                                                             random_state=25) # shffulinug, making the random split reproducible
-            
+
             dataset    = TensorDataset(X_train, y_train)
             dataloader = DataLoader(dataset = dataset, batch_size = batch_size)
             dataset_size = len(dataloader.dataset)
+            
             
             for epoch in range(epochs + 1):
                 if(epoch % print_interval == 0):
@@ -140,15 +142,10 @@ class NNModelRunner():
                 tmp_train_accys : list = [] # added
                 for id_batch, (X_batch, y_batch) in enumerate(dataloader):
                     # set to training mode
-                    model_0.train()
-                    
-                    # Binary classification, just using sigmoid to predict output
-                    # Round: <0.5 class 1, >0.5 class2
-                    # if (i==0) and (epoch==0):
-                    #     logger.debug(f"shape of X_batch: {X_batch.shape}")
-                    #     logger.debug(f"shape of y_batch: {y_batch.shape}")
+                    model_0.train() 
 
                     y_logits = model_0(X_batch).squeeze()
+                    # y_logits = torch.round(y_logits)
                         
                     # Calculate loss
                     loss = loss_fn(y_logits, y_batch)
@@ -183,21 +180,12 @@ class NNModelRunner():
                     print(f"Test Loss: {test_loss:>7f}, Test Accuracy: {test_acc:>7f}%\n")
                 
                 # record loss and accuracy for plot graph
-                train_losses.append(loss_item)
-                train_accuracies.append(train_acc)
+                # train_losses.append(loss_item)
+                # train_accuracies.append(train_acc)
+                train_losses.append(sum(tmp_train_losses) / len(tmp_train_losses))   # added
+                train_accuracies.append(sum(tmp_train_accys) / len(tmp_train_accys)) # added
                 test_losses.append(test_loss.item())        # .item will convert the var to float (CPU-bound)
                 test_accuracies.append(test_acc)
-
-                # print(f"i={i}, epoch={epoch}")
-                # print("train loss:")
-                # print([el for el in train_losses])
-                # print("train accuracy:")
-                # print([el for el in train_accuracies])
-                # print("test loss:")
-                # print([el for el in test_losses])
-                # print("test accuracy:")
-                # print([el for el in test_accuracies])
-
                 
                 # save the pred and y in last epoch of last task for later use
                 if (epoch == (epochs -1)) and ( i== (len(self.megData)-1) ):
@@ -212,7 +200,7 @@ class NNModelRunner():
     
     def save_result(self, test_pred, y_test, train_losses, train_accuracies, test_losses, test_accuracies, total_epoch)->dict:
 
-        graph_save_path = util.get_unique_file_name("NN_loss_accuracy_graph.png", "./results/nn/graph")
+        graph_save_path = util.get_unique_file_name("NN_PCA_loss_accuracy_graph.png", "./results/nn_pca/graph")
 
         util.plot_loss_accu_across_epoch(train_losses, train_accuracies, test_losses, test_accuracies, total_epoch, graph_save_path)
         # Save the result metrics
