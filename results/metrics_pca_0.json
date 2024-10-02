@@ -1,0 +1,12 @@
+{
+    "description": "PCA",
+    "recall": 0.2163265306122449,
+    "precision": 0.4774774774774775,
+    "accuracy": 0.4908350305498982,
+    "f1_score": 0.29775280898876405,
+    "tp": 53,
+    "fp": 58,
+    "tn": 188,
+    "fn": 192,
+    "result_description": "pca, voiced, super light model, sub 1 ses 0 task 1 tmin -0.1, tmax 0.3, decim 2, lowpass 0.5, high pass 180, epoch 10000"
+}

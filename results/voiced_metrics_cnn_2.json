@@ -1,0 +1,11 @@
+{
+    "description": "Description of the training configuration",
+    "recall": 0.3836734693877551,
+    "precision": 0.5310734463276836,
+    "accuracy": 0.5234215885947047,
+    "f1_score": 0.44549763033175355,
+    "tp": 94,
+    "fp": 83,
+    "tn": 163,
+    "fn": 151
+}
