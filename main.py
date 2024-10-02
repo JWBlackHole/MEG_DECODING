@@ -60,6 +60,7 @@ def train_loop(config: json):
         onset_offset          = training_config.get('onset_offset', None)
         baseline              = training_config.get('meg_baseline', None)
         subsestask_list         = training_config.get('sub_ses_task_list', None)
+        epochs                  =  training_config.get('epoch', None)
 
 
         house_keeping_config    = config.get('house_keeping', {})
@@ -213,7 +214,7 @@ def train_loop(config: json):
         ntimes = megDataIter.cal_ntimes()
         
         nnPCARunner = NNPCAModelRunner(megDataIter, target_label, nchans=208, ntimes=ntimes)
-        nnPCARunner.train(epochs = 2000, batch_size = 512, lr = 0.001, option=extra_option if extra_option else None)
+        nnPCARunner.train(epochs = epochs, batch_size = 512, lr = 0.001, option=extra_option if extra_option else None)
        
     elif(training_flow == "lda"):
         logger.warning(f"currently only training for one subject is supported. Will train for subject {subject:02}")

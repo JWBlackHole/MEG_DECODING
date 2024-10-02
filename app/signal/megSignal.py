@@ -59,6 +59,7 @@ class MEGSignal():
         self.baseline = baseline
         
         logger.debug(f"ntimes= {self.ntimes}")
+        logger.warning(f"low pass: {self.low_pass}, hp: {self.high_pass}, label: {self.target_label}")
        
     def get_nchans_ntimes(self)->tuple[int,int]:
         if (self.nchans and self.ntimes):
@@ -318,8 +319,8 @@ class MEGSignal():
 
 
 
-        if self.preload:
-            logger.warning("preload is true. will load data of this epoch to memory immediately.")
+        # if self.preload:
+        #     logger.warning("preload is true. will load data of this epoch to memory immediately.")
         epochs = mne.Epochs(
             raw,
             events,
@@ -334,8 +335,8 @@ class MEGSignal():
         )
 
 
-        logger.info(f"size of epoch: ")
-        print(sys.getsizeof(epochs))
+        #logger.info(f"size of epoch: ")
+        #print(sys.getsizeof(epochs))
 
         
 

@@ -202,7 +202,7 @@ class MegDataIterator(Dataset):
     def cal_ntimes(self):
         try:
             ntimes = int((self.meg_param["tmax"] - self.meg_param["tmin"])*(1000/self.meg_param["decim"])) +1
-            logger.info(f"ntimes (# timepoints in each window) calculated by megDataIter is: {ntimes}")
+            logger.debug(f"ntimes (# timepoints in each window) calculated by megDataIter is: {ntimes}")
             return ntimes
         except Exception as e:
             logger.error(e)
