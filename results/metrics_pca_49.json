@@ -1,0 +1,11 @@
+{
+    "description": "{\"flow\": \"pca\", \"target_label\": \"word_onset\", \"meg_tmin\": -0.1, \"meg_tmax\": 0.3, \"meg_decim\": 2, \"preprocess_low_pass\": 0.5, \"preprocess_high_pass\": 180, \"epoch\": 20000, \"sub_ses_task_list\": [[1, 0, 1]], \"pca_model\": \"medium\"}",
+    "recall": 0.2593856655290102,
+    "precision": 0.5314685314685315,
+    "accuracy": 0.5161839863713799,
+    "f1_score": 0.3486238532110092,
+    "tp": 76,
+    "fp": 67,
+    "tn": 227,
+    "fn": 217
+}
