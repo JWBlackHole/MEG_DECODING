@@ -29,14 +29,6 @@ A pipeline for MEG signal decoding using both Neural Networks (NN) and Linear Di
 
 ## Plot Evoked Responses
 
-**Just run this configuration:**
-
-```json
-// app/config/plot_evo.json
-{ /* your plot config here */ }
-```
-
----
 
 ## Installation
 
